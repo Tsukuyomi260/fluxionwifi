@@ -282,7 +282,7 @@ export default function LandingPage() {
             <span className="text-sm font-semibold text-[#0B1E4D]">Fluxion WiFi</span>
           </div>
           <p className="text-xs text-[#9CA3AF]">
-            © {new Date().getFullYear()} Fluxion WiFi. Connecte votre monde.
+            © 2026 Fluxion WiFi. Connecte votre monde.
           </p>
           <div className="flex gap-6">
             <a href="#" className="text-xs text-[#6B7280] hover:text-[#1A1D26]">Conditions</a>
