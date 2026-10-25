@@ -4,17 +4,28 @@ import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Loader2, ArrowLeft, CheckCircle } from "lucide-react";
+import { resetPassword } from "./actions";
 
 export default function ForgotPasswordPage() {
-  const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [email, setEmail] = useState("");
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setLoading(true);
-    // TODO: Supabase password reset
-    setSent(true);
+    setError(null);
+
+    const formData = new FormData(e.currentTarget);
+    setEmail(formData.get("email") as string);
+    const result = await resetPassword(formData);
+
+    if (result?.error) {
+      setError(result.error);
+    } else {
+      setSent(true);
+    }
     setLoading(false);
   }
 
@@ -35,12 +46,8 @@ export default function ForgotPasswordPage() {
           <p className="text-sm text-[#6B7280]">
             Si un compte existe avec {email}, vous recevrez un lien de réinitialisation.
           </p>
-          <Link
-            href="/login"
-            className="inline-flex items-center gap-2 text-sm text-[#2B7FFF] hover:underline"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Retour à la connexion
+          <Link href="/login" className="inline-flex items-center gap-2 text-sm text-[#2B7FFF] hover:underline">
+            <ArrowLeft className="h-4 w-4" /> Retour à la connexion
           </Link>
         </div>
       ) : (
@@ -52,23 +59,24 @@ export default function ForgotPasswordPage() {
             </p>
           </div>
 
+          {error && (
+            <div className="rounded-xl bg-red-50 border border-red-200 p-3 text-sm text-red-600">{error}</div>
+          )}
+
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-1.5">
-              <label htmlFor="reset-email" className="text-sm font-medium text-[#374151]">Email</label>
-              <input id="reset-email" type="email" placeholder="vous@exemple.com"
-                value={email} onChange={(e) => setEmail(e.target.value)} required className={inputClass} />
+              <label htmlFor="email" className="text-sm font-medium text-[#374151]">Email</label>
+              <input id="email" name="email" type="email" placeholder="vous@exemple.com"
+                required className={inputClass} />
             </div>
-
             <button type="submit" disabled={loading}
               className="inline-flex h-11 w-full items-center justify-center rounded-xl bg-[#2B7FFF] px-4 text-sm font-medium text-white transition-colors hover:bg-[#1A6BE6] disabled:pointer-events-none disabled:opacity-50 shadow-sm">
               {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Envoyer le lien"}
             </button>
           </form>
 
-          <Link href="/login"
-            className="inline-flex items-center gap-2 text-sm text-[#6B7280] hover:text-[#1A1D26]">
-            <ArrowLeft className="h-4 w-4" />
-            Retour à la connexion
+          <Link href="/login" className="inline-flex items-center gap-2 text-sm text-[#6B7280] hover:text-[#1A1D26]">
+            <ArrowLeft className="h-4 w-4" /> Retour à la connexion
           </Link>
         </>
       )}

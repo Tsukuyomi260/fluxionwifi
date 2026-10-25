@@ -4,29 +4,30 @@ import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
+import { register } from "./actions";
 
 export default function RegisterPage() {
-  const [form, setForm] = useState({
-    name: "",
-    email: "",
-    phone: "",
-    password: "",
-    confirmPassword: "",
-    country: "",
-  });
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  function update(field: string, value: string) {
-    setForm((prev) => ({ ...prev, [field]: value }));
-  }
-
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    if (form.password !== form.confirmPassword) return;
     setLoading(true);
-    // TODO: Supabase auth
-    setLoading(false);
+    setError(null);
+
+    const formData = new FormData(e.currentTarget);
+    if (formData.get("password") !== formData.get("confirmPassword")) {
+      setError("Les mots de passe ne correspondent pas");
+      setLoading(false);
+      return;
+    }
+
+    const result = await register(formData);
+    if (result?.error) {
+      setError(result.error);
+      setLoading(false);
+    }
   }
 
   const countries = [
@@ -51,41 +52,41 @@ export default function RegisterPage() {
         </p>
       </div>
 
+      {error && (
+        <div className="rounded-xl bg-red-50 border border-red-200 p-3 text-sm text-red-600">
+          {error}
+        </div>
+      )}
+
       <form onSubmit={handleSubmit} className="space-y-3.5">
         <div className="space-y-1.5">
           <label htmlFor="name" className="text-sm font-medium text-[#374151]">Nom complet</label>
-          <input id="name" type="text" placeholder="Jean Dupont" value={form.name}
-            onChange={(e) => update("name", e.target.value)} required className={inputClass} />
+          <input id="name" name="name" type="text" placeholder="Jean Dupont" required className={inputClass} />
         </div>
 
         <div className="space-y-1.5">
-          <label htmlFor="reg-email" className="text-sm font-medium text-[#374151]">Email</label>
-          <input id="reg-email" type="email" placeholder="vous@exemple.com" value={form.email}
-            onChange={(e) => update("email", e.target.value)} required className={inputClass} />
+          <label htmlFor="email" className="text-sm font-medium text-[#374151]">Email</label>
+          <input id="email" name="email" type="email" placeholder="vous@exemple.com" required className={inputClass} />
         </div>
 
         <div className="space-y-1.5">
           <label htmlFor="phone" className="text-sm font-medium text-[#374151]">Téléphone</label>
-          <input id="phone" type="tel" placeholder="+229 xx xx xx xx" value={form.phone}
-            onChange={(e) => update("phone", e.target.value)} required className={inputClass} />
+          <input id="phone" name="phone" type="tel" placeholder="+229 xx xx xx xx" required className={inputClass} />
         </div>
 
         <div className="space-y-1.5">
           <label htmlFor="country" className="text-sm font-medium text-[#374151]">Pays</label>
-          <select id="country" value={form.country} onChange={(e) => update("country", e.target.value)}
-            required className={inputClass}>
+          <select id="country" name="country" required className={inputClass}>
             <option value="">Sélectionnez votre pays</option>
             {countries.map((c) => <option key={c} value={c}>{c}</option>)}
           </select>
         </div>
 
         <div className="space-y-1.5">
-          <label htmlFor="reg-password" className="text-sm font-medium text-[#374151]">Mot de passe</label>
+          <label htmlFor="password" className="text-sm font-medium text-[#374151]">Mot de passe</label>
           <div className="relative">
-            <input id="reg-password" type={showPassword ? "text" : "password"}
-              placeholder="Min. 8 caractères" value={form.password}
-              onChange={(e) => update("password", e.target.value)} required minLength={8}
-              className={`${inputClass} pr-10`} />
+            <input id="password" name="password" type={showPassword ? "text" : "password"}
+              placeholder="Min. 8 caractères" required minLength={8} className={`${inputClass} pr-10`} />
             <button type="button" onClick={() => setShowPassword(!showPassword)}
               className="absolute right-3 top-1/2 -translate-y-1/2 text-[#9CA3AF] hover:text-[#6B7280]">
               {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -94,12 +95,9 @@ export default function RegisterPage() {
         </div>
 
         <div className="space-y-1.5">
-          <label htmlFor="confirm-password" className="text-sm font-medium text-[#374151]">
-            Confirmez le mot de passe
-          </label>
-          <input id="confirm-password" type="password" placeholder="Retapez votre mot de passe"
-            value={form.confirmPassword} onChange={(e) => update("confirmPassword", e.target.value)}
-            required minLength={8} className={inputClass} />
+          <label htmlFor="confirmPassword" className="text-sm font-medium text-[#374151]">Confirmez le mot de passe</label>
+          <input id="confirmPassword" name="confirmPassword" type="password"
+            placeholder="Retapez votre mot de passe" required minLength={8} className={inputClass} />
         </div>
 
         <button type="submit" disabled={loading}

@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { Bell, Menu, Search, LogOut } from "lucide-react";
+import { logout } from "@/app/(auth)/actions";
 
 interface HeaderProps {
   networkName?: string;
@@ -51,9 +52,11 @@ export function Header({
             </span>
           </div>
           <span className="hidden md:block text-sm font-medium text-[#1A1D26]">{userName}</span>
-          <button className="p-1.5 rounded-lg hover:bg-red-50 text-[#6B7280] hover:text-red-500 transition-colors">
-            <LogOut className="h-4 w-4" />
-          </button>
+          <form action={logout}>
+            <button type="submit" className="p-1.5 rounded-lg hover:bg-red-50 text-[#6B7280] hover:text-red-500 transition-colors">
+              <LogOut className="h-4 w-4" />
+            </button>
+          </form>
         </div>
       </div>
     </header>

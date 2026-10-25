@@ -33,6 +33,18 @@ yarn-error.log*
 # env files (can opt-in for committing if needed)
 .env*
 
+# project docs (private)
+chart.md
+parcours.md
+ANALYSE-EVISIONS-CONNECT.md
+
+# screenshots
+/screenshots/
+*.jpg
+*.jpeg
+*.png
+!public/**
+
 # vercel
 .vercel
 
