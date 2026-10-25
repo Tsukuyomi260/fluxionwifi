@@ -31,8 +31,8 @@ export default function RegisterPage() {
   }
 
   const countries = [
-    "Bénin", "Burkina Faso", "Cameroun", "Côte d'Ivoire", "Gabon",
-    "Guinée", "Mali", "Niger", "Rép. Dém. du Congo", "Sénégal", "Tchad", "Togo",
+    "Congo-Kinshasa (RDC)", "Bénin", "Burkina Faso", "Cameroun", "Congo-Brazzaville",
+    "Côte d'Ivoire", "Gabon", "Guinée", "Mali", "Niger", "Sénégal", "Tchad", "Togo",
   ];
 
   const inputClass =
@@ -71,7 +71,7 @@ export default function RegisterPage() {
 
         <div className="space-y-1.5">
           <label htmlFor="phone" className="text-sm font-medium text-[#374151]">Téléphone</label>
-          <input id="phone" name="phone" type="tel" placeholder="+229 xx xx xx xx" required className={inputClass} />
+          <input id="phone" name="phone" type="tel" placeholder="+243 xx xxx xxxx" required className={inputClass} />
         </div>
 
         <div className="space-y-1.5">
