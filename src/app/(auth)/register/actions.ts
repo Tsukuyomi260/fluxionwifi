@@ -25,8 +25,13 @@ export async function register(formData: FormData) {
   });
 
   if (error) {
-    return { error: error.message };
+    const messages: Record<string, string> = {
+      "User already registered": "Un compte existe déjà avec cet email",
+      "Password should be at least 6 characters": "Le mot de passe doit contenir au moins 6 caractères",
+      "Unable to validate email address: invalid format": "Format d'email invalide",
+    };
+    return { error: messages[error.message] || error.message };
   }
 
-  redirect("/");
+  redirect("/dashboard");
 }

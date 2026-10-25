@@ -1,18 +1,22 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-const publicRoutes = ["/login", "/register", "/forgot-password"];
+const publicRoutes = ["/", "/login", "/register", "/forgot-password"];
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  if (publicRoutes.some((route) => pathname.startsWith(route))) {
+  if (pathname === "/") {
+    return NextResponse.next();
+  }
+
+  if (publicRoutes.some((route) => route !== "/" && pathname.startsWith(route))) {
     const response = NextResponse.next();
     const supabase = createSupabaseMiddleware(request, response);
     const { data: { user } } = await supabase.auth.getUser();
 
     if (user) {
-      return NextResponse.redirect(new URL("/", request.url));
+      return NextResponse.redirect(new URL("/dashboard", request.url));
     }
     return response;
   }
@@ -22,7 +26,9 @@ export async function middleware(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) {
-    return NextResponse.redirect(new URL("/login", request.url));
+    const loginUrl = new URL("/login", request.url);
+    loginUrl.searchParams.set("next", pathname);
+    return NextResponse.redirect(loginUrl);
   }
 
   return response;

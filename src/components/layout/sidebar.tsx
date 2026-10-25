@@ -25,7 +25,7 @@ const sections = [
   {
     label: "PRINCIPAL",
     items: [
-      { name: "Tableau de bord", href: "/", icon: LayoutDashboard },
+      { name: "Tableau de bord", href: "/dashboard", icon: LayoutDashboard },
       { name: "Portail Captif", href: "/portal", icon: Globe },
       { name: "Tickets", href: "/tickets", icon: Ticket },
     ],
@@ -86,8 +86,9 @@ export function Sidebar({ mobile = false }: SidebarProps) {
             <ul className="space-y-0.5">
               {section.items.map((item) => {
                 const isActive =
-                  pathname === item.href ||
-                  (item.href !== "/" && pathname.startsWith(item.href));
+                  item.href === "/dashboard"
+                    ? pathname === "/dashboard"
+                    : pathname === item.href || pathname.startsWith(item.href);
                 return (
                   <li key={item.name}>
                     <Link

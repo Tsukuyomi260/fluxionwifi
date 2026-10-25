@@ -12,8 +12,14 @@ export async function login(formData: FormData) {
   });
 
   if (error) {
-    return { error: error.message };
+    const messages: Record<string, string> = {
+      "Invalid login credentials": "Email ou mot de passe incorrect",
+      "Email not confirmed": "Veuillez confirmer votre email avant de vous connecter",
+      "Invalid email or password": "Email ou mot de passe incorrect",
+      "Too many requests": "Trop de tentatives. Veuillez réessayer plus tard",
+    };
+    return { error: messages[error.message] || error.message };
   }
 
-  redirect("/");
+  redirect("/dashboard");
 }

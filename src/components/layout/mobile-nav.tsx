@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 import { LayoutDashboard, Ticket, Wallet, Globe, MoreHorizontal } from "lucide-react";
 
 const mobileNav = [
-  { name: "Dashboard", href: "/", icon: LayoutDashboard },
+  { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { name: "Portail", href: "/portal", icon: Globe },
   { name: "Tickets", href: "/tickets", icon: Ticket },
   { name: "Solde", href: "/finance/balance", icon: Wallet },
@@ -21,8 +21,9 @@ export function MobileNav() {
       <ul className="flex justify-around">
         {mobileNav.map((item) => {
           const isActive =
-            pathname === item.href ||
-            (item.href !== "/" && pathname.startsWith(item.href));
+            item.href === "/dashboard"
+              ? pathname === "/dashboard"
+              : pathname === item.href || pathname.startsWith(item.href);
           return (
             <li key={item.name}>
               <Link

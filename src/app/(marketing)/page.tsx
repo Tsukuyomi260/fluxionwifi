@@ -1,0 +1,296 @@
+import Image from "next/image";
+import Link from "next/link";
+import {
+  Wifi,
+  Globe,
+  Ticket,
+  Wallet,
+  Shield,
+  Users,
+  Smartphone,
+  Zap,
+  ArrowRight,
+  CheckCircle,
+  Star,
+} from "lucide-react";
+
+const features = [
+  {
+    icon: Globe,
+    title: "Portail Captif",
+    description: "Pages de connexion WiFi personnalisées avec votre marque et vos couleurs.",
+  },
+  {
+    icon: Ticket,
+    title: "Tickets WiFi",
+    description: "Créez, générez et vendez des tickets avec codes uniques en quelques clics.",
+  },
+  {
+    icon: Wallet,
+    title: "Paiement Mobile Money",
+    description: "Acceptez les paiements via FedaPay, CinetPay et tous les opérateurs locaux.",
+  },
+  {
+    icon: Shield,
+    title: "VPN & Accès distant",
+    description: "Gérez vos routeurs à distance via WireGuard ou SSTP en toute sécurité.",
+  },
+  {
+    icon: Users,
+    title: "Gestion des vendeurs",
+    description: "Attribuez des stocks de tickets et suivez les performances de votre équipe.",
+  },
+  {
+    icon: Smartphone,
+    title: "100% Mobile",
+    description: "Interface optimisée pour smartphone. Gérez votre réseau depuis n'importe où.",
+  },
+];
+
+const steps = [
+  { step: "01", title: "Créez votre compte", description: "Inscription gratuite en 2 minutes" },
+  { step: "02", title: "Configurez votre routeur", description: "Connectez votre MikroTik en quelques clics" },
+  { step: "03", title: "Personnalisez votre portail", description: "Choisissez un thème et ajoutez votre logo" },
+  { step: "04", title: "Vendez vos tickets", description: "Commencez à générer des revenus immédiatement" },
+];
+
+const pricing = [
+  {
+    name: "Starter",
+    price: "Gratuit",
+    period: "",
+    description: "Pour démarrer et tester la plateforme",
+    features: ["1 routeur", "100 tickets/mois", "1 portail captif", "Support email"],
+    cta: "Commencer gratuitement",
+    highlighted: false,
+  },
+  {
+    name: "Pro",
+    price: "15 000",
+    period: "CDF/mois",
+    description: "Pour les opérateurs WiFi actifs",
+    features: [
+      "5 routeurs",
+      "Tickets illimités",
+      "Portails personnalisés",
+      "VPN inclus",
+      "Gestion vendeurs",
+      "Support prioritaire",
+    ],
+    cta: "Essai gratuit 14 jours",
+    highlighted: true,
+  },
+  {
+    name: "Enterprise",
+    price: "Sur mesure",
+    period: "",
+    description: "Pour les grandes organisations",
+    features: [
+      "Routeurs illimités",
+      "API complète",
+      "Console RADIUS",
+      "Multi-sites",
+      "Account manager dédié",
+      "SLA garanti",
+    ],
+    cta: "Nous contacter",
+    highlighted: false,
+  },
+];
+
+export default function LandingPage() {
+  return (
+    <div className="min-h-screen bg-white">
+      {/* Navigation */}
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-md border-b border-[#E8ECF1]">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex h-16 items-center justify-between">
+            <div className="flex items-center gap-2.5">
+              <Image src="/logo.jpg" alt="Fluxion WiFi" width={36} height={36} className="rounded-xl" />
+              <span className="text-lg font-bold text-[#0B1E4D]">Fluxion WiFi</span>
+            </div>
+            <div className="hidden md:flex items-center gap-8">
+              <a href="#features" className="text-sm text-[#6B7280] hover:text-[#1A1D26] transition-colors">Fonctionnalités</a>
+              <a href="#how-it-works" className="text-sm text-[#6B7280] hover:text-[#1A1D26] transition-colors">Comment ça marche</a>
+              <a href="#pricing" className="text-sm text-[#6B7280] hover:text-[#1A1D26] transition-colors">Tarifs</a>
+            </div>
+            <div className="flex items-center gap-3">
+              <Link href="/login" className="text-sm font-medium text-[#374151] hover:text-[#1A1D26] transition-colors">
+                Se connecter
+              </Link>
+              <Link href="/register" className="inline-flex h-9 items-center rounded-xl bg-[#2B7FFF] px-4 text-sm font-medium text-white hover:bg-[#1A6BE6] transition-colors shadow-sm">
+                Commencer
+              </Link>
+            </div>
+          </div>
+        </div>
+      </nav>
+
+      {/* Hero */}
+      <section className="pt-32 pb-20 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-4xl mx-auto text-center">
+          <div className="inline-flex items-center gap-2 rounded-full bg-[#EBF2FF] px-4 py-1.5 text-sm font-medium text-[#2B7FFF] mb-6">
+            <Zap className="h-4 w-4" />
+            Plateforme #1 de gestion WiFi en Afrique
+          </div>
+          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-[#0B1E4D] leading-tight">
+            Gérez vos zones WiFi.{" "}
+            <span className="text-[#2B7FFF]">Encaissez en Mobile Money.</span>
+          </h1>
+          <p className="mt-6 text-lg text-[#6B7280] max-w-2xl mx-auto leading-relaxed">
+            Fluxion WiFi vous permet de monétiser vos hotspots WiFi avec des tickets prépayés,
+            des portails captifs personnalisés et le paiement Mobile Money intégré.
+          </p>
+          <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
+            <Link href="/register" className="inline-flex h-12 items-center gap-2 rounded-xl bg-[#2B7FFF] px-6 text-base font-medium text-white hover:bg-[#1A6BE6] transition-colors shadow-md">
+              Créer mon compte gratuitement
+              <ArrowRight className="h-4 w-4" />
+            </Link>
+            <a href="#how-it-works" className="inline-flex h-12 items-center gap-2 rounded-xl border border-[#D1D5DB] px-6 text-base font-medium text-[#374151] hover:bg-[#F5F7FA] transition-colors">
+              Voir comment ça marche
+            </a>
+          </div>
+          <p className="mt-4 text-xs text-[#9CA3AF]">Gratuit pour commencer · Aucune carte requise</p>
+        </div>
+      </section>
+
+      {/* Features */}
+      <section id="features" className="py-20 px-4 sm:px-6 lg:px-8 bg-[#F5F7FA]">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-14">
+            <h2 className="text-3xl font-bold text-[#0B1E4D]">Tout ce dont vous avez besoin</h2>
+            <p className="mt-3 text-[#6B7280] max-w-xl mx-auto">
+              Une plateforme complète pour gérer, monétiser et superviser vos zones WiFi.
+            </p>
+          </div>
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {features.map((feature) => (
+              <div key={feature.title} className="rounded-2xl bg-white border border-[#E8ECF1] p-6 shadow-[0_1px_3px_rgba(0,0,0,0.04)] hover:shadow-md transition-shadow">
+                <div className="rounded-xl bg-[#EBF2FF] p-3 w-fit">
+                  <feature.icon className="h-6 w-6 text-[#2B7FFF]" />
+                </div>
+                <h3 className="mt-4 text-base font-semibold text-[#1A1D26]">{feature.title}</h3>
+                <p className="mt-2 text-sm text-[#6B7280] leading-relaxed">{feature.description}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* How it works */}
+      <section id="how-it-works" className="py-20 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-5xl mx-auto">
+          <div className="text-center mb-14">
+            <h2 className="text-3xl font-bold text-[#0B1E4D]">Opérationnel en 4 étapes</h2>
+            <p className="mt-3 text-[#6B7280]">De l&apos;inscription à la première vente en moins de 10 minutes.</p>
+          </div>
+          <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
+            {steps.map((s) => (
+              <div key={s.step} className="text-center">
+                <div className="mx-auto h-14 w-14 rounded-2xl bg-[#2B7FFF] flex items-center justify-center text-white text-lg font-bold shadow-md">
+                  {s.step}
+                </div>
+                <h3 className="mt-4 text-base font-semibold text-[#1A1D26]">{s.title}</h3>
+                <p className="mt-2 text-sm text-[#6B7280]">{s.description}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Pricing */}
+      <section id="pricing" className="py-20 px-4 sm:px-6 lg:px-8 bg-[#F5F7FA]">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-14">
+            <h2 className="text-3xl font-bold text-[#0B1E4D]">Tarifs simples et transparents</h2>
+            <p className="mt-3 text-[#6B7280]">Commencez gratuitement, passez à Pro quand vous êtes prêt.</p>
+          </div>
+          <div className="grid gap-6 lg:grid-cols-3">
+            {pricing.map((plan) => (
+              <div
+                key={plan.name}
+                className={`rounded-2xl p-6 ${
+                  plan.highlighted
+                    ? "bg-[#0B1E4D] text-white ring-2 ring-[#2B7FFF] shadow-xl scale-[1.02]"
+                    : "bg-white border border-[#E8ECF1] shadow-[0_1px_3px_rgba(0,0,0,0.04)]"
+                }`}
+              >
+                {plan.highlighted && (
+                  <div className="inline-flex items-center gap-1 rounded-full bg-[#2B7FFF] px-3 py-1 text-xs font-medium text-white mb-4">
+                    <Star className="h-3 w-3" /> Populaire
+                  </div>
+                )}
+                <h3 className={`text-lg font-semibold ${plan.highlighted ? "text-white" : "text-[#1A1D26]"}`}>
+                  {plan.name}
+                </h3>
+                <div className="mt-3 flex items-baseline gap-1">
+                  <span className={`text-3xl font-bold ${plan.highlighted ? "text-white" : "text-[#1A1D26]"}`}>
+                    {plan.price}
+                  </span>
+                  {plan.period && (
+                    <span className={`text-sm ${plan.highlighted ? "text-white/70" : "text-[#6B7280]"}`}>
+                      {plan.period}
+                    </span>
+                  )}
+                </div>
+                <p className={`mt-2 text-sm ${plan.highlighted ? "text-white/70" : "text-[#6B7280]"}`}>
+                  {plan.description}
+                </p>
+                <ul className="mt-6 space-y-3">
+                  {plan.features.map((f) => (
+                    <li key={f} className="flex items-center gap-2 text-sm">
+                      <CheckCircle className={`h-4 w-4 shrink-0 ${plan.highlighted ? "text-[#2B7FFF]" : "text-emerald-500"}`} />
+                      <span className={plan.highlighted ? "text-white/90" : "text-[#374151]"}>{f}</span>
+                    </li>
+                  ))}
+                </ul>
+                <Link
+                  href="/register"
+                  className={`mt-6 block text-center h-11 leading-[44px] rounded-xl text-sm font-medium transition-colors ${
+                    plan.highlighted
+                      ? "bg-[#2B7FFF] text-white hover:bg-[#1A6BE6]"
+                      : "border border-[#D1D5DB] text-[#374151] hover:bg-[#F5F7FA]"
+                  }`}
+                >
+                  {plan.cta}
+                </Link>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* CTA */}
+      <section className="py-20 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-3xl mx-auto text-center">
+          <h2 className="text-3xl font-bold text-[#0B1E4D]">Prêt à connecter votre monde ?</h2>
+          <p className="mt-4 text-[#6B7280] text-lg">
+            Rejoignez les opérateurs WiFi qui utilisent Fluxion WiFi pour gérer et monétiser leurs hotspots.
+          </p>
+          <Link href="/register" className="mt-8 inline-flex h-12 items-center gap-2 rounded-xl bg-[#2B7FFF] px-8 text-base font-medium text-white hover:bg-[#1A6BE6] transition-colors shadow-md">
+            Créer mon compte gratuitement
+            <ArrowRight className="h-4 w-4" />
+          </Link>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="border-t border-[#E8ECF1] bg-[#F5F7FA] py-10 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-2">
+            <Image src="/logo.jpg" alt="Fluxion WiFi" width={28} height={28} className="rounded-lg" />
+            <span className="text-sm font-semibold text-[#0B1E4D]">Fluxion WiFi</span>
+          </div>
+          <p className="text-xs text-[#9CA3AF]">
+            © {new Date().getFullYear()} Fluxion WiFi. Connecte votre monde.
+          </p>
+          <div className="flex gap-6">
+            <a href="#" className="text-xs text-[#6B7280] hover:text-[#1A1D26]">Conditions</a>
+            <a href="#" className="text-xs text-[#6B7280] hover:text-[#1A1D26]">Confidentialité</a>
+            <a href="#" className="text-xs text-[#6B7280] hover:text-[#1A1D26]">Contact</a>
+          </div>
+        </div>
+      </footer>
+    </div>
+  );
+}
