@@ -124,17 +124,17 @@ export default function LandingPage() {
       {/* Hero */}
       <section className="pt-28 pb-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
+          <ScrollReveal delay={0.1} distance={20}>
+            <div className="flex justify-center mb-10">
+              <div className="inline-flex items-center gap-2 rounded-full bg-[#EBF2FF] px-4 py-1.5 text-sm font-medium text-[#2B7FFF]">
+                <Zap className="h-4 w-4" />
+                Plateforme #1 de gestion WiFi en Afrique
+              </div>
+            </div>
+          </ScrollReveal>
           <div className="flex flex-col lg:flex-row items-center gap-12 lg:gap-16">
             {/* Text */}
             <div className="flex-1 text-center lg:text-left">
-              <ScrollReveal delay={0.1} distance={20}>
-                <div className="flex justify-center mb-6">
-                  <div className="inline-flex items-center gap-2 rounded-full bg-[#EBF2FF] px-4 py-1.5 text-sm font-medium text-[#2B7FFF]">
-                    <Zap className="h-4 w-4" />
-                    Plateforme #1 de gestion WiFi en Afrique
-                  </div>
-                </div>
-              </ScrollReveal>
               <ScrollReveal delay={0.2} distance={25}>
                 <h1 className="text-4xl sm:text-5xl lg:text-[3.25rem] xl:text-6xl font-bold text-[#0B1E4D] leading-tight">
                   Gérez vos zones WiFi.{" "}
