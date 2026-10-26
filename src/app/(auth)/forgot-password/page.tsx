@@ -35,8 +35,8 @@ export default function ForgotPasswordPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-2.5 lg:hidden mb-4">
-        <Image src="/logo.jpg" alt="Fluxion WiFi" width={40} height={40} className="rounded-xl" />
-        <span className="text-xl font-bold text-[#0B1E4D]">Fluxion WiFi</span>
+        <Image src="/logo.jpg" alt="FLUXIONWIFI" width={40} height={40} className="rounded-xl" />
+        <span className="text-xl font-bold text-[#0B1E4D]">FLUXIONWIFI</span>
       </div>
 
       {sent ? (

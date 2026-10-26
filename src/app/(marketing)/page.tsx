@@ -101,8 +101,8 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 items-center justify-between">
             <div className="flex items-center gap-2.5">
-              <Image src="/logo.jpg" alt="Fluxion WiFi" width={36} height={36} className="rounded-xl" />
-              <span className="text-lg font-bold text-[#0B1E4D]">Fluxion WiFi</span>
+              <Image src="/logo.jpg" alt="FLUXIONWIFI" width={36} height={36} className="rounded-xl" />
+              <span className="text-lg font-bold text-[#0B1E4D]">FLUXIONWIFI</span>
             </div>
             <div className="hidden md:flex items-center gap-8">
               <a href="#features" className="text-sm text-[#6B7280] hover:text-[#1A1D26] transition-colors">Fonctionnalités</a>
@@ -138,7 +138,7 @@ export default function LandingPage() {
           </ScrollReveal>
           <ScrollReveal delay={0.35}>
             <p className="mt-6 text-lg text-[#6B7280] max-w-2xl mx-auto leading-relaxed">
-              Fluxion WiFi vous permet de monétiser vos hotspots WiFi avec des tickets prépayés,
+              FLUXIONWIFI vous permet de monétiser vos hotspots WiFi avec des tickets prépayés,
               des portails captifs personnalisés et le paiement Mobile Money intégré.
             </p>
           </ScrollReveal>
@@ -268,7 +268,7 @@ export default function LandingPage() {
           <ScrollReveal>
             <h2 className="text-3xl font-bold text-[#0B1E4D]">Prêt à connecter votre monde ?</h2>
             <p className="mt-4 text-[#6B7280] text-lg">
-              Rejoignez les opérateurs WiFi qui utilisent Fluxion WiFi pour gérer et monétiser leurs hotspots.
+              Rejoignez les opérateurs WiFi qui utilisent FLUXIONWIFI pour gérer et monétiser leurs hotspots.
             </p>
           </ScrollReveal>
           <ScrollReveal delay={0.2}>
@@ -285,11 +285,11 @@ export default function LandingPage() {
         <ScrollReveal direction="none" duration={0.8}>
           <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-2">
-              <Image src="/logo.jpg" alt="Fluxion WiFi" width={28} height={28} className="rounded-lg" />
-              <span className="text-sm font-semibold text-[#0B1E4D]">Fluxion WiFi</span>
+              <Image src="/logo.jpg" alt="FLUXIONWIFI" width={28} height={28} className="rounded-lg" />
+              <span className="text-sm font-semibold text-[#0B1E4D]">FLUXIONWIFI</span>
             </div>
             <p className="text-xs text-[#9CA3AF]">
-              © 2026 Fluxion WiFi. Connecte votre monde.
+              © 2026 FLUXIONWIFI. Connecte votre monde.
             </p>
             <div className="flex gap-6">
               <a href="#" className="text-xs text-[#6B7280] hover:text-[#1A1D26]">Conditions</a>

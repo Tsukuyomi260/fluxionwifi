@@ -12,12 +12,12 @@ export default function AuthLayout({
         <div className="relative z-10 text-center text-white space-y-6 px-12">
           <Image
             src="/logo.jpg"
-            alt="Fluxion WiFi"
+            alt="FLUXIONWIFI"
             width={120}
             height={120}
             className="mx-auto rounded-2xl"
           />
-          <h1 className="text-3xl font-bold">Fluxion WiFi</h1>
+          <h1 className="text-3xl font-bold">FLUXIONWIFI</h1>
           <p className="text-lg text-white/80 leading-relaxed">
             La plateforme de gestion de zones WiFi avec paiement Mobile Money
             pour l&apos;Afrique.

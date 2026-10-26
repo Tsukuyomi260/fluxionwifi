@@ -41,8 +41,8 @@ export default function RegisterPage() {
   return (
     <div className="space-y-5">
       <div className="flex items-center gap-2.5 lg:hidden mb-2">
-        <Image src="/logo.jpg" alt="Fluxion WiFi" width={40} height={40} className="rounded-xl" />
-        <span className="text-xl font-bold text-[#0B1E4D]">Fluxion WiFi</span>
+        <Image src="/logo.jpg" alt="FLUXIONWIFI" width={40} height={40} className="rounded-xl" />
+        <span className="text-xl font-bold text-[#0B1E4D]">FLUXIONWIFI</span>
       </div>
 
       <div>

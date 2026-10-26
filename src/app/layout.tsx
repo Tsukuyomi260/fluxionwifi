@@ -8,7 +8,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Fluxion WiFi",
+  title: "FLUXIONWIFI",
   description:
     "Plateforme de gestion de zones Wi-Fi avec paiement Mobile Money",
 };

@@ -73,8 +73,8 @@ export function Sidebar({ mobile = false }: SidebarProps) {
       }
     >
       <div className="flex h-16 items-center gap-2.5 px-5 border-b border-border">
-        <Image src="/logo.jpg" alt="Fluxion WiFi" width={36} height={36} className="rounded-lg" />
-        <span className="text-base font-bold text-[#0B1E4D]">Fluxion WiFi</span>
+        <Image src="/logo.jpg" alt="FLUXIONWIFI" width={36} height={36} className="rounded-lg" />
+        <span className="text-base font-bold text-[#0B1E4D]">FLUXIONWIFI</span>
       </div>
 
       <nav className="flex-1 overflow-y-auto py-4 px-3">

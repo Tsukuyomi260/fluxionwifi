@@ -25,8 +25,8 @@ export function Header({
           <Menu className="h-5 w-5 text-[#6B7280]" />
         </button>
         <div className="flex items-center gap-2 lg:hidden">
-          <Image src="/logo.jpg" alt="Fluxion WiFi" width={28} height={28} className="rounded-lg" />
-          <span className="font-bold text-[#0B1E4D]">Fluxion WiFi</span>
+          <Image src="/logo.jpg" alt="FLUXIONWIFI" width={28} height={28} className="rounded-lg" />
+          <span className="font-bold text-[#0B1E4D]">FLUXIONWIFI</span>
         </div>
         <div className="hidden lg:block">
           <h1 className="text-lg font-semibold text-[#1A1D26]">{networkName}</h1>
