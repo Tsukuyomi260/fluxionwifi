@@ -13,6 +13,7 @@ import {
   CheckCircle,
   Star,
 } from "lucide-react";
+import { AnimatedSteps } from "@/components/marketing/animated-steps";
 
 const features = [
   {
@@ -45,13 +46,6 @@ const features = [
     title: "100% Mobile",
     description: "Interface optimisée pour smartphone. Gérez votre réseau depuis n'importe où.",
   },
-];
-
-const steps = [
-  { step: "01", title: "Créez votre compte", description: "Inscription gratuite en 2 minutes" },
-  { step: "02", title: "Configurez votre routeur", description: "Connectez votre MikroTik en quelques clics" },
-  { step: "03", title: "Personnalisez votre portail", description: "Choisissez un thème et ajoutez votre logo" },
-  { step: "04", title: "Vendez vos tickets", description: "Commencez à générer des revenus immédiatement" },
 ];
 
 const pricing = [
@@ -184,17 +178,7 @@ export default function LandingPage() {
             <h2 className="text-3xl font-bold text-[#0B1E4D]">Opérationnel en 4 étapes</h2>
             <p className="mt-3 text-[#6B7280]">De l&apos;inscription à la première vente en moins de 10 minutes.</p>
           </div>
-          <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
-            {steps.map((s) => (
-              <div key={s.step} className="text-center">
-                <div className="mx-auto h-14 w-14 rounded-2xl bg-[#2B7FFF] flex items-center justify-center text-white text-lg font-bold shadow-md">
-                  {s.step}
-                </div>
-                <h3 className="mt-4 text-base font-semibold text-[#1A1D26]">{s.title}</h3>
-                <p className="mt-2 text-sm text-[#6B7280]">{s.description}</p>
-              </div>
-            ))}
-          </div>
+          <AnimatedSteps />
         </div>
       </section>
 
