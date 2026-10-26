@@ -128,9 +128,11 @@ export default function LandingPage() {
             {/* Text */}
             <div className="flex-1 text-center lg:text-left">
               <ScrollReveal delay={0.1} distance={20}>
-                <div className="inline-flex items-center gap-2 rounded-full bg-[#EBF2FF] px-4 py-1.5 text-sm font-medium text-[#2B7FFF] mb-6">
-                  <Zap className="h-4 w-4" />
-                  Plateforme #1 de gestion WiFi en Afrique
+                <div className="flex justify-center mb-6">
+                  <div className="inline-flex items-center gap-2 rounded-full bg-[#EBF2FF] px-4 py-1.5 text-sm font-medium text-[#2B7FFF]">
+                    <Zap className="h-4 w-4" />
+                    Plateforme #1 de gestion WiFi en Afrique
+                  </div>
                 </div>
               </ScrollReveal>
               <ScrollReveal delay={0.2} distance={25}>
@@ -146,16 +148,16 @@ export default function LandingPage() {
                 </p>
               </ScrollReveal>
               <ScrollReveal delay={0.5}>
-                <div className="mt-8 flex flex-col sm:flex-row items-center lg:items-start justify-center lg:justify-start gap-4">
-                  <Link href="/register" className="inline-flex h-12 items-center gap-2 rounded-xl bg-[#2B7FFF] px-6 text-base font-medium text-white hover:bg-[#1A6BE6] transition-colors shadow-md">
-                    Créer mon compte gratuitement
+                <div className="mt-8 flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-3">
+                  <Link href="/register" className="inline-flex h-11 sm:h-12 items-center justify-center gap-2 rounded-xl bg-[#2B7FFF] px-5 sm:px-6 text-sm sm:text-base font-medium text-white hover:bg-[#1A6BE6] transition-colors shadow-md w-full sm:w-auto">
+                    Créer mon compte
                     <ArrowRight className="h-4 w-4" />
                   </Link>
-                  <a href="#how-it-works" className="inline-flex h-12 items-center gap-2 rounded-xl border border-[#D1D5DB] px-6 text-base font-medium text-[#374151] hover:bg-[#F5F7FA] transition-colors">
-                    Voir comment ça marche
+                  <a href="#how-it-works" className="inline-flex h-11 sm:h-12 items-center justify-center gap-2 rounded-xl border border-[#D1D5DB] px-5 sm:px-6 text-sm sm:text-base font-medium text-[#374151] hover:bg-[#F5F7FA] transition-colors w-full sm:w-auto">
+                    Comment ça marche
                   </a>
                 </div>
-                <p className="mt-4 text-xs text-[#9CA3AF]">Gratuit pour commencer · Aucune carte requise</p>
+                <p className="mt-4 text-xs text-[#9CA3AF] text-center lg:text-left">Gratuit · Aucune carte requise</p>
               </ScrollReveal>
             </div>
 
