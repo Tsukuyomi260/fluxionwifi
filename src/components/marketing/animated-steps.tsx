@@ -28,81 +28,84 @@ export function AnimatedSteps() {
     <div ref={ref} className="relative">
       {/* Desktop horizontal */}
       <div className="hidden lg:block">
-        <div className="relative flex items-start justify-between max-w-4xl mx-auto">
-          {/* Connecting line */}
-          <div className="absolute top-7 left-[calc(12.5%+28px)] right-[calc(12.5%+28px)] h-[2px] bg-[#E8ECF1]">
-            <div
-              className="h-full bg-[#2B7FFF] origin-left"
-              style={{
-                transform: visible ? "scaleX(1)" : "scaleX(0)",
-                transition: "transform 1.5s cubic-bezier(0.4,0,0.2,1) 0.5s",
-              }}
-            />
-            {/* Traveling dots */}
-            {visible && (
-              <>
-                <span className="step-dot" style={{ animationDelay: "0.8s" }} />
-                <span className="step-dot" style={{ animationDelay: "1.4s" }} />
-                <span className="step-dot" style={{ animationDelay: "2.0s" }} />
-              </>
-            )}
+        <div className="relative max-w-4xl mx-auto">
+          {/* Steps row */}
+          <div className="flex items-start justify-between">
+            {steps.map((s, i) => (
+              <div
+                key={s.step}
+                className="relative flex flex-col items-center text-center w-1/4 z-10"
+                style={{
+                  opacity: visible ? 1 : 0,
+                  transform: visible ? "translateY(0)" : "translateY(20px)",
+                  transition: `opacity 0.6s ease ${0.3 + i * 0.4}s, transform 0.6s ease ${0.3 + i * 0.4}s`,
+                }}
+              >
+                <div className="relative">
+                  <svg className="h-14 w-14" viewBox="0 0 56 56">
+                    <circle cx="28" cy="28" r="26" fill="white" stroke="#E8ECF1" strokeWidth="2" />
+                    <circle
+                      cx="28" cy="28" r="26"
+                      fill="none"
+                      stroke="#2B7FFF"
+                      strokeWidth="2.5"
+                      strokeLinecap="round"
+                      strokeDasharray="163.36"
+                      strokeDashoffset={visible ? "0" : "163.36"}
+                      style={{
+                        transition: `stroke-dashoffset 0.8s cubic-bezier(0.4,0,0.2,1) ${0.5 + i * 0.4}s`,
+                      }}
+                      transform="rotate(-90 28 28)"
+                    />
+                  </svg>
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <span
+                      className="text-sm font-bold text-[#2B7FFF]"
+                      style={{
+                        opacity: visible ? 1 : 0,
+                        transform: visible ? "scale(1)" : "scale(0.5)",
+                        transition: `all 0.4s ease ${0.7 + i * 0.4}s`,
+                      }}
+                    >
+                      {s.step}
+                    </span>
+                  </div>
+                  {visible && (
+                    <div
+                      className="absolute inset-0 rounded-full border-2 border-[#2B7FFF] animate-step-pulse"
+                      style={{ animationDelay: `${1.0 + i * 0.4}s` }}
+                    />
+                  )}
+                </div>
+                <h3 className="mt-4 text-base font-semibold text-[#1A1D26]">{s.title}</h3>
+                <p className="mt-2 text-sm text-[#6B7280] max-w-[180px]">{s.description}</p>
+              </div>
+            ))}
           </div>
 
-          {steps.map((s, i) => (
+          {/* 3 separate line segments between circles */}
+          {[0, 1, 2].map((i) => (
             <div
-              key={s.step}
-              className="relative flex flex-col items-center text-center w-1/4"
+              key={i}
+              className="absolute top-7 h-[2px] bg-[#E8ECF1]"
               style={{
-                opacity: visible ? 1 : 0,
-                transform: visible ? "translateY(0)" : "translateY(20px)",
-                transition: `opacity 0.6s ease ${0.3 + i * 0.4}s, transform 0.6s ease ${0.3 + i * 0.4}s`,
+                left: `calc(${12.5 + i * 25}% + 30px)`,
+                right: `calc(${62.5 - i * 25}% + 30px)`,
               }}
             >
-              {/* Animated circle */}
-              <div className="relative">
-                <svg className="h-14 w-14" viewBox="0 0 56 56">
-                  <circle
-                    cx="28" cy="28" r="26"
-                    fill="none"
-                    stroke="#E8ECF1"
-                    strokeWidth="2"
-                  />
-                  <circle
-                    cx="28" cy="28" r="26"
-                    fill="none"
-                    stroke="#2B7FFF"
-                    strokeWidth="2.5"
-                    strokeLinecap="round"
-                    strokeDasharray="163.36"
-                    strokeDashoffset={visible ? "0" : "163.36"}
-                    style={{
-                      transition: `stroke-dashoffset 0.8s cubic-bezier(0.4,0,0.2,1) ${0.5 + i * 0.4}s`,
-                    }}
-                    transform="rotate(-90 28 28)"
-                  />
-                </svg>
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <span
-                    className="text-sm font-bold text-[#2B7FFF]"
-                    style={{
-                      opacity: visible ? 1 : 0,
-                      transform: visible ? "scale(1)" : "scale(0.5)",
-                      transition: `all 0.4s ease ${0.7 + i * 0.4}s`,
-                    }}
-                  >
-                    {s.step}
-                  </span>
-                </div>
-                {/* Pulse ring */}
-                {visible && (
-                  <div
-                    className="absolute inset-0 rounded-full border-2 border-[#2B7FFF] animate-step-pulse"
-                    style={{ animationDelay: `${1.0 + i * 0.4}s` }}
-                  />
-                )}
-              </div>
-              <h3 className="mt-4 text-base font-semibold text-[#1A1D26]">{s.title}</h3>
-              <p className="mt-2 text-sm text-[#6B7280] max-w-[180px]">{s.description}</p>
+              <div
+                className="h-full bg-[#2B7FFF] origin-left"
+                style={{
+                  transform: visible ? "scaleX(1)" : "scaleX(0)",
+                  transition: `transform 0.6s cubic-bezier(0.4,0,0.2,1) ${0.7 + i * 0.4}s`,
+                }}
+              />
+              {visible && (
+                <span
+                  className="step-dot"
+                  style={{ animationDelay: `${1.0 + i * 0.5}s` }}
+                />
+              )}
             </div>
           ))}
         </div>
@@ -111,7 +114,6 @@ export function AnimatedSteps() {
       {/* Mobile vertical */}
       <div className="lg:hidden">
         <div className="relative pl-10">
-          {/* Vertical line */}
           <div className="absolute left-[19px] top-0 bottom-0 w-[2px] bg-[#E8ECF1]">
             <div
               className="w-full bg-[#2B7FFF] origin-top"
@@ -174,14 +176,14 @@ export function AnimatedSteps() {
           margin-top: -3px;
           border-radius: 50%;
           background: #2B7FFF;
-          box-shadow: 0 0 6px rgba(43, 127, 255, 0.5);
+          box-shadow: 0 0 8px rgba(43, 127, 255, 0.6);
           opacity: 0;
-          animation: travelDot 2.5s ease-in-out forwards;
+          animation: travelDot 1.2s ease-in-out forwards;
         }
         @keyframes travelDot {
           0% { left: 0%; opacity: 0; }
-          5% { opacity: 1; }
-          95% { opacity: 1; }
+          10% { opacity: 1; }
+          90% { opacity: 1; }
           100% { left: 100%; opacity: 0; }
         }
         :global(.animate-step-pulse) {

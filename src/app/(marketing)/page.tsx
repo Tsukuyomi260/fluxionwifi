@@ -14,6 +14,7 @@ import {
   Star,
 } from "lucide-react";
 import { AnimatedSteps } from "@/components/marketing/animated-steps";
+import { ScrollReveal } from "@/components/marketing/scroll-reveal";
 
 const features = [
   {
@@ -94,7 +95,7 @@ const pricing = [
 
 export default function LandingPage() {
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white scroll-smooth">
       {/* Navigation */}
       <nav className="fixed top-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-md border-b border-[#E8ECF1]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -123,49 +124,61 @@ export default function LandingPage() {
       {/* Hero */}
       <section className="pt-32 pb-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto text-center">
-          <div className="inline-flex items-center gap-2 rounded-full bg-[#EBF2FF] px-4 py-1.5 text-sm font-medium text-[#2B7FFF] mb-6">
-            <Zap className="h-4 w-4" />
-            Plateforme #1 de gestion WiFi en Afrique
-          </div>
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-[#0B1E4D] leading-tight">
-            Gérez vos zones WiFi.{" "}
-            <span className="text-[#2B7FFF]">Encaissez en Mobile Money.</span>
-          </h1>
-          <p className="mt-6 text-lg text-[#6B7280] max-w-2xl mx-auto leading-relaxed">
-            Fluxion WiFi vous permet de monétiser vos hotspots WiFi avec des tickets prépayés,
-            des portails captifs personnalisés et le paiement Mobile Money intégré.
-          </p>
-          <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link href="/register" className="inline-flex h-12 items-center gap-2 rounded-xl bg-[#2B7FFF] px-6 text-base font-medium text-white hover:bg-[#1A6BE6] transition-colors shadow-md">
-              Créer mon compte gratuitement
-              <ArrowRight className="h-4 w-4" />
-            </Link>
-            <a href="#how-it-works" className="inline-flex h-12 items-center gap-2 rounded-xl border border-[#D1D5DB] px-6 text-base font-medium text-[#374151] hover:bg-[#F5F7FA] transition-colors">
-              Voir comment ça marche
-            </a>
-          </div>
-          <p className="mt-4 text-xs text-[#9CA3AF]">Gratuit pour commencer · Aucune carte requise</p>
+          <ScrollReveal delay={0.1} distance={20}>
+            <div className="inline-flex items-center gap-2 rounded-full bg-[#EBF2FF] px-4 py-1.5 text-sm font-medium text-[#2B7FFF] mb-6">
+              <Zap className="h-4 w-4" />
+              Plateforme #1 de gestion WiFi en Afrique
+            </div>
+          </ScrollReveal>
+          <ScrollReveal delay={0.2} distance={25}>
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-[#0B1E4D] leading-tight">
+              Gérez vos zones WiFi.{" "}
+              <span className="text-[#2B7FFF]">Encaissez en Mobile Money.</span>
+            </h1>
+          </ScrollReveal>
+          <ScrollReveal delay={0.35}>
+            <p className="mt-6 text-lg text-[#6B7280] max-w-2xl mx-auto leading-relaxed">
+              Fluxion WiFi vous permet de monétiser vos hotspots WiFi avec des tickets prépayés,
+              des portails captifs personnalisés et le paiement Mobile Money intégré.
+            </p>
+          </ScrollReveal>
+          <ScrollReveal delay={0.5}>
+            <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
+              <Link href="/register" className="inline-flex h-12 items-center gap-2 rounded-xl bg-[#2B7FFF] px-6 text-base font-medium text-white hover:bg-[#1A6BE6] transition-colors shadow-md">
+                Créer mon compte gratuitement
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+              <a href="#how-it-works" className="inline-flex h-12 items-center gap-2 rounded-xl border border-[#D1D5DB] px-6 text-base font-medium text-[#374151] hover:bg-[#F5F7FA] transition-colors">
+                Voir comment ça marche
+              </a>
+            </div>
+            <p className="mt-4 text-xs text-[#9CA3AF]">Gratuit pour commencer · Aucune carte requise</p>
+          </ScrollReveal>
         </div>
       </section>
 
       {/* Features */}
       <section id="features" className="py-20 px-4 sm:px-6 lg:px-8 bg-[#F5F7FA]">
         <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-14">
-            <h2 className="text-3xl font-bold text-[#0B1E4D]">Tout ce dont vous avez besoin</h2>
-            <p className="mt-3 text-[#6B7280] max-w-xl mx-auto">
-              Une plateforme complète pour gérer, monétiser et superviser vos zones WiFi.
-            </p>
-          </div>
+          <ScrollReveal>
+            <div className="text-center mb-14">
+              <h2 className="text-3xl font-bold text-[#0B1E4D]">Tout ce dont vous avez besoin</h2>
+              <p className="mt-3 text-[#6B7280] max-w-xl mx-auto">
+                Une plateforme complète pour gérer, monétiser et superviser vos zones WiFi.
+              </p>
+            </div>
+          </ScrollReveal>
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {features.map((feature) => (
-              <div key={feature.title} className="rounded-2xl bg-white border border-[#E8ECF1] p-6 shadow-[0_1px_3px_rgba(0,0,0,0.04)] hover:shadow-md transition-shadow">
-                <div className="rounded-xl bg-[#EBF2FF] p-3 w-fit">
-                  <feature.icon className="h-6 w-6 text-[#2B7FFF]" />
+            {features.map((feature, i) => (
+              <ScrollReveal key={feature.title} delay={0.1 + i * 0.1}>
+                <div className="rounded-2xl bg-white border border-[#E8ECF1] p-6 shadow-[0_1px_3px_rgba(0,0,0,0.04)] hover:shadow-md transition-shadow h-full">
+                  <div className="rounded-xl bg-[#EBF2FF] p-3 w-fit">
+                    <feature.icon className="h-6 w-6 text-[#2B7FFF]" />
+                  </div>
+                  <h3 className="mt-4 text-base font-semibold text-[#1A1D26]">{feature.title}</h3>
+                  <p className="mt-2 text-sm text-[#6B7280] leading-relaxed">{feature.description}</p>
                 </div>
-                <h3 className="mt-4 text-base font-semibold text-[#1A1D26]">{feature.title}</h3>
-                <p className="mt-2 text-sm text-[#6B7280] leading-relaxed">{feature.description}</p>
-              </div>
+              </ScrollReveal>
             ))}
           </div>
         </div>
@@ -174,10 +187,12 @@ export default function LandingPage() {
       {/* How it works */}
       <section id="how-it-works" className="py-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-5xl mx-auto">
-          <div className="text-center mb-14">
-            <h2 className="text-3xl font-bold text-[#0B1E4D]">Opérationnel en 4 étapes</h2>
-            <p className="mt-3 text-[#6B7280]">De l&apos;inscription à la première vente en moins de 10 minutes.</p>
-          </div>
+          <ScrollReveal>
+            <div className="text-center mb-14">
+              <h2 className="text-3xl font-bold text-[#0B1E4D]">Opérationnel en 4 étapes</h2>
+              <p className="mt-3 text-[#6B7280]">De l&apos;inscription à la première vente en moins de 10 minutes.</p>
+            </div>
+          </ScrollReveal>
           <AnimatedSteps />
         </div>
       </section>
@@ -185,60 +200,63 @@ export default function LandingPage() {
       {/* Pricing */}
       <section id="pricing" className="py-20 px-4 sm:px-6 lg:px-8 bg-[#F5F7FA]">
         <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-14">
-            <h2 className="text-3xl font-bold text-[#0B1E4D]">Tarifs simples et transparents</h2>
-            <p className="mt-3 text-[#6B7280]">Commencez gratuitement, passez à Pro quand vous êtes prêt.</p>
-          </div>
+          <ScrollReveal>
+            <div className="text-center mb-14">
+              <h2 className="text-3xl font-bold text-[#0B1E4D]">Tarifs simples et transparents</h2>
+              <p className="mt-3 text-[#6B7280]">Commencez gratuitement, passez à Pro quand vous êtes prêt.</p>
+            </div>
+          </ScrollReveal>
           <div className="grid gap-6 lg:grid-cols-3">
-            {pricing.map((plan) => (
-              <div
-                key={plan.name}
-                className={`rounded-2xl p-6 ${
-                  plan.highlighted
-                    ? "bg-[#0B1E4D] text-white ring-2 ring-[#2B7FFF] shadow-xl scale-[1.02]"
-                    : "bg-white border border-[#E8ECF1] shadow-[0_1px_3px_rgba(0,0,0,0.04)]"
-                }`}
-              >
-                {plan.highlighted && (
-                  <div className="inline-flex items-center gap-1 rounded-full bg-[#2B7FFF] px-3 py-1 text-xs font-medium text-white mb-4">
-                    <Star className="h-3 w-3" /> Populaire
-                  </div>
-                )}
-                <h3 className={`text-lg font-semibold ${plan.highlighted ? "text-white" : "text-[#1A1D26]"}`}>
-                  {plan.name}
-                </h3>
-                <div className="mt-3 flex items-baseline gap-1">
-                  <span className={`text-3xl font-bold ${plan.highlighted ? "text-white" : "text-[#1A1D26]"}`}>
-                    {plan.price}
-                  </span>
-                  {plan.period && (
-                    <span className={`text-sm ${plan.highlighted ? "text-white/70" : "text-[#6B7280]"}`}>
-                      {plan.period}
-                    </span>
-                  )}
-                </div>
-                <p className={`mt-2 text-sm ${plan.highlighted ? "text-white/70" : "text-[#6B7280]"}`}>
-                  {plan.description}
-                </p>
-                <ul className="mt-6 space-y-3">
-                  {plan.features.map((f) => (
-                    <li key={f} className="flex items-center gap-2 text-sm">
-                      <CheckCircle className={`h-4 w-4 shrink-0 ${plan.highlighted ? "text-[#2B7FFF]" : "text-emerald-500"}`} />
-                      <span className={plan.highlighted ? "text-white/90" : "text-[#374151]"}>{f}</span>
-                    </li>
-                  ))}
-                </ul>
-                <Link
-                  href="/register"
-                  className={`mt-6 block text-center h-11 leading-[44px] rounded-xl text-sm font-medium transition-colors ${
+            {pricing.map((plan, i) => (
+              <ScrollReveal key={plan.name} delay={0.15 * i}>
+                <div
+                  className={`rounded-2xl p-6 h-full ${
                     plan.highlighted
-                      ? "bg-[#2B7FFF] text-white hover:bg-[#1A6BE6]"
-                      : "border border-[#D1D5DB] text-[#374151] hover:bg-[#F5F7FA]"
+                      ? "bg-[#0B1E4D] text-white ring-2 ring-[#2B7FFF] shadow-xl scale-[1.02]"
+                      : "bg-white border border-[#E8ECF1] shadow-[0_1px_3px_rgba(0,0,0,0.04)]"
                   }`}
                 >
-                  {plan.cta}
-                </Link>
-              </div>
+                  {plan.highlighted && (
+                    <div className="inline-flex items-center gap-1 rounded-full bg-[#2B7FFF] px-3 py-1 text-xs font-medium text-white mb-4">
+                      <Star className="h-3 w-3" /> Populaire
+                    </div>
+                  )}
+                  <h3 className={`text-lg font-semibold ${plan.highlighted ? "text-white" : "text-[#1A1D26]"}`}>
+                    {plan.name}
+                  </h3>
+                  <div className="mt-3 flex items-baseline gap-1">
+                    <span className={`text-3xl font-bold ${plan.highlighted ? "text-white" : "text-[#1A1D26]"}`}>
+                      {plan.price}
+                    </span>
+                    {plan.period && (
+                      <span className={`text-sm ${plan.highlighted ? "text-white/70" : "text-[#6B7280]"}`}>
+                        {plan.period}
+                      </span>
+                    )}
+                  </div>
+                  <p className={`mt-2 text-sm ${plan.highlighted ? "text-white/70" : "text-[#6B7280]"}`}>
+                    {plan.description}
+                  </p>
+                  <ul className="mt-6 space-y-3">
+                    {plan.features.map((f) => (
+                      <li key={f} className="flex items-center gap-2 text-sm">
+                        <CheckCircle className={`h-4 w-4 shrink-0 ${plan.highlighted ? "text-[#2B7FFF]" : "text-emerald-500"}`} />
+                        <span className={plan.highlighted ? "text-white/90" : "text-[#374151]"}>{f}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  <Link
+                    href="/register"
+                    className={`mt-6 block text-center h-11 leading-[44px] rounded-xl text-sm font-medium transition-colors ${
+                      plan.highlighted
+                        ? "bg-[#2B7FFF] text-white hover:bg-[#1A6BE6]"
+                        : "border border-[#D1D5DB] text-[#374151] hover:bg-[#F5F7FA]"
+                    }`}
+                  >
+                    {plan.cta}
+                  </Link>
+                </div>
+              </ScrollReveal>
             ))}
           </div>
         </div>
@@ -247,33 +265,39 @@ export default function LandingPage() {
       {/* CTA */}
       <section className="py-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-3xl mx-auto text-center">
-          <h2 className="text-3xl font-bold text-[#0B1E4D]">Prêt à connecter votre monde ?</h2>
-          <p className="mt-4 text-[#6B7280] text-lg">
-            Rejoignez les opérateurs WiFi qui utilisent Fluxion WiFi pour gérer et monétiser leurs hotspots.
-          </p>
-          <Link href="/register" className="mt-8 inline-flex h-12 items-center gap-2 rounded-xl bg-[#2B7FFF] px-8 text-base font-medium text-white hover:bg-[#1A6BE6] transition-colors shadow-md">
-            Créer mon compte gratuitement
-            <ArrowRight className="h-4 w-4" />
-          </Link>
+          <ScrollReveal>
+            <h2 className="text-3xl font-bold text-[#0B1E4D]">Prêt à connecter votre monde ?</h2>
+            <p className="mt-4 text-[#6B7280] text-lg">
+              Rejoignez les opérateurs WiFi qui utilisent Fluxion WiFi pour gérer et monétiser leurs hotspots.
+            </p>
+          </ScrollReveal>
+          <ScrollReveal delay={0.2}>
+            <Link href="/register" className="mt-8 inline-flex h-12 items-center gap-2 rounded-xl bg-[#2B7FFF] px-8 text-base font-medium text-white hover:bg-[#1A6BE6] transition-colors shadow-md">
+              Créer mon compte gratuitement
+              <ArrowRight className="h-4 w-4" />
+            </Link>
+          </ScrollReveal>
         </div>
       </section>
 
       {/* Footer */}
       <footer className="border-t border-[#E8ECF1] bg-[#F5F7FA] py-10 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
-            <Image src="/logo.jpg" alt="Fluxion WiFi" width={28} height={28} className="rounded-lg" />
-            <span className="text-sm font-semibold text-[#0B1E4D]">Fluxion WiFi</span>
+        <ScrollReveal direction="none" duration={0.8}>
+          <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-2">
+              <Image src="/logo.jpg" alt="Fluxion WiFi" width={28} height={28} className="rounded-lg" />
+              <span className="text-sm font-semibold text-[#0B1E4D]">Fluxion WiFi</span>
+            </div>
+            <p className="text-xs text-[#9CA3AF]">
+              © 2026 Fluxion WiFi. Connecte votre monde.
+            </p>
+            <div className="flex gap-6">
+              <a href="#" className="text-xs text-[#6B7280] hover:text-[#1A1D26]">Conditions</a>
+              <a href="#" className="text-xs text-[#6B7280] hover:text-[#1A1D26]">Confidentialité</a>
+              <a href="#" className="text-xs text-[#6B7280] hover:text-[#1A1D26]">Contact</a>
+            </div>
           </div>
-          <p className="text-xs text-[#9CA3AF]">
-            © 2026 Fluxion WiFi. Connecte votre monde.
-          </p>
-          <div className="flex gap-6">
-            <a href="#" className="text-xs text-[#6B7280] hover:text-[#1A1D26]">Conditions</a>
-            <a href="#" className="text-xs text-[#6B7280] hover:text-[#1A1D26]">Confidentialité</a>
-            <a href="#" className="text-xs text-[#6B7280] hover:text-[#1A1D26]">Contact</a>
-          </div>
-        </div>
+        </ScrollReveal>
       </footer>
     </div>
   );
