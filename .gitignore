@@ -44,6 +44,8 @@ ANALYSE-EVISIONS-CONNECT.md
 *.jpeg
 *.png
 !public/**
+!src/app/icon.png
+!src/app/apple-icon.png
 
 # vercel
 .vercel
