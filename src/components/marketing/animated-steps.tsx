@@ -113,7 +113,7 @@ export function AnimatedSteps() {
 
       {/* Mobile vertical */}
       <div className="lg:hidden">
-        <div className="relative pl-10">
+        <div className="relative pl-14">
           <div className="absolute left-[19px] top-0 bottom-0 w-[2px] bg-[#E8ECF1]">
             <div
               className="w-full bg-[#2B7FFF] origin-top"
@@ -135,7 +135,7 @@ export function AnimatedSteps() {
                   transition: `opacity 0.6s ease ${0.4 + i * 0.35}s, transform 0.6s ease ${0.4 + i * 0.35}s`,
                 }}
               >
-                <div className="absolute -left-10">
+                <div className="absolute -left-14">
                   <div className="relative">
                     <svg className="h-10 w-10" viewBox="0 0 40 40">
                       <circle cx="20" cy="20" r="18" fill="white" stroke="#E8ECF1" strokeWidth="2" />
