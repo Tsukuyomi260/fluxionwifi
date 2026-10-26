@@ -122,38 +122,58 @@ export default function LandingPage() {
       </nav>
 
       {/* Hero */}
-      <section className="pt-32 pb-20 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-4xl mx-auto text-center">
-          <ScrollReveal delay={0.1} distance={20}>
-            <div className="inline-flex items-center gap-2 rounded-full bg-[#EBF2FF] px-4 py-1.5 text-sm font-medium text-[#2B7FFF] mb-6">
-              <Zap className="h-4 w-4" />
-              Plateforme #1 de gestion WiFi en Afrique
+      <section className="pt-28 pb-20 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex flex-col lg:flex-row items-center gap-12 lg:gap-16">
+            {/* Text */}
+            <div className="flex-1 text-center lg:text-left">
+              <ScrollReveal delay={0.1} distance={20}>
+                <div className="inline-flex items-center gap-2 rounded-full bg-[#EBF2FF] px-4 py-1.5 text-sm font-medium text-[#2B7FFF] mb-6">
+                  <Zap className="h-4 w-4" />
+                  Plateforme #1 de gestion WiFi en Afrique
+                </div>
+              </ScrollReveal>
+              <ScrollReveal delay={0.2} distance={25}>
+                <h1 className="text-4xl sm:text-5xl lg:text-[3.25rem] xl:text-6xl font-bold text-[#0B1E4D] leading-tight">
+                  Gérez vos zones WiFi.{" "}
+                  <span className="text-[#2B7FFF]">Encaissez en Mobile Money.</span>
+                </h1>
+              </ScrollReveal>
+              <ScrollReveal delay={0.35}>
+                <p className="mt-6 text-lg text-[#6B7280] max-w-xl mx-auto lg:mx-0 leading-relaxed">
+                  FLUXIONWIFI vous permet de monétiser vos hotspots WiFi avec des tickets prépayés,
+                  des portails captifs personnalisés et le paiement Mobile Money intégré.
+                </p>
+              </ScrollReveal>
+              <ScrollReveal delay={0.5}>
+                <div className="mt-8 flex flex-col sm:flex-row items-center lg:items-start justify-center lg:justify-start gap-4">
+                  <Link href="/register" className="inline-flex h-12 items-center gap-2 rounded-xl bg-[#2B7FFF] px-6 text-base font-medium text-white hover:bg-[#1A6BE6] transition-colors shadow-md">
+                    Créer mon compte gratuitement
+                    <ArrowRight className="h-4 w-4" />
+                  </Link>
+                  <a href="#how-it-works" className="inline-flex h-12 items-center gap-2 rounded-xl border border-[#D1D5DB] px-6 text-base font-medium text-[#374151] hover:bg-[#F5F7FA] transition-colors">
+                    Voir comment ça marche
+                  </a>
+                </div>
+                <p className="mt-4 text-xs text-[#9CA3AF]">Gratuit pour commencer · Aucune carte requise</p>
+              </ScrollReveal>
             </div>
-          </ScrollReveal>
-          <ScrollReveal delay={0.2} distance={25}>
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-[#0B1E4D] leading-tight">
-              Gérez vos zones WiFi.{" "}
-              <span className="text-[#2B7FFF]">Encaissez en Mobile Money.</span>
-            </h1>
-          </ScrollReveal>
-          <ScrollReveal delay={0.35}>
-            <p className="mt-6 text-lg text-[#6B7280] max-w-2xl mx-auto leading-relaxed">
-              FLUXIONWIFI vous permet de monétiser vos hotspots WiFi avec des tickets prépayés,
-              des portails captifs personnalisés et le paiement Mobile Money intégré.
-            </p>
-          </ScrollReveal>
-          <ScrollReveal delay={0.5}>
-            <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Link href="/register" className="inline-flex h-12 items-center gap-2 rounded-xl bg-[#2B7FFF] px-6 text-base font-medium text-white hover:bg-[#1A6BE6] transition-colors shadow-md">
-                Créer mon compte gratuitement
-                <ArrowRight className="h-4 w-4" />
-              </Link>
-              <a href="#how-it-works" className="inline-flex h-12 items-center gap-2 rounded-xl border border-[#D1D5DB] px-6 text-base font-medium text-[#374151] hover:bg-[#F5F7FA] transition-colors">
-                Voir comment ça marche
-              </a>
-            </div>
-            <p className="mt-4 text-xs text-[#9CA3AF]">Gratuit pour commencer · Aucune carte requise</p>
-          </ScrollReveal>
+
+            {/* Image */}
+            <ScrollReveal delay={0.3} direction="right" distance={40} className="flex-1 w-full max-w-lg lg:max-w-none">
+              <div className="relative">
+                <div className="absolute -inset-4 bg-gradient-to-br from-[#2B7FFF]/20 to-[#0B1E4D]/10 rounded-3xl blur-2xl" />
+                <Image
+                  src="/hero-main.jpg"
+                  alt="Entrepreneur utilisant un smartphone pour gérer son réseau WiFi"
+                  width={600}
+                  height={450}
+                  className="relative rounded-2xl shadow-2xl object-cover w-full"
+                  priority
+                />
+              </div>
+            </ScrollReveal>
+          </div>
         </div>
       </section>
 
