@@ -3,6 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
+import { useState } from "react";
 import { cn } from "@/lib/utils";
 import {
   Wallet,
@@ -19,9 +20,26 @@ import {
   Receipt,
   HeadphonesIcon,
   Shield,
+  ChevronDown,
+  Activity,
+  Router,
+  Package,
+  Printer,
 } from "lucide-react";
 
-const sections = [
+interface NavItem {
+  name: string;
+  href: string;
+  icon: typeof LayoutDashboard;
+  children?: { name: string; href: string; icon: typeof LayoutDashboard }[];
+}
+
+interface Section {
+  label: string;
+  items: NavItem[];
+}
+
+const sections: Section[] = [
   {
     label: "PRINCIPAL",
     items: [
@@ -31,9 +49,25 @@ const sections = [
     ],
   },
   {
+    label: "CONSOLE",
+    items: [
+      {
+        name: "Console Hotspot",
+        href: "/console",
+        icon: Terminal,
+        children: [
+          { name: "Vue d'ensemble", href: "/console", icon: LayoutDashboard },
+          { name: "Sessions & Conso", href: "/console/sessions", icon: Activity },
+          { name: "Routeurs", href: "/console/routers", icon: Router },
+          { name: "Stock & Utilisateurs", href: "/console/stock", icon: Package },
+          { name: "Impression rapide", href: "/console/print", icon: Printer },
+        ],
+      },
+    ],
+  },
+  {
     label: "OPÉRATIONS",
     items: [
-      { name: "Console RADIUS", href: "/console", icon: Terminal },
       { name: "Vendeurs", href: "/sellers", icon: Users },
       { name: "VPN", href: "/vpn", icon: Shield },
     ],
@@ -63,6 +97,7 @@ interface SidebarProps {
 
 export function Sidebar({ mobile = false }: SidebarProps) {
   const pathname = usePathname();
+  const [consoleOpen, setConsoleOpen] = useState(pathname.startsWith("/console"));
 
   return (
     <aside
@@ -85,10 +120,61 @@ export function Sidebar({ mobile = false }: SidebarProps) {
             </p>
             <ul className="space-y-0.5">
               {section.items.map((item) => {
-                const isActive =
-                  item.href === "/dashboard"
+                const isConsoleParent = !!item.children;
+                const isActive = isConsoleParent
+                  ? pathname.startsWith("/console")
+                  : item.href === "/dashboard"
                     ? pathname === "/dashboard"
                     : pathname === item.href || pathname.startsWith(item.href);
+
+                if (isConsoleParent) {
+                  return (
+                    <li key={item.name}>
+                      <button
+                        onClick={() => setConsoleOpen(!consoleOpen)}
+                        className={cn(
+                          "flex items-center gap-3 w-full rounded-xl px-3 py-2.5 text-sm font-medium transition-colors",
+                          isActive
+                            ? "bg-primary/10 text-primary"
+                            : "text-[#6B7280] hover:bg-[#F5F7FA] hover:text-[#1A1D26]"
+                        )}
+                      >
+                        <item.icon className="h-[18px] w-[18px] shrink-0" />
+                        <span className="flex-1 text-left">{item.name}</span>
+                        <ChevronDown className={cn(
+                          "h-4 w-4 transition-transform",
+                          consoleOpen && "rotate-180"
+                        )} />
+                      </button>
+                      {consoleOpen && item.children && (
+                        <ul className="mt-1 ml-4 pl-3 border-l border-[#E8ECF1] space-y-0.5">
+                          {item.children.map((child) => {
+                            const childActive = child.href === "/console"
+                              ? pathname === "/console"
+                              : pathname === child.href || pathname.startsWith(child.href + "/");
+                            return (
+                              <li key={child.href}>
+                                <Link
+                                  href={child.href}
+                                  className={cn(
+                                    "flex items-center gap-2.5 rounded-lg px-3 py-2 text-[13px] font-medium transition-colors",
+                                    childActive
+                                      ? "bg-primary text-primary-foreground shadow-sm"
+                                      : "text-[#6B7280] hover:bg-[#F5F7FA] hover:text-[#1A1D26]"
+                                  )}
+                                >
+                                  <child.icon className="h-4 w-4 shrink-0" />
+                                  {child.name}
+                                </Link>
+                              </li>
+                            );
+                          })}
+                        </ul>
+                      )}
+                    </li>
+                  );
+                }
+
                 return (
                   <li key={item.name}>
                     <Link

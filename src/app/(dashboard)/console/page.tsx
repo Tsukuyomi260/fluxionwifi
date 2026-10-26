@@ -1,487 +1,387 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import {
-  Terminal,
-  Wifi,
+  Ticket,
   Users,
-  Clock,
+  Layers,
+  Router,
   Activity,
-  PowerOff,
-  Search,
-  ChevronDown,
-  RefreshCw,
-  Monitor,
-  AlertCircle,
+  TrendingUp,
+  ArrowRight,
+  Printer,
+  Plus,
+  Package,
+  Wifi,
+  Clock,
   CheckCircle2,
-  XCircle,
-  MoreHorizontal,
-  X,
-  Eye,
+  AlertTriangle,
+  Monitor,
+  RefreshCw,
 } from "lucide-react";
 
-type SessionStatus = "active" | "idle" | "expired";
-type NasStatus = "online" | "offline";
+const stats = [
+  {
+    label: "Tickets en stock",
+    value: "47",
+    change: "+12",
+    sublabel: "disponibles",
+    icon: Ticket,
+    iconBg: "bg-blue-50",
+    iconColor: "text-[#2B7FFF]",
+    color: "#2B7FFF",
+  },
+  {
+    label: "Sessions actives",
+    value: "5",
+    change: "+2",
+    sublabel: "connectés maintenant",
+    icon: Users,
+    iconBg: "bg-emerald-50",
+    iconColor: "text-emerald-500",
+    color: "#10B981",
+  },
+  {
+    label: "Profils tarifaires",
+    value: "5",
+    change: "",
+    sublabel: "configurés",
+    icon: Layers,
+    iconBg: "bg-violet-50",
+    iconColor: "text-violet-500",
+    color: "#8B5CF6",
+  },
+  {
+    label: "Routeurs en ligne",
+    value: "3/4",
+    change: "1 hors ligne",
+    sublabel: "connectés",
+    icon: Router,
+    iconBg: "bg-orange-50",
+    iconColor: "text-orange-500",
+    color: "#F59E0B",
+  },
+];
 
-interface RadiusSession {
-  id: string;
-  username: string;
-  ipAddress: string;
-  macAddress: string;
-  nasName: string;
-  startTime: string;
-  duration: string;
-  uploadMb: number;
-  downloadMb: number;
-  status: SessionStatus;
-}
+const quickActions = [
+  { name: "Générer des tickets", href: "/tickets", icon: Plus, desc: "Créer de nouveaux tickets WiFi" },
+  { name: "Impression rapide", href: "/console/print", icon: Printer, desc: "Imprimer vos tickets en lot" },
+  { name: "Voir le stock", href: "/console/stock", icon: Package, desc: "Stock et utilisateurs actifs" },
+  { name: "Sessions en cours", href: "/console/sessions", icon: Activity, desc: "Monitorer les connexions" },
+];
 
-interface NasDevice {
+const trafficData = [
+  { hour: "08h", download: 12, upload: 3 },
+  { hour: "09h", download: 25, upload: 8 },
+  { hour: "10h", download: 45, upload: 15 },
+  { hour: "11h", download: 38, upload: 12 },
+  { hour: "12h", download: 55, upload: 20 },
+  { hour: "13h", download: 42, upload: 14 },
+  { hour: "14h", download: 65, upload: 22 },
+  { hour: "15h", download: 78, upload: 28 },
+  { hour: "16h", download: 60, upload: 18 },
+  { hour: "17h", download: 45, upload: 12 },
+  { hour: "18h", download: 30, upload: 8 },
+  { hour: "19h", download: 20, upload: 5 },
+];
+
+const maxTraffic = Math.max(...trafficData.map((d) => d.download));
+
+interface DemoRouter {
   id: string;
   name: string;
-  ipAddress: string;
-  type: string;
-  status: NasStatus;
-  activeSessions: number;
-  lastSeen: string;
+  ip: string;
+  model: string;
+  status: "online" | "offline";
+  sessions: number;
+  uptime: string;
+  cpu: number;
+  memory: number;
 }
 
-const sessionStatusConfig: Record<SessionStatus, { label: string; bg: string; text: string; icon: typeof CheckCircle2 }> = {
-  active: { label: "Actif", bg: "bg-emerald-50", text: "text-emerald-700", icon: CheckCircle2 },
-  idle: { label: "Inactif", bg: "bg-amber-50", text: "text-amber-700", icon: Clock },
-  expired: { label: "Expiré", bg: "bg-red-50", text: "text-red-600", icon: XCircle },
-};
-
-const nasStatusConfig: Record<NasStatus, { label: string; bg: string; text: string; dot: string }> = {
-  online: { label: "En ligne", bg: "bg-emerald-50", text: "text-emerald-700", dot: "bg-emerald-500" },
-  offline: { label: "Hors ligne", bg: "bg-red-50", text: "text-red-600", dot: "bg-red-500" },
-};
-
-const demoSessions: RadiusSession[] = [
-  { id: "1", username: "ticket-8F3A2D", ipAddress: "10.0.0.15", macAddress: "AA:BB:CC:11:22:33", nasName: "MK-Café-01", startTime: "14:32", duration: "1h 24min", uploadMb: 45, downloadMb: 312, status: "active" },
-  { id: "2", username: "ticket-C7E901", ipAddress: "10.0.0.22", macAddress: "DD:EE:FF:44:55:66", nasName: "MK-Café-01", startTime: "15:10", duration: "46min", uploadMb: 12, downloadMb: 87, status: "active" },
-  { id: "3", username: "ticket-1B4F8A", ipAddress: "10.0.1.8", macAddress: "11:22:33:AA:BB:CC", nasName: "MK-Hotel-03", startTime: "12:05", duration: "3h 51min", uploadMb: 230, downloadMb: 1840, status: "idle" },
-  { id: "4", username: "free-guest-01", ipAddress: "10.0.1.15", macAddress: "77:88:99:DD:EE:FF", nasName: "MK-Hotel-03", startTime: "09:45", duration: "5h 11min", uploadMb: 8, downloadMb: 42, status: "idle" },
-  { id: "5", username: "ticket-9D2C4E", ipAddress: "10.0.0.31", macAddress: "CC:DD:EE:77:88:99", nasName: "MK-Café-01", startTime: "08:20", duration: "Expiré", uploadMb: 67, downloadMb: 456, status: "expired" },
-  { id: "6", username: "ticket-F5A1B3", ipAddress: "10.0.2.5", macAddress: "55:66:77:11:22:33", nasName: "MK-Campus-02", startTime: "13:58", duration: "2h 02min", uploadMb: 156, downloadMb: 920, status: "active" },
+const demoRouters: DemoRouter[] = [
+  { id: "1", name: "MK-Café-01", ip: "192.168.88.1", model: "hAP ac²", status: "online", sessions: 2, uptime: "12j 4h", cpu: 23, memory: 45 },
+  { id: "2", name: "MK-Hotel-03", ip: "192.168.88.2", model: "RB4011", status: "online", sessions: 2, uptime: "8j 15h", cpu: 15, memory: 38 },
+  { id: "3", name: "MK-Campus-02", ip: "192.168.88.3", model: "hEX S", status: "online", sessions: 1, uptime: "3j 22h", cpu: 8, memory: 25 },
+  { id: "4", name: "MK-Resto-04", ip: "192.168.88.4", model: "hAP lite", status: "offline", sessions: 0, uptime: "—", cpu: 0, memory: 0 },
 ];
 
-const demoNas: NasDevice[] = [
-  { id: "1", name: "MK-Café-01", ipAddress: "192.168.88.1", type: "MikroTik hAP ac²", status: "online", activeSessions: 2, lastSeen: "Maintenant" },
-  { id: "2", name: "MK-Hotel-03", ipAddress: "192.168.88.2", type: "MikroTik RB4011", status: "online", activeSessions: 2, lastSeen: "Maintenant" },
-  { id: "3", name: "MK-Campus-02", ipAddress: "192.168.88.3", type: "MikroTik hEX S", status: "online", activeSessions: 1, lastSeen: "Maintenant" },
-  { id: "4", name: "MK-Resto-04", ipAddress: "192.168.88.4", type: "MikroTik hAP lite", status: "offline", activeSessions: 0, lastSeen: "Il y a 3h" },
+const recentEvents = [
+  { type: "auth", text: "ticket-C7E901 connecté via MK-Café-01", time: "Il y a 2 min" },
+  { type: "sale", text: "Ticket Standard vendu (500 CDF)", time: "Il y a 8 min" },
+  { type: "disconnect", text: "ticket-9D2C4E déconnecté — temps écoulé", time: "Il y a 15 min" },
+  { type: "auth", text: "ticket-8F3A2D connecté via MK-Café-01", time: "Il y a 32 min" },
+  { type: "router", text: "MK-Resto-04 hors ligne", time: "Il y a 3h" },
+  { type: "sale", text: "Ticket Journée vendu (1 000 CDF)", time: "Il y a 4h" },
 ];
 
-type Tab = "sessions" | "nas" | "logs";
-
-interface LogEntry {
-  id: string;
-  time: string;
-  type: "auth" | "disconnect" | "error" | "nas";
-  message: string;
-}
-
-const demoLogs: LogEntry[] = [
-  { id: "1", time: "15:10:03", type: "auth", message: "Auth-Accept: ticket-C7E901 via MK-Café-01 (10.0.0.22)" },
-  { id: "2", time: "14:58:21", type: "disconnect", message: "Session terminée: ticket-9D2C4E — temps écoulé (MK-Café-01)" },
-  { id: "3", time: "14:32:15", type: "auth", message: "Auth-Accept: ticket-8F3A2D via MK-Café-01 (10.0.0.15)" },
-  { id: "4", time: "13:58:44", type: "auth", message: "Auth-Accept: ticket-F5A1B3 via MK-Campus-02 (10.0.2.5)" },
-  { id: "5", time: "13:45:02", type: "error", message: "Auth-Reject: ticket-INVALID — code invalide (MK-Café-01)" },
-  { id: "6", time: "12:05:33", type: "auth", message: "Auth-Accept: ticket-1B4F8A via MK-Hotel-03 (10.0.1.8)" },
-  { id: "7", time: "11:30:00", type: "nas", message: "NAS MK-Resto-04 (192.168.88.4) — connexion perdue" },
-  { id: "8", time: "09:45:12", type: "auth", message: "Auth-Accept: free-guest-01 via MK-Hotel-03 (10.0.1.15)" },
-];
-
-const logTypeConfig: Record<string, { bg: string; text: string }> = {
-  auth: { bg: "bg-emerald-50", text: "text-emerald-700" },
-  disconnect: { bg: "bg-amber-50", text: "text-amber-700" },
-  error: { bg: "bg-red-50", text: "text-red-600" },
-  nas: { bg: "bg-blue-50", text: "text-[#2B7FFF]" },
+const eventConfig: Record<string, { dot: string }> = {
+  auth: { dot: "bg-emerald-500" },
+  sale: { dot: "bg-[#2B7FFF]" },
+  disconnect: { dot: "bg-amber-500" },
+  router: { dot: "bg-red-500" },
 };
 
-export default function ConsolePage() {
-  const [activeTab, setActiveTab] = useState<Tab>("sessions");
-  const [sessions, setSessions] = useState(demoSessions);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [sessionFilter, setSessionFilter] = useState<"all" | SessionStatus>("all");
-  const [selectedSession, setSelectedSession] = useState<RadiusSession | null>(null);
-  const [openMenu, setOpenMenu] = useState<string | null>(null);
+export default function ConsoleDashboard() {
+  const [refreshing, setRefreshing] = useState(false);
 
-  const filteredSessions = sessions.filter((s) => {
-    const matchSearch =
-      s.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      s.ipAddress.includes(searchQuery) ||
-      s.macAddress.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      s.nasName.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchStatus = sessionFilter === "all" || s.status === sessionFilter;
-    return matchSearch && matchStatus;
-  });
-
-  const stats = [
-    { label: "Sessions actives", value: sessions.filter((s) => s.status === "active").length, icon: Users, iconBg: "bg-emerald-50", iconColor: "text-emerald-500" },
-    { label: "NAS en ligne", value: demoNas.filter((n) => n.status === "online").length + "/" + demoNas.length, icon: Monitor, iconBg: "bg-blue-50", iconColor: "text-[#2B7FFF]" },
-    { label: "Bande passante", value: (sessions.reduce((s, x) => s + x.downloadMb + x.uploadMb, 0) / 1024).toFixed(1) + " Go", icon: Activity, iconBg: "bg-violet-50", iconColor: "text-violet-500" },
-    { label: "Erreurs auth", value: demoLogs.filter((l) => l.type === "error").length, icon: AlertCircle, iconBg: "bg-red-50", iconColor: "text-red-500" },
-  ];
-
-  function disconnectSession(id: string) {
-    setSessions((prev) => prev.map((s) => s.id === id ? { ...s, status: "expired" as SessionStatus, duration: "Déconnecté" } : s));
-    setOpenMenu(null);
-    setSelectedSession(null);
+  function handleRefresh() {
+    setRefreshing(true);
+    setTimeout(() => setRefreshing(false), 1500);
   }
-
-  const tabs: { id: Tab; label: string; icon: typeof Terminal }[] = [
-    { id: "sessions", label: "Sessions", icon: Users },
-    { id: "nas", label: "NAS / Routeurs", icon: Monitor },
-    { id: "logs", label: "Logs RADIUS", icon: Terminal },
-  ];
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h2 className="text-xl font-bold text-[#1A1D26]">Console RADIUS</h2>
-          <p className="text-sm text-[#6B7280] mt-0.5">
-            Administrez vos sessions, routeurs et logs en temps réel
-          </p>
+      {/* Alert banner */}
+      <div className="flex items-center gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-5 py-3.5">
+        <AlertTriangle className="h-5 w-5 text-amber-500 shrink-0" />
+        <div className="flex-1">
+          <p className="text-sm font-medium text-amber-800">1 routeur hors ligne</p>
+          <p className="text-xs text-amber-600 mt-0.5">MK-Resto-04 est injoignable depuis 3 heures</p>
         </div>
-        <button className="inline-flex h-10 items-center gap-2 rounded-xl border border-[#E8ECF1] bg-white px-4 text-sm font-medium text-[#374151] hover:bg-[#F5F7FA] transition-colors shadow-sm">
-          <RefreshCw className="h-4 w-4" />
-          Actualiser
-        </button>
+        <Link
+          href="/console/routers"
+          className="text-xs font-medium text-amber-700 hover:text-amber-900 whitespace-nowrap"
+        >
+          Voir les routeurs →
+        </Link>
       </div>
 
-      {/* Stats */}
+      {/* Stats cards */}
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {stats.map((stat) => (
-          <div key={stat.label} className="rounded-2xl border border-[#E8ECF1] bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
-            <div className="flex items-center gap-3">
+          <div
+            key={stat.label}
+            className="rounded-2xl border border-[#E8ECF1] bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]"
+          >
+            <div className="flex items-start justify-between">
               <div className={`rounded-xl p-2.5 ${stat.iconBg}`}>
                 <stat.icon className={`h-5 w-5 ${stat.iconColor}`} />
               </div>
-              <div>
-                <p className="text-2xl font-bold text-[#1A1D26]">{stat.value}</p>
-                <p className="text-xs text-[#6B7280]">{stat.label}</p>
-              </div>
+              {stat.change && (
+                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-600">
+                  <TrendingUp className="h-3 w-3" />
+                  {stat.change}
+                </span>
+              )}
             </div>
+            <p className="mt-4 text-[28px] font-bold text-[#1A1D26]">{stat.value}</p>
+            <p className="mt-0.5 text-[13px] text-[#6B7280]">
+              {stat.label} · {stat.sublabel}
+            </p>
           </div>
         ))}
       </div>
 
-      {/* Tabs */}
-      <div className="flex items-center gap-1 bg-[#F5F7FA] rounded-xl p-1 w-fit">
-        {tabs.map((tab) => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-              activeTab === tab.id
-                ? "bg-white text-[#1A1D26] shadow-sm"
-                : "text-[#6B7280] hover:text-[#1A1D26]"
-            }`}
+      {/* Quick actions */}
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        {quickActions.map((action) => (
+          <Link
+            key={action.name}
+            href={action.href}
+            className="group flex items-center gap-3 rounded-2xl border border-[#E8ECF1] bg-white p-4 shadow-[0_1px_3px_rgba(0,0,0,0.04)] hover:border-[#2B7FFF]/20 hover:shadow-md transition-all"
           >
-            <tab.icon className="h-4 w-4" />
-            {tab.label}
-          </button>
+            <div className="rounded-xl bg-[#2B7FFF]/10 p-2.5">
+              <action.icon className="h-5 w-5 text-[#2B7FFF]" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-[#1A1D26]">{action.name}</p>
+              <p className="text-xs text-[#6B7280] truncate">{action.desc}</p>
+            </div>
+            <ArrowRight className="h-4 w-4 text-[#D1D5DB] group-hover:text-[#2B7FFF] transition-colors shrink-0" />
+          </Link>
         ))}
       </div>
 
-      {/* Sessions Tab */}
-      {activeTab === "sessions" && (
-        <div className="space-y-4">
-          <div className="flex flex-col sm:flex-row gap-3">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#9CA3AF]" />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Rechercher par utilisateur, IP, MAC..."
-                className="w-full h-10 pl-10 pr-4 rounded-xl border border-[#E8ECF1] bg-white text-sm text-[#1A1D26] placeholder:text-[#9CA3AF] focus:outline-none focus:border-[#2B7FFF] focus:ring-1 focus:ring-[#2B7FFF]/20 transition-colors"
-              />
+      <div className="grid gap-5 lg:grid-cols-3">
+        {/* Traffic chart */}
+        <div className="lg:col-span-2 rounded-2xl border border-[#E8ECF1] bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h3 className="text-base font-semibold text-[#1A1D26]">Trafic réseau</h3>
+              <p className="text-xs text-[#6B7280]">RADIUS accounting — Aujourd'hui (Mbps)</p>
             </div>
-            <div className="relative">
-              <select
-                value={sessionFilter}
-                onChange={(e) => setSessionFilter(e.target.value as typeof sessionFilter)}
-                className="h-10 pl-4 pr-10 rounded-xl border border-[#E8ECF1] bg-white text-sm text-[#1A1D26] appearance-none focus:outline-none focus:border-[#2B7FFF] transition-colors"
-              >
-                <option value="all">Tous les statuts</option>
-                <option value="active">Actif</option>
-                <option value="idle">Inactif</option>
-                <option value="expired">Expiré</option>
-              </select>
-              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#9CA3AF] pointer-events-none" />
-            </div>
-          </div>
-
-          {/* Sessions table */}
-          <div className="rounded-2xl border border-[#E8ECF1] bg-white shadow-[0_1px_3px_rgba(0,0,0,0.04)] overflow-hidden">
-            {/* Desktop table */}
-            <div className="hidden lg:block overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-[#E8ECF1] bg-[#FAFBFC]">
-                    <th className="text-left px-4 py-3 text-xs font-semibold text-[#6B7280] uppercase tracking-wider">Utilisateur</th>
-                    <th className="text-left px-4 py-3 text-xs font-semibold text-[#6B7280] uppercase tracking-wider">IP / MAC</th>
-                    <th className="text-left px-4 py-3 text-xs font-semibold text-[#6B7280] uppercase tracking-wider">NAS</th>
-                    <th className="text-left px-4 py-3 text-xs font-semibold text-[#6B7280] uppercase tracking-wider">Durée</th>
-                    <th className="text-left px-4 py-3 text-xs font-semibold text-[#6B7280] uppercase tracking-wider">Trafic</th>
-                    <th className="text-left px-4 py-3 text-xs font-semibold text-[#6B7280] uppercase tracking-wider">Statut</th>
-                    <th className="text-right px-4 py-3 text-xs font-semibold text-[#6B7280] uppercase tracking-wider">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-[#F1F3F7]">
-                  {filteredSessions.map((session) => {
-                    const sc = sessionStatusConfig[session.status];
-                    const Icon = sc.icon;
-                    return (
-                      <tr key={session.id} className="hover:bg-[#FAFBFC] transition-colors">
-                        <td className="px-4 py-3">
-                          <span className="font-mono text-xs font-medium text-[#1A1D26]">{session.username}</span>
-                        </td>
-                        <td className="px-4 py-3">
-                          <p className="font-mono text-xs text-[#1A1D26]">{session.ipAddress}</p>
-                          <p className="font-mono text-[10px] text-[#9CA3AF]">{session.macAddress}</p>
-                        </td>
-                        <td className="px-4 py-3 text-xs text-[#6B7280]">{session.nasName}</td>
-                        <td className="px-4 py-3">
-                          <div className="flex items-center gap-1.5 text-xs text-[#6B7280]">
-                            <Clock className="h-3 w-3" />
-                            {session.duration}
-                          </div>
-                        </td>
-                        <td className="px-4 py-3">
-                          <div className="text-xs text-[#6B7280]">
-                            <span className="text-emerald-600">↓ {session.downloadMb} Mo</span>
-                            <span className="mx-1 text-[#D1D5DB]">·</span>
-                            <span className="text-[#2B7FFF]">↑ {session.uploadMb} Mo</span>
-                          </div>
-                        </td>
-                        <td className="px-4 py-3">
-                          <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium ${sc.bg} ${sc.text}`}>
-                            <Icon className="h-3 w-3" />
-                            {sc.label}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3 text-right">
-                          <div className="relative inline-block">
-                            <button
-                              onClick={() => setOpenMenu(openMenu === session.id ? null : session.id)}
-                              className="p-1.5 rounded-lg hover:bg-[#F5F7FA] text-[#9CA3AF] hover:text-[#6B7280] transition-colors"
-                            >
-                              <MoreHorizontal className="h-4 w-4" />
-                            </button>
-                            {openMenu === session.id && (
-                              <div className="absolute right-0 top-8 w-44 bg-white rounded-xl border border-[#E8ECF1] shadow-xl z-20 overflow-hidden">
-                                <button
-                                  onClick={() => { setSelectedSession(session); setOpenMenu(null); }}
-                                  className="flex items-center gap-2.5 w-full px-3.5 py-2.5 text-sm text-[#374151] hover:bg-[#F5F7FA] transition-colors"
-                                >
-                                  <Eye className="h-4 w-4 text-[#9CA3AF]" />
-                                  Détails
-                                </button>
-                                {session.status !== "expired" && (
-                                  <button
-                                    onClick={() => disconnectSession(session.id)}
-                                    className="flex items-center gap-2.5 w-full px-3.5 py-2.5 text-sm text-red-500 hover:bg-red-50 transition-colors"
-                                  >
-                                    <PowerOff className="h-4 w-4" />
-                                    Déconnecter
-                                  </button>
-                                )}
-                              </div>
-                            )}
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-
-            {/* Mobile cards */}
-            <div className="lg:hidden divide-y divide-[#F1F3F7]">
-              {filteredSessions.map((session) => {
-                const sc = sessionStatusConfig[session.status];
-                const Icon = sc.icon;
-                return (
-                  <div key={session.id} className="p-4 space-y-3">
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <p className="font-mono text-sm font-medium text-[#1A1D26]">{session.username}</p>
-                        <p className="font-mono text-[11px] text-[#9CA3AF] mt-0.5">{session.ipAddress} · {session.nasName}</p>
-                      </div>
-                      <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium ${sc.bg} ${sc.text}`}>
-                        <Icon className="h-3 w-3" />
-                        {sc.label}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-4 text-xs text-[#6B7280]">
-                      <span className="flex items-center gap-1"><Clock className="h-3 w-3" />{session.duration}</span>
-                      <span className="text-emerald-600">↓ {session.downloadMb} Mo</span>
-                      <span className="text-[#2B7FFF]">↑ {session.uploadMb} Mo</span>
-                    </div>
-                    {session.status !== "expired" && (
-                      <button
-                        onClick={() => disconnectSession(session.id)}
-                        className="inline-flex items-center gap-1.5 text-xs font-medium text-red-500 hover:text-red-600"
-                      >
-                        <PowerOff className="h-3 w-3" />
-                        Déconnecter
-                      </button>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-
-            {filteredSessions.length === 0 && (
-              <div className="p-12 text-center">
-                <Users className="h-8 w-8 text-[#D1D5DB] mx-auto mb-3" />
-                <p className="text-sm text-[#6B7280]">Aucune session trouvée</p>
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-4 text-xs">
+                <span className="flex items-center gap-1.5">
+                  <span className="h-2.5 w-2.5 rounded-sm bg-[#2B7FFF]" />
+                  Download
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <span className="h-2.5 w-2.5 rounded-sm bg-[#2B7FFF]/30" />
+                  Upload
+                </span>
               </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* NAS Tab */}
-      {activeTab === "nas" && (
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-2">
-          {demoNas.map((nas) => {
-            const nc = nasStatusConfig[nas.status];
-            return (
-              <div
-                key={nas.id}
-                className={`rounded-2xl border bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)] transition-all ${
-                  nas.status === "online" ? "border-[#E8ECF1] hover:border-[#2B7FFF]/20 hover:shadow-md" : "border-red-100 opacity-75"
-                }`}
+              <button
+                onClick={handleRefresh}
+                className="p-1.5 rounded-lg hover:bg-[#F5F7FA] text-[#9CA3AF] transition-colors"
               >
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className={`rounded-xl p-2.5 ${nas.status === "online" ? "bg-emerald-50" : "bg-red-50"}`}>
-                      <Monitor className={`h-5 w-5 ${nas.status === "online" ? "text-emerald-500" : "text-red-400"}`} />
-                    </div>
-                    <div>
-                      <h3 className="text-sm font-semibold text-[#1A1D26]">{nas.name}</h3>
-                      <p className="font-mono text-xs text-[#9CA3AF]">{nas.ipAddress}</p>
-                    </div>
-                  </div>
-                  <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11px] font-medium ${nc.bg} ${nc.text}`}>
-                    <span className={`h-1.5 w-1.5 rounded-full ${nc.dot}`} />
-                    {nc.label}
-                  </span>
-                </div>
-
-                <div className="mt-4 grid grid-cols-3 gap-3 pt-4 border-t border-[#F1F3F7]">
-                  <div>
-                    <p className="text-xs text-[#9CA3AF]">Type</p>
-                    <p className="text-xs font-medium text-[#1A1D26] mt-0.5">{nas.type}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-[#9CA3AF]">Sessions</p>
-                    <p className="text-xs font-medium text-[#1A1D26] mt-0.5">{nas.activeSessions} active{nas.activeSessions !== 1 ? "s" : ""}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-[#9CA3AF]">Vu</p>
-                    <p className="text-xs font-medium text-[#1A1D26] mt-0.5">{nas.lastSeen}</p>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
-
-      {/* Logs Tab */}
-      {activeTab === "logs" && (
-        <div className="rounded-2xl border border-[#E8ECF1] bg-[#0B1E4D] shadow-[0_1px_3px_rgba(0,0,0,0.04)] overflow-hidden">
-          <div className="flex items-center justify-between px-5 py-3 border-b border-white/10">
-            <div className="flex items-center gap-2">
-              <Terminal className="h-4 w-4 text-[#2B7FFF]" />
-              <span className="text-sm font-medium text-white">Logs RADIUS — Temps réel</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-              <span className="text-xs text-emerald-400">Live</span>
-            </div>
-          </div>
-          <div className="p-4 space-y-1 font-mono text-xs max-h-[420px] overflow-y-auto">
-            {demoLogs.map((log) => {
-              const lc = logTypeConfig[log.type];
-              return (
-                <div key={log.id} className="flex items-start gap-3 py-1.5 hover:bg-white/5 rounded px-2 -mx-2 transition-colors">
-                  <span className="text-[#6B7280] shrink-0 w-16">{log.time}</span>
-                  <span className={`inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider shrink-0 ${lc.bg} ${lc.text}`}>
-                    {log.type}
-                  </span>
-                  <span className="text-[#E2E8F0] break-all">{log.message}</span>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
-      {/* Session detail modal */}
-      {selectedSession && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setSelectedSession(null)} />
-          <div className="relative w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden">
-            <div className="flex items-center justify-between px-6 py-4 border-b border-[#E8ECF1]">
-              <h3 className="text-lg font-semibold text-[#1A1D26]">Détails de la session</h3>
-              <button onClick={() => setSelectedSession(null)} className="p-1.5 rounded-lg hover:bg-[#F5F7FA] text-[#9CA3AF]">
-                <X className="h-5 w-5" />
+                <RefreshCw className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`} />
               </button>
             </div>
-            <div className="px-6 py-5 space-y-4">
-              {[
-                { label: "Utilisateur", value: selectedSession.username },
-                { label: "Adresse IP", value: selectedSession.ipAddress },
-                { label: "Adresse MAC", value: selectedSession.macAddress },
-                { label: "NAS", value: selectedSession.nasName },
-                { label: "Début", value: selectedSession.startTime },
-                { label: "Durée", value: selectedSession.duration },
-                { label: "Download", value: `${selectedSession.downloadMb} Mo` },
-                { label: "Upload", value: `${selectedSession.uploadMb} Mo` },
-              ].map((row) => (
-                <div key={row.label} className="flex items-center justify-between">
-                  <span className="text-sm text-[#6B7280]">{row.label}</span>
-                  <span className="text-sm font-medium text-[#1A1D26] font-mono">{row.value}</span>
+          </div>
+          <div className="flex items-end gap-2 h-52">
+            {trafficData.map((d) => (
+              <div key={d.hour} className="flex-1 flex flex-col items-center gap-1">
+                <div className="w-full flex flex-col items-center gap-0.5" style={{ height: "200px" }}>
+                  <div className="w-full flex-1 flex flex-col justify-end gap-0.5">
+                    <div
+                      className="w-full rounded-t bg-[#2B7FFF] transition-all hover:opacity-80"
+                      style={{ height: `${(d.download / maxTraffic) * 100}%` }}
+                    />
+                    <div
+                      className="w-full rounded-b bg-[#2B7FFF]/30"
+                      style={{ height: `${(d.upload / maxTraffic) * 100}%` }}
+                    />
+                  </div>
                 </div>
-              ))}
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-[#6B7280]">Statut</span>
-                {(() => {
-                  const sc = sessionStatusConfig[selectedSession.status];
-                  const Icon = sc.icon;
-                  return (
-                    <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${sc.bg} ${sc.text}`}>
-                      <Icon className="h-3 w-3" />
-                      {sc.label}
-                    </span>
-                  );
-                })()}
+                <span className="text-[10px] text-[#9CA3AF]">{d.hour}</span>
               </div>
-            </div>
-            {selectedSession.status !== "expired" && (
-              <div className="px-6 py-4 border-t border-[#E8ECF1] flex justify-end">
-                <button
-                  onClick={() => disconnectSession(selectedSession.id)}
-                  className="inline-flex items-center gap-2 h-10 px-5 rounded-xl bg-red-500 text-sm font-medium text-white hover:bg-red-600 transition-colors"
-                >
-                  <PowerOff className="h-4 w-4" />
-                  Déconnecter la session
-                </button>
-              </div>
-            )}
+            ))}
           </div>
         </div>
-      )}
+
+        {/* Recent events */}
+        <div className="rounded-2xl border border-[#E8ECF1] bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-base font-semibold text-[#1A1D26]">Activité récente</h3>
+            <Link href="/console/sessions" className="text-xs text-[#2B7FFF] hover:underline">
+              Voir tout
+            </Link>
+          </div>
+          <ul className="space-y-1">
+            {recentEvents.map((event, i) => {
+              const ec = eventConfig[event.type] || eventConfig.auth;
+              return (
+                <li key={i} className="flex items-start gap-3 py-2.5 border-b border-[#F1F3F7] last:border-0">
+                  <span className={`mt-1.5 h-2 w-2 rounded-full shrink-0 ${ec.dot}`} />
+                  <div className="min-w-0">
+                    <p className="text-sm text-[#1A1D26] leading-snug">{event.text}</p>
+                    <p className="text-xs text-[#9CA3AF] mt-0.5">{event.time}</p>
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      </div>
+
+      {/* Routeurs panel */}
+      <div className="rounded-2xl border border-[#E8ECF1] bg-white shadow-[0_1px_3px_rgba(0,0,0,0.04)] overflow-hidden">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-[#E8ECF1]">
+          <div className="flex items-center gap-2">
+            <Router className="h-5 w-5 text-[#2B7FFF]" />
+            <h3 className="text-base font-semibold text-[#1A1D26]">Routeurs MikroTik</h3>
+          </div>
+          <Link href="/console/routers" className="text-xs text-[#2B7FFF] hover:underline">
+            Gérer les routeurs →
+          </Link>
+        </div>
+
+        {/* Desktop table */}
+        <div className="hidden lg:block overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-[#E8ECF1] bg-[#FAFBFC]">
+                <th className="text-left px-5 py-3 text-xs font-semibold text-[#6B7280] uppercase tracking-wider">Routeur</th>
+                <th className="text-left px-5 py-3 text-xs font-semibold text-[#6B7280] uppercase tracking-wider">Modèle</th>
+                <th className="text-left px-5 py-3 text-xs font-semibold text-[#6B7280] uppercase tracking-wider">Statut</th>
+                <th className="text-left px-5 py-3 text-xs font-semibold text-[#6B7280] uppercase tracking-wider">Sessions</th>
+                <th className="text-left px-5 py-3 text-xs font-semibold text-[#6B7280] uppercase tracking-wider">Uptime</th>
+                <th className="text-left px-5 py-3 text-xs font-semibold text-[#6B7280] uppercase tracking-wider">CPU / RAM</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-[#F1F3F7]">
+              {demoRouters.map((r) => (
+                <tr key={r.id} className="hover:bg-[#FAFBFC] transition-colors">
+                  <td className="px-5 py-3.5">
+                    <div className="flex items-center gap-2.5">
+                      <div className={`h-2 w-2 rounded-full ${r.status === "online" ? "bg-emerald-500" : "bg-red-500"}`} />
+                      <div>
+                        <p className="text-sm font-medium text-[#1A1D26]">{r.name}</p>
+                        <p className="font-mono text-xs text-[#9CA3AF]">{r.ip}</p>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-5 py-3.5 text-xs text-[#6B7280]">MikroTik {r.model}</td>
+                  <td className="px-5 py-3.5">
+                    <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11px] font-medium ${
+                      r.status === "online" ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-600"
+                    }`}>
+                      {r.status === "online" ? (
+                        <CheckCircle2 className="h-3 w-3" />
+                      ) : (
+                        <AlertTriangle className="h-3 w-3" />
+                      )}
+                      {r.status === "online" ? "En ligne" : "Hors ligne"}
+                    </span>
+                  </td>
+                  <td className="px-5 py-3.5">
+                    <span className="text-sm font-medium text-[#1A1D26]">{r.sessions}</span>
+                    <span className="text-xs text-[#9CA3AF] ml-1">active{r.sessions !== 1 ? "s" : ""}</span>
+                  </td>
+                  <td className="px-5 py-3.5 text-xs text-[#6B7280]">
+                    <div className="flex items-center gap-1">
+                      <Clock className="h-3 w-3" />
+                      {r.uptime}
+                    </div>
+                  </td>
+                  <td className="px-5 py-3.5">
+                    {r.status === "online" ? (
+                      <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-1.5">
+                          <div className="w-16 h-1.5 rounded-full bg-[#F1F3F7] overflow-hidden">
+                            <div className="h-full rounded-full bg-[#2B7FFF]" style={{ width: `${r.cpu}%` }} />
+                          </div>
+                          <span className="text-[11px] text-[#6B7280]">{r.cpu}%</span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <div className="w-16 h-1.5 rounded-full bg-[#F1F3F7] overflow-hidden">
+                            <div className="h-full rounded-full bg-violet-400" style={{ width: `${r.memory}%` }} />
+                          </div>
+                          <span className="text-[11px] text-[#6B7280]">{r.memory}%</span>
+                        </div>
+                      </div>
+                    ) : (
+                      <span className="text-xs text-[#9CA3AF]">—</span>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Mobile cards */}
+        <div className="lg:hidden divide-y divide-[#F1F3F7]">
+          {demoRouters.map((r) => (
+            <div key={r.id} className="p-4 space-y-3">
+              <div className="flex items-start justify-between">
+                <div className="flex items-center gap-2.5">
+                  <div className={`h-2.5 w-2.5 rounded-full ${r.status === "online" ? "bg-emerald-500" : "bg-red-500"}`} />
+                  <div>
+                    <p className="text-sm font-semibold text-[#1A1D26]">{r.name}</p>
+                    <p className="font-mono text-xs text-[#9CA3AF]">{r.ip} · {r.model}</p>
+                  </div>
+                </div>
+                <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium ${
+                  r.status === "online" ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-600"
+                }`}>
+                  {r.status === "online" ? "En ligne" : "Hors ligne"}
+                </span>
+              </div>
+              {r.status === "online" && (
+                <div className="flex items-center gap-4 text-xs text-[#6B7280]">
+                  <span>{r.sessions} session{r.sessions !== 1 ? "s" : ""}</span>
+                  <span>Uptime: {r.uptime}</span>
+                  <span>CPU: {r.cpu}%</span>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }
