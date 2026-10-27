@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useCurrency } from "@/hooks/use-currency";
 import {
   Ticket,
   Plus,
@@ -100,6 +101,7 @@ const demoTickets: WifiTicket[] = [
 type Tab = "tickets" | "profiles";
 
 export default function TicketsPage() {
+  const { currency } = useCurrency();
   const [activeTab, setActiveTab] = useState<Tab>("tickets");
   const [tickets, setTickets] = useState(demoTickets);
   const [profiles] = useState(demoProfiles);
@@ -138,7 +140,7 @@ export default function TicketsPage() {
     { label: "Total tickets", value: tickets.length, icon: Package, iconBg: "bg-blue-50", iconColor: "text-[#2B7FFF]" },
     { label: "Disponibles", value: tickets.filter((t) => t.status === "available").length, icon: Ticket, iconBg: "bg-emerald-50", iconColor: "text-emerald-500" },
     { label: "En cours", value: tickets.filter((t) => t.status === "active").length, icon: Wifi, iconBg: "bg-violet-50", iconColor: "text-violet-500" },
-    { label: "Revenu potentiel", value: tickets.filter((t) => t.status === "available").reduce((s, t) => s + t.price, 0).toLocaleString("fr-FR") + " CDF", icon: Banknote, iconBg: "bg-orange-50", iconColor: "text-orange-500" },
+    { label: "Revenu potentiel", value: tickets.filter((t) => t.status === "available").reduce((s, t) => s + t.price, 0).toLocaleString("fr-FR") + ` ${currency}`, icon: Banknote, iconBg: "bg-orange-50", iconColor: "text-orange-500" },
   ];
 
   function handleGenerate() {
@@ -332,7 +334,7 @@ export default function TicketsPage() {
                             </span>
                           </td>
                           <td className="px-4 py-3">
-                            <span className="text-sm font-semibold text-[#1A1D26]">{ticket.price.toLocaleString("fr-FR")} CDF</span>
+                            <span className="text-sm font-semibold text-[#1A1D26]">{ticket.price.toLocaleString("fr-FR")} {currency}</span>
                           </td>
                           <td className="px-4 py-3">
                             <span className="text-xs text-[#6B7280]">{ticket.assignedTo || "—"}</span>
@@ -422,7 +424,7 @@ export default function TicketsPage() {
                         </span>
                       </div>
                       <div className="flex items-center justify-between text-xs">
-                        <span className="font-semibold text-[#1A1D26]">{ticket.price.toLocaleString("fr-FR")} CDF</span>
+                        <span className="font-semibold text-[#1A1D26]">{ticket.price.toLocaleString("fr-FR")} {currency}</span>
                         {ticket.assignedTo && <span className="text-[#9CA3AF]">{ticket.assignedTo}</span>}
                         <button
                           onClick={() => setShowDetailModal(ticket)}
@@ -461,7 +463,7 @@ export default function TicketsPage() {
                         <p className="text-xs text-[#9CA3AF]">{durationLabels[profile.duration]}</p>
                       </div>
                     </div>
-                    <span className="text-lg font-bold text-[#1A1D26]">{profile.price.toLocaleString("fr-FR")} <span className="text-xs font-normal text-[#9CA3AF]">CDF</span></span>
+                    <span className="text-lg font-bold text-[#1A1D26]">{profile.price.toLocaleString("fr-FR")} <span className="text-xs font-normal text-[#9CA3AF]">{currency}</span></span>
                   </div>
 
                   <div className="mt-4 grid grid-cols-3 gap-3 pt-4 border-t border-[#F1F3F7]">
@@ -527,7 +529,7 @@ export default function TicketsPage() {
                           <p className="text-[11px] text-[#9CA3AF]">{durationLabels[p.duration]} · {p.speedLimit}</p>
                         </div>
                       </div>
-                      <span className="text-sm font-bold text-[#1A1D26]">{p.price.toLocaleString("fr-FR")} CDF</span>
+                      <span className="text-sm font-bold text-[#1A1D26]">{p.price.toLocaleString("fr-FR")} {currency}</span>
                     </button>
                   ))}
                 </div>
@@ -558,7 +560,7 @@ export default function TicketsPage() {
                   <div className="mt-2 flex items-center justify-between">
                     <span className="text-sm text-[#1A1D26]">{generateForm.quantity}x {selectedProfile.name}</span>
                     <span className="text-base font-bold text-[#1A1D26]">
-                      {(selectedProfile.price * generateForm.quantity).toLocaleString("fr-FR")} CDF
+                      {(selectedProfile.price * generateForm.quantity).toLocaleString("fr-FR")} {currency}
                     </span>
                   </div>
                   <p className="text-[11px] text-[#9CA3AF] mt-1">Valeur totale des tickets générés</p>
@@ -606,7 +608,7 @@ export default function TicketsPage() {
                 {[
                   { label: "Profil", value: showDetailModal.profileName },
                   { label: "Durée", value: durationLabels[showDetailModal.duration] },
-                  { label: "Prix", value: `${showDetailModal.price.toLocaleString("fr-FR")} CDF` },
+                  { label: "Prix", value: `${showDetailModal.price.toLocaleString("fr-FR")} {currency}` },
                   { label: "Créé le", value: showDetailModal.createdAt },
                   ...(showDetailModal.usedAt ? [{ label: "Utilisé le", value: showDetailModal.usedAt }] : []),
                   ...(showDetailModal.expiresAt ? [{ label: "Expire le", value: showDetailModal.expiresAt }] : []),

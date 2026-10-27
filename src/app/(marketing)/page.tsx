@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { getDefaultCountry } from "@/lib/currency";
 import {
   Wifi,
   Globe,
@@ -49,6 +50,8 @@ const features = [
   },
 ];
 
+const cur = getDefaultCountry().currency.code;
+
 const pricing = [
   {
     name: "Starter",
@@ -62,7 +65,7 @@ const pricing = [
   {
     name: "Pro",
     price: "15 000",
-    period: "CDF/mois",
+    period: `${cur}/mois`,
     description: "Pour les opérateurs WiFi actifs",
     features: [
       "5 routeurs",

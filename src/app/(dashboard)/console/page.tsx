@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useCurrency } from "@/hooks/use-currency";
 import {
   Ticket,
   Users,
@@ -107,14 +108,16 @@ const demoRouters: DemoRouter[] = [
   { id: "4", name: "MK-Resto-04", ip: "192.168.88.4", model: "hAP lite", status: "offline", sessions: 0, uptime: "—", cpu: 0, memory: 0 },
 ];
 
-const recentEvents = [
-  { type: "auth", text: "ticket-C7E901 connecté via MK-Café-01", time: "Il y a 2 min" },
-  { type: "sale", text: "Ticket Standard vendu (500 CDF)", time: "Il y a 8 min" },
-  { type: "disconnect", text: "ticket-9D2C4E déconnecté — temps écoulé", time: "Il y a 15 min" },
-  { type: "auth", text: "ticket-8F3A2D connecté via MK-Café-01", time: "Il y a 32 min" },
-  { type: "router", text: "MK-Resto-04 hors ligne", time: "Il y a 3h" },
-  { type: "sale", text: "Ticket Journée vendu (1 000 CDF)", time: "Il y a 4h" },
-];
+function getRecentEvents(cur: string) {
+  return [
+    { type: "auth", text: "ticket-C7E901 connecté via MK-Café-01", time: "Il y a 2 min" },
+    { type: "sale", text: `Ticket Standard vendu (500 ${cur})`, time: "Il y a 8 min" },
+    { type: "disconnect", text: "ticket-9D2C4E déconnecté — temps écoulé", time: "Il y a 15 min" },
+    { type: "auth", text: "ticket-8F3A2D connecté via MK-Café-01", time: "Il y a 32 min" },
+    { type: "router", text: "MK-Resto-04 hors ligne", time: "Il y a 3h" },
+    { type: "sale", text: `Ticket Journée vendu (1 000 ${cur})`, time: "Il y a 4h" },
+  ];
+}
 
 const eventConfig: Record<string, { dot: string }> = {
   auth: { dot: "bg-emerald-500" },
@@ -124,6 +127,7 @@ const eventConfig: Record<string, { dot: string }> = {
 };
 
 export default function ConsoleDashboard() {
+  const { currency } = useCurrency();
   const [refreshing, setRefreshing] = useState(false);
 
   function handleRefresh() {
@@ -251,7 +255,7 @@ export default function ConsoleDashboard() {
             </Link>
           </div>
           <ul className="space-y-1">
-            {recentEvents.map((event, i) => {
+            {getRecentEvents(currency).map((event, i) => {
               const ec = eventConfig[event.type] || eventConfig.auth;
               return (
                 <li key={i} className="flex items-start gap-3 py-2.5 border-b border-[#F1F3F7] last:border-0">

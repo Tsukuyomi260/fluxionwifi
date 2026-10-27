@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useCurrency } from "@/hooks/use-currency";
 import {
   Package,
   Ticket,
@@ -64,6 +65,7 @@ const activeUsers: ActiveUser[] = [
 type ViewMode = "stock" | "users";
 
 export default function StockPage() {
+  const { currency } = useCurrency();
   const [viewMode, setViewMode] = useState<ViewMode>("stock");
   const [searchQuery, setSearchQuery] = useState("");
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
@@ -154,7 +156,7 @@ export default function StockPage() {
                       <h3 className="text-sm font-semibold text-[#1A1D26]">{p.name}</h3>
                       <p className="text-xs text-[#6B7280]">{p.duration} · {p.speed}</p>
                     </div>
-                    <span className="text-sm font-bold" style={{ color: p.color }}>{p.price.toLocaleString()} CDF</span>
+                    <span className="text-sm font-bold" style={{ color: p.color }}>{p.price.toLocaleString()} {currency}</span>
                   </div>
 
                   {/* Stock bar */}

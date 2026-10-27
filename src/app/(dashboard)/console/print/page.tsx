@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useCurrency } from "@/hooks/use-currency";
 import {
   Printer,
   Ticket,
@@ -53,6 +54,7 @@ function generateCode(): string {
 type PrintLayout = "grid" | "list";
 
 export default function PrintPage() {
+  const { currency } = useCurrency();
   const [selectedProfile, setSelectedProfile] = useState<string>("");
   const [quantity, setQuantity] = useState(10);
   const [tickets, setTickets] = useState<PrintTicket[]>([]);
@@ -110,7 +112,7 @@ export default function PrintPage() {
                     <span className="text-sm font-medium text-[#1A1D26]">{p.name}</span>
                     <span className="text-xs text-[#9CA3AF] ml-2">{p.duration}</span>
                   </div>
-                  <span className="text-xs font-semibold" style={{ color: p.color }}>{p.price} CDF</span>
+                  <span className="text-xs font-semibold" style={{ color: p.color }}>{p.price} {currency}</span>
                   <span className="text-[10px] text-[#9CA3AF]">({p.availableCount})</span>
                 </button>
               ))}
@@ -162,7 +164,7 @@ export default function PrintPage() {
                   <span>{Math.min(quantity, profile.availableCount)} ticket{Math.min(quantity, profile.availableCount) > 1 ? "s" : ""}</span>
                   <span>·</span>
                   <span className="font-semibold text-[#1A1D26]">
-                    {(profile.price * Math.min(quantity, profile.availableCount)).toLocaleString()} CDF valeur totale
+                    {(profile.price * Math.min(quantity, profile.availableCount)).toLocaleString()} {currency} valeur totale
                   </span>
                 </div>
               </div>
@@ -242,7 +244,7 @@ export default function PrintPage() {
                       <p className="font-mono text-xl font-bold text-[#1A1D26] mt-1 tracking-wider">{t.code}</p>
                     </div>
                     <div className="flex items-center justify-center gap-2">
-                      <span className="text-sm font-bold" style={{ color: t.profileColor }}>{t.price.toLocaleString()} CDF</span>
+                      <span className="text-sm font-bold" style={{ color: t.profileColor }}>{t.price.toLocaleString()} {currency}</span>
                       <button
                         onClick={() => copyCode(t.code)}
                         className="p-1 rounded hover:bg-[#F5F7FA] text-[#9CA3AF] print:hidden"
@@ -289,7 +291,7 @@ export default function PrintPage() {
                         </span>
                       </td>
                       <td className="px-4 py-3 text-xs text-[#6B7280]">{t.duration}</td>
-                      <td className="px-4 py-3 text-xs font-semibold text-[#1A1D26]">{t.price.toLocaleString()} CDF</td>
+                      <td className="px-4 py-3 text-xs font-semibold text-[#1A1D26]">{t.price.toLocaleString()} {currency}</td>
                       <td className="px-4 py-3 text-right print:hidden">
                         <button
                           onClick={() => copyCode(t.code)}
@@ -343,7 +345,7 @@ export default function PrintPage() {
                     <p className="text-[10px] font-bold text-[#0B1E4D] uppercase tracking-wider mb-1">FLUXIONWIFI</p>
                     <p className="text-[9px] text-[#9CA3AF]">{t.profile} · {t.duration}</p>
                     <p className="font-mono text-base font-bold text-[#1A1D26] my-2 tracking-wider">{t.code}</p>
-                    <p className="text-xs font-bold" style={{ color: t.profileColor }}>{t.price.toLocaleString()} CDF</p>
+                    <p className="text-xs font-bold" style={{ color: t.profileColor }}>{t.price.toLocaleString()} {currency}</p>
                   </div>
                 ))}
               </div>

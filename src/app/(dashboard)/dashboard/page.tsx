@@ -19,6 +19,9 @@ import {
   ShoppingCart,
 } from "lucide-react";
 import Link from "next/link";
+import { getDefaultCountry } from "@/lib/currency";
+
+const cur = getDefaultCountry().currency.code;
 
 const stats = [
   {
@@ -33,7 +36,7 @@ const stats = [
   },
   {
     label: "Revenu du mois",
-    value: "0 CDF",
+    value: `0 ${cur}`,
     change: "+0%",
     trend: "up" as const,
     sublabel: "vs mois dernier",
@@ -163,10 +166,10 @@ const modules = [
 ];
 
 const recentActivity = [
-  { type: "Vente", detail: "Ticket 24h vendu", amount: "500 CDF", time: "Il y a 2 min" },
+  { type: "Vente", detail: "Ticket 24h vendu", amount: `500 ${cur}`, time: "Il y a 2 min" },
   { type: "Connexion", detail: "Routeur MK-01 connecté", amount: null, time: "Il y a 15 min" },
-  { type: "Vente", detail: "Ticket 1h vendu", amount: "200 CDF", time: "Il y a 30 min" },
-  { type: "Paiement", detail: "Paiement reçu via FedaPay", amount: "1 500 CDF", time: "Il y a 1h" },
+  { type: "Vente", detail: "Ticket 1h vendu", amount: `200 ${cur}`, time: "Il y a 30 min" },
+  { type: "Paiement", detail: "Paiement reçu via FedaPay", amount: `1 500 ${cur}`, time: "Il y a 1h" },
 ];
 
 export default function DashboardPage() {
