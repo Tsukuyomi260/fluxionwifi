@@ -1,9 +1,24 @@
-import { getDefaultCountry, formatPrice, type Country } from "@/lib/currency";
+"use client";
+
+import { useUser } from "./use-user";
+import { getDefaultCountry, getCountry, getCountryByName, formatPrice, type Country } from "@/lib/currency";
 
 export function useCurrency() {
-  // Phase UI: default country (RD Congo)
-  // Phase Data: will read from user profile in Supabase (user_metadata.country)
-  const country = getDefaultCountry();
+  const { user } = useUser();
+
+  let country: Country = getDefaultCountry();
+
+  if (user?.user_metadata?.country) {
+    const raw = user.user_metadata.country as string;
+    const byCode = getCountry(raw);
+    if (byCode) {
+      country = byCode;
+    } else {
+      const byName = getCountryByName(raw);
+      if (byName) country = byName;
+    }
+  }
+
   const currency = country.currency.code;
   const phonePrefix = country.phonePrefix;
 

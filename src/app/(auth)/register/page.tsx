@@ -5,11 +5,13 @@ import Link from "next/link";
 import Image from "next/image";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { register } from "./actions";
+import { getCountries } from "@/lib/currency";
 
 export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [selectedCountry, setSelectedCountry] = useState("");
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -30,10 +32,7 @@ export default function RegisterPage() {
     }
   }
 
-  const countries = [
-    "Congo-Kinshasa (RDC)", "Bénin", "Burkina Faso", "Cameroun", "Congo-Brazzaville",
-    "Côte d'Ivoire", "Gabon", "Guinée", "Mali", "Niger", "Sénégal", "Tchad", "Togo",
-  ];
+  const countries = getCountries();
 
   const inputClass =
     "flex h-11 w-full rounded-xl border border-[#D1D5DB] bg-white px-4 text-sm text-[#1A1D26] placeholder:text-[#9CA3AF] focus:outline-none focus:ring-2 focus:ring-[#2B7FFF]/20 focus:border-[#2B7FFF] transition-colors";
@@ -71,14 +70,15 @@ export default function RegisterPage() {
 
         <div className="space-y-1.5">
           <label htmlFor="phone" className="text-sm font-medium text-[#374151]">Téléphone</label>
-          <input id="phone" name="phone" type="tel" placeholder="+243 xx xxx xxxx" required className={inputClass} />
+          <input id="phone" name="phone" type="tel" placeholder={`${countries.find(c => c.code === selectedCountry)?.phonePrefix || "+xxx"} xx xxx xxxx`} required className={inputClass} />
         </div>
 
         <div className="space-y-1.5">
           <label htmlFor="country" className="text-sm font-medium text-[#374151]">Pays</label>
-          <select id="country" name="country" required className={inputClass}>
+          <select id="country" name="country" required className={inputClass}
+            value={selectedCountry} onChange={(e) => setSelectedCountry(e.target.value)}>
             <option value="">Sélectionnez votre pays</option>
-            {countries.map((c) => <option key={c} value={c}>{c}</option>)}
+            {countries.map((c) => <option key={c.code} value={c.code}>{c.name}</option>)}
           </select>
         </div>
 

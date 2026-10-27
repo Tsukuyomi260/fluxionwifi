@@ -1,3 +1,5 @@
+"use client";
+
 import {
   Globe,
   Ticket,
@@ -19,52 +21,52 @@ import {
   ShoppingCart,
 } from "lucide-react";
 import Link from "next/link";
-import { getDefaultCountry } from "@/lib/currency";
+import { useCurrency } from "@/hooks/use-currency";
 
-const cur = getDefaultCountry().currency.code;
-
-const stats = [
-  {
-    label: "Ventes aujourd'hui",
-    value: "0",
-    change: "+0%",
-    trend: "up" as const,
-    sublabel: "vs hier",
-    icon: ShoppingCart,
-    iconBg: "bg-blue-50",
-    iconColor: "text-[#2B7FFF]",
-  },
-  {
-    label: "Revenu du mois",
-    value: `0 ${cur}`,
-    change: "+0%",
-    trend: "up" as const,
-    sublabel: "vs mois dernier",
-    icon: Banknote,
-    iconBg: "bg-emerald-50",
-    iconColor: "text-emerald-500",
-  },
-  {
-    label: "Tickets actifs",
-    value: "0",
-    change: "+0%",
-    trend: "up" as const,
-    sublabel: "en cours",
-    icon: Ticket,
-    iconBg: "bg-violet-50",
-    iconColor: "text-violet-500",
-  },
-  {
-    label: "Routeurs en ligne",
-    value: "0",
-    change: "0%",
-    trend: "down" as const,
-    sublabel: "connectés",
-    icon: Activity,
-    iconBg: "bg-orange-50",
-    iconColor: "text-orange-500",
-  },
-];
+function getStats(cur: string) {
+  return [
+    {
+      label: "Ventes aujourd'hui",
+      value: "0",
+      change: "+0%",
+      trend: "up" as const,
+      sublabel: "vs hier",
+      icon: ShoppingCart,
+      iconBg: "bg-blue-50",
+      iconColor: "text-[#2B7FFF]",
+    },
+    {
+      label: "Revenu du mois",
+      value: `0 ${cur}`,
+      change: "+0%",
+      trend: "up" as const,
+      sublabel: "vs mois dernier",
+      icon: Banknote,
+      iconBg: "bg-emerald-50",
+      iconColor: "text-emerald-500",
+    },
+    {
+      label: "Tickets actifs",
+      value: "0",
+      change: "+0%",
+      trend: "up" as const,
+      sublabel: "en cours",
+      icon: Ticket,
+      iconBg: "bg-violet-50",
+      iconColor: "text-violet-500",
+    },
+    {
+      label: "Routeurs en ligne",
+      value: "0",
+      change: "0%",
+      trend: "down" as const,
+      sublabel: "connectés",
+      icon: Activity,
+      iconBg: "bg-orange-50",
+      iconColor: "text-orange-500",
+    },
+  ];
+}
 
 const modules = [
   {
@@ -165,14 +167,20 @@ const modules = [
   },
 ];
 
-const recentActivity = [
-  { type: "Vente", detail: "Ticket 24h vendu", amount: `500 ${cur}`, time: "Il y a 2 min" },
-  { type: "Connexion", detail: "Routeur MK-01 connecté", amount: null, time: "Il y a 15 min" },
-  { type: "Vente", detail: "Ticket 1h vendu", amount: `200 ${cur}`, time: "Il y a 30 min" },
-  { type: "Paiement", detail: "Paiement reçu via FedaPay", amount: `1 500 ${cur}`, time: "Il y a 1h" },
-];
+function getRecentActivity(cur: string) {
+  return [
+    { type: "Vente", detail: "Ticket 24h vendu", amount: `500 ${cur}`, time: "Il y a 2 min" },
+    { type: "Connexion", detail: "Routeur MK-01 connecté", amount: null as string | null, time: "Il y a 15 min" },
+    { type: "Vente", detail: "Ticket 1h vendu", amount: `200 ${cur}`, time: "Il y a 30 min" },
+    { type: "Paiement", detail: "Paiement reçu via FedaPay", amount: `1 500 ${cur}`, time: "Il y a 1h" },
+  ];
+}
 
 export default function DashboardPage() {
+  const { currency } = useCurrency();
+  const stats = getStats(currency);
+  const recentActivity = getRecentActivity(currency);
+
   return (
     <div className="space-y-6">
       <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">

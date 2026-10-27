@@ -50,7 +50,16 @@ export function getCountry(code: string): Country | undefined {
 }
 
 export function getDefaultCountry(): Country {
-  return countries[0]; // RD Congo as default — will come from user profile in Phase Data
+  return countries[0];
+}
+
+export function getCountryByName(name: string): Country | undefined {
+  const normalized = name.toLowerCase().trim();
+  return countries.find((c) => {
+    if (c.name.toLowerCase() === normalized) return true;
+    if (normalized === "congo-kinshasa (rdc)" || normalized === "congo-kinshasa") return c.code === "CD";
+    return false;
+  });
 }
 
 export function formatPrice(amount: number, currencyCode: string): string {
