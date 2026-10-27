@@ -17,7 +17,7 @@ export default function AuthLayout({
   return (
     <div className="flex min-h-screen">
       {/* Left branding panel */}
-      <div className="hidden lg:flex lg:w-[480px] xl:w-[520px] relative overflow-hidden">
+      <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden">
         {/* Gradient background */}
         <div className="absolute inset-0 bg-gradient-to-br from-[#0B1E4D] via-[#122B66] to-[#1A3A7A]" />
 
