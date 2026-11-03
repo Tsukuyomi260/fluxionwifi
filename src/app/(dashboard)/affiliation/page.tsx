@@ -25,6 +25,7 @@ import {
   ExternalLink,
   Download,
   MessageCircle,
+  Globe,
 } from "lucide-react";
 import { useCurrency } from "@/hooks/use-currency";
 

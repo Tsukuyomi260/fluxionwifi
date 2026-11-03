@@ -33,6 +33,7 @@ import {
   X,
   Copy,
   RefreshCw,
+  BookOpen,
 } from "lucide-react";
 import { useCurrency } from "@/hooks/use-currency";
 
