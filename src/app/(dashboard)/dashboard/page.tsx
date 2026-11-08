@@ -13,12 +13,13 @@ import {
   HeadphonesIcon,
   BookOpen,
   Gift,
-  ArrowRight,
   TrendingUp,
   TrendingDown,
   Banknote,
   Activity,
   ShoppingCart,
+  Printer,
+  Settings,
 } from "lucide-react";
 import Link from "next/link";
 import { useCurrency } from "@/hooks/use-currency";
@@ -68,102 +69,43 @@ function getStats(cur: string) {
   ];
 }
 
-const modules = [
-  {
-    name: "Portail Captif",
-    description: "Gérez vos pages de connexion WiFi",
-    href: "/portal",
-    icon: Globe,
-    iconBg: "bg-blue-50",
-    iconColor: "text-[#2B7FFF]",
-  },
-  {
-    name: "Tickets",
-    description: "Créez et gérez vos tickets WiFi",
-    href: "/tickets",
-    icon: Ticket,
-    iconBg: "bg-emerald-50",
-    iconColor: "text-emerald-500",
-  },
-  {
-    name: "Console RADIUS",
-    description: "Administrez votre serveur RADIUS",
-    href: "/console",
-    icon: Terminal,
-    iconBg: "bg-violet-50",
-    iconColor: "text-violet-500",
-  },
-  {
-    name: "Vendeurs",
-    description: "Gérez votre équipe de vendeurs",
-    href: "/sellers",
-    icon: Users,
-    iconBg: "bg-orange-50",
-    iconColor: "text-orange-500",
-  },
+const navTabs = [
+  { name: "Facturation", href: "/finance/billing", icon: Receipt },
+  { name: "Portail Captif", href: "/portal", icon: Globe },
+  { name: "Interopérabilité", href: "/interop", icon: Network },
+  { name: "Services Connectés", href: "/vpn", icon: Shield },
+  { name: "Comptes Associés", href: "/sellers", icon: Users },
+  { name: "Studio", href: "/studio", icon: Palette },
+  { name: "Support", href: "/support", icon: HeadphonesIcon },
+  { name: "Tutoriels", href: "/tutorials", icon: BookOpen },
+  { name: "Affiliation", href: "/affiliation", icon: Gift },
+  { name: "Paramètres", href: "/settings", icon: Settings },
+];
+
+const quickActions = [
   {
     name: "Mon Solde",
-    description: "Consultez votre solde et transactions",
     href: "/finance/balance",
     icon: Wallet,
-    iconBg: "bg-cyan-50",
-    iconColor: "text-cyan-500",
+    gradient: "from-[#2B7FFF] to-[#0B1E4D]",
   },
   {
-    name: "Facturation",
-    description: "Gérez vos factures et paiements",
-    href: "/finance/billing",
-    icon: Receipt,
-    iconBg: "bg-pink-50",
-    iconColor: "text-pink-500",
+    name: "Vente / Impression\nde Tickets",
+    href: "/console/print",
+    icon: Printer,
+    gradient: "from-orange-500 to-red-500",
   },
   {
-    name: "VPN",
-    description: "Accès distant à vos routeurs",
-    href: "/vpn",
-    icon: Shield,
-    iconBg: "bg-teal-50",
-    iconColor: "text-teal-500",
+    name: "Inventé / Clé\nVendeurs",
+    href: "/sellers",
+    icon: Users,
+    gradient: "from-emerald-500 to-teal-600",
   },
   {
-    name: "Interopérabilité",
-    description: "Connectez vos agrégateurs de paiement",
-    href: "/interop",
-    icon: Network,
-    iconBg: "bg-amber-50",
-    iconColor: "text-amber-500",
-  },
-  {
-    name: "Studio",
-    description: "Personnalisez vos portails captifs",
-    href: "/studio",
-    icon: Palette,
-    iconBg: "bg-fuchsia-50",
-    iconColor: "text-fuchsia-500",
-  },
-  {
-    name: "Support",
-    description: "Contactez l'équipe support",
-    href: "/support",
-    icon: HeadphonesIcon,
-    iconBg: "bg-red-50",
-    iconColor: "text-red-400",
-  },
-  {
-    name: "Tutoriels",
-    description: "Apprenez à utiliser la plateforme",
-    href: "/tutorials",
-    icon: BookOpen,
-    iconBg: "bg-indigo-50",
-    iconColor: "text-indigo-500",
-  },
-  {
-    name: "Affiliation",
-    description: "Gagnez 20% de commission",
-    href: "/affiliation",
-    icon: Gift,
-    iconBg: "bg-lime-50",
-    iconColor: "text-lime-600",
+    name: "Système\nConsole",
+    href: "/console",
+    icon: Terminal,
+    gradient: "from-violet-500 to-purple-700",
   },
 ];
 
@@ -182,16 +124,48 @@ export default function DashboardPage() {
   const recentActivity = getRecentActivity(currency);
 
   return (
-    <div className="space-y-6">
-      <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
+    <div className="space-y-5">
+      {/* Navigation bar - compact horizontal tabs like EVISIONS CONNECT */}
+      <div className="rounded-2xl border border-[#E8ECF1] bg-white shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
+        <div className="flex items-center overflow-x-auto scrollbar-hide">
+          {navTabs.map((tab) => (
+            <Link
+              key={tab.name}
+              href={tab.href}
+              className="flex items-center gap-1.5 whitespace-nowrap px-4 py-3 text-[13px] font-medium text-[#6B7280] hover:text-[#2B7FFF] hover:bg-blue-50/50 transition-colors border-r border-[#F1F3F7] last:border-r-0"
+            >
+              <tab.icon className="h-3.5 w-3.5 shrink-0" />
+              {tab.name}
+            </Link>
+          ))}
+        </div>
+      </div>
+
+      {/* Quick action tiles */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        {quickActions.map((action) => (
+          <Link
+            key={action.name}
+            href={action.href}
+            className={`group relative rounded-2xl bg-gradient-to-br ${action.gradient} p-5 text-white shadow-lg hover:shadow-xl transition-all hover:scale-[1.02] overflow-hidden`}
+          >
+            <div className="absolute top-0 right-0 w-20 h-20 bg-white/10 rounded-full -translate-y-6 translate-x-6" />
+            <action.icon className="h-8 w-8 mb-3 opacity-90" />
+            <p className="text-sm font-semibold leading-tight whitespace-pre-line">{action.name}</p>
+          </Link>
+        ))}
+      </div>
+
+      {/* Stats cards */}
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {stats.map((stat) => (
           <div
             key={stat.label}
-            className="rounded-2xl border border-[#E8ECF1] bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]"
+            className="rounded-2xl border border-[#E8ECF1] bg-white p-4 shadow-[0_1px_3px_rgba(0,0,0,0.04)]"
           >
             <div className="flex items-start justify-between">
-              <div className={`rounded-xl p-2.5 ${stat.iconBg}`}>
-                <stat.icon className={`h-5 w-5 ${stat.iconColor}`} />
+              <div className={`rounded-xl p-2 ${stat.iconBg}`}>
+                <stat.icon className={`h-4.5 w-4.5 ${stat.iconColor}`} />
               </div>
               <span
                 className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${
@@ -208,19 +182,20 @@ export default function DashboardPage() {
                 {stat.change}
               </span>
             </div>
-            <p className="mt-4 text-[28px] font-bold text-[#1A1D26]">{stat.value}</p>
-            <p className="mt-0.5 text-[13px] text-[#6B7280]">
+            <p className="mt-3 text-2xl font-bold text-[#1A1D26]">{stat.value}</p>
+            <p className="mt-0.5 text-[12px] text-[#6B7280]">
               {stat.label} · {stat.sublabel}
             </p>
           </div>
         ))}
       </div>
 
-      <div className="grid gap-5 lg:grid-cols-3">
+      {/* Charts + Activity */}
+      <div className="grid gap-4 lg:grid-cols-3">
         <div className="lg:col-span-2 rounded-2xl border border-[#E8ECF1] bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
-          <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center justify-between mb-5">
             <div>
-              <h3 className="text-base font-semibold text-[#1A1D26]">Revenus de la semaine</h3>
+              <h3 className="text-sm font-semibold text-[#1A1D26]">Revenus de la semaine</h3>
               <p className="text-xs text-[#6B7280]">Suivi de vos ventes quotidiennes</p>
             </div>
             <select className="text-xs border border-[#E8ECF1] rounded-lg px-2.5 py-1.5 text-[#6B7280] bg-white">
@@ -229,7 +204,7 @@ export default function DashboardPage() {
               <option>Cette année</option>
             </select>
           </div>
-          <div className="flex items-end gap-3 h-48">
+          <div className="flex items-end gap-3 h-44">
             {["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"].map((day, i) => {
               const heights = [40, 65, 45, 80, 55, 70, 30];
               return (
@@ -247,12 +222,12 @@ export default function DashboardPage() {
 
         <div className="rounded-2xl border border-[#E8ECF1] bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-base font-semibold text-[#1A1D26]">Activité récente</h3>
+            <h3 className="text-sm font-semibold text-[#1A1D26]">Activité récente</h3>
             <Link href="/finance/balance" className="text-xs text-primary hover:underline">
               Voir tout
             </Link>
           </div>
-          <ul className="space-y-3">
+          <ul className="space-y-2.5">
             {recentActivity.map((item, i) => (
               <li key={i} className="flex items-center justify-between py-2 border-b border-[#F1F3F7] last:border-0">
                 <div>
@@ -265,28 +240,6 @@ export default function DashboardPage() {
               </li>
             ))}
           </ul>
-        </div>
-      </div>
-
-      <div>
-        <h3 className="mb-4 text-base font-semibold text-[#1A1D26]">Modules</h3>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {modules.map((mod) => (
-            <Link
-              key={mod.name}
-              href={mod.href}
-              className="group rounded-2xl border border-[#E8ECF1] bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)] transition-all hover:shadow-md hover:border-primary/30"
-            >
-              <div className="flex items-start justify-between">
-                <div className={`rounded-xl p-2.5 ${mod.iconBg}`}>
-                  <mod.icon className={`h-5 w-5 ${mod.iconColor}`} />
-                </div>
-                <ArrowRight className="h-4 w-4 text-[#D1D5DB] opacity-0 transition-all group-hover:opacity-100 group-hover:text-primary" />
-              </div>
-              <h4 className="mt-3 text-sm font-semibold text-[#1A1D26]">{mod.name}</h4>
-              <p className="mt-1 text-xs text-[#6B7280]">{mod.description}</p>
-            </Link>
-          ))}
         </div>
       </div>
     </div>
