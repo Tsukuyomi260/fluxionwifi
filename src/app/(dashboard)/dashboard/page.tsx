@@ -28,9 +28,7 @@ import {
   BookText,
   Gift,
   ChevronDown,
-  Loader2,
   TrendingUp,
-  Star,
 } from "lucide-react";
 
 const navTabs = [
@@ -64,7 +62,7 @@ export default function DashboardPage() {
   const { sellers, loading: sel } = useSellers();
   const { balance, loading: bl } = useTransactions();
 
-  const loading = tl || rl || sl || sel || bl;
+  const anyLoading = tl || rl || sl || sel || bl;
 
   const availableTickets = tickets.filter((t) => t.status === "available").length;
   const totalStock = tickets.length;
@@ -78,9 +76,9 @@ export default function DashboardPage() {
       icon: Wallet,
       iconBg: "bg-orange-100",
       iconColor: "text-orange-500",
-      badge: balance > 0 ? `${balance >= 1000 ? (balance / 1000).toFixed(1) + "k" : balance}` : null,
+      badge: !bl && balance > 0 ? `${balance >= 1000 ? (balance / 1000).toFixed(1) + "k" : balance}` : null,
       badgeColor: "bg-emerald-500",
-      subtitle: `Retirable : ${balance.toLocaleString("fr-FR")} ${currency}`,
+      subtitle: bl ? undefined : `Retirable : ${balance.toLocaleString("fr-FR")} ${currency}`,
       subtitleColor: "text-emerald-500",
     },
     {
@@ -89,9 +87,9 @@ export default function DashboardPage() {
       icon: Printer,
       iconBg: "bg-blue-100",
       iconColor: "text-[#2B7FFF]",
-      badge: totalStock > 0 ? `${totalStock >= 1000 ? (totalStock / 1000).toFixed(1) + "k" : totalStock}` : null,
+      badge: !tl && totalStock > 0 ? `${totalStock >= 1000 ? (totalStock / 1000).toFixed(1) + "k" : totalStock}` : null,
       badgeColor: "bg-emerald-500",
-      subtitle: profiles.length > 0 ? `${profiles[0].name}: ${profiles[0].price?.toLocaleString("fr-FR")} ${currency}` : "Aucun profil",
+      subtitle: tl ? undefined : profiles.length > 0 ? `${profiles[0].name}: ${profiles[0].price?.toLocaleString("fr-FR")} ${currency}` : "Aucun profil",
       subtitleColor: "text-[#2B7FFF]",
     },
     {
@@ -100,9 +98,9 @@ export default function DashboardPage() {
       icon: Users,
       iconBg: "bg-amber-100",
       iconColor: "text-amber-600",
-      badge: activeSellers > 0 ? String(activeSellers) : null,
+      badge: !sel && activeSellers > 0 ? String(activeSellers) : null,
       badgeColor: "bg-[#2B7FFF]",
-      subtitle: `Stock confié : ${totalSellersStock} tickets`,
+      subtitle: sel ? undefined : `Stock confié : ${totalSellersStock} tickets`,
       subtitleColor: "text-amber-600",
     },
     {
@@ -120,9 +118,9 @@ export default function DashboardPage() {
       icon: Ticket,
       iconBg: "bg-teal-100",
       iconColor: "text-teal-600",
-      badge: String(availableTickets),
+      badge: tl ? null : String(availableTickets),
       badgeColor: availableTickets > 0 ? "bg-emerald-500" : "bg-red-500",
-      subtitle: `Stock Total : ${availableTickets}`,
+      subtitle: tl ? undefined : `Stock Total : ${availableTickets}`,
       subtitleColor: availableTickets > 0 ? "text-emerald-500" : "text-red-500",
     },
     {
@@ -149,7 +147,7 @@ export default function DashboardPage() {
       icon: Shield,
       iconBg: "bg-emerald-100",
       iconColor: "text-emerald-600",
-      subtitle: `${online} routeur${online !== 1 ? "s" : ""} connecté${online !== 1 ? "s" : ""}`,
+      subtitle: rl ? undefined : `${online} routeur${online !== 1 ? "s" : ""} connecté${online !== 1 ? "s" : ""}`,
       subtitleColor: "text-emerald-600",
     },
     {
@@ -192,14 +190,6 @@ export default function DashboardPage() {
       subtitleColor: "text-red-500",
     },
   ];
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 className="h-8 w-8 animate-spin text-[#2B7FFF]" />
-      </div>
-    );
-  }
 
   return (
     <div className="-m-4 lg:-m-6 min-h-full bg-[#1F2937] p-4 lg:p-6">
@@ -277,12 +267,14 @@ export default function DashboardPage() {
               {card.name}
             </h3>
 
-            {/* Subtitle */}
-            {card.subtitle && (
+            {/* Subtitle — skeleton or real */}
+            {anyLoading && !card.subtitle ? (
+              <div className="mt-2 mx-auto h-3 w-20 rounded bg-slate-200 animate-pulse" />
+            ) : card.subtitle ? (
               <p className={`mt-1.5 text-center text-xs ${card.subtitleColor || "text-[#6B7280]"}`}>
                 {card.subtitle}
               </p>
-            )}
+            ) : null}
           </Link>
         ))}
       </div>
