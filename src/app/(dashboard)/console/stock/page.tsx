@@ -2,310 +2,351 @@
 
 import { useState } from "react";
 import { useCurrency } from "@/hooks/use-currency";
+import { useTickets } from "@/hooks/use-tickets";
+import type { TicketStatus } from "@/lib/supabase/types";
 import {
-  Package,
-  Ticket,
-  Users,
   Search,
+  Trash2,
+  Printer,
   ChevronDown,
-  Clock,
-  CheckCircle2,
-  AlertCircle,
-  TrendingUp,
-  Eye,
-  X,
-  Copy,
-  Check,
+  Loader2,
+  Package,
+  CheckCircle,
 } from "lucide-react";
 
-interface TicketProfile {
-  id: string;
-  name: string;
-  duration: string;
-  price: number;
-  speed: string;
-  color: string;
-  total: number;
-  available: number;
-  active: number;
-  used: number;
-  expired: number;
-}
-
-const profiles: TicketProfile[] = [
-  { id: "1", name: "Express", duration: "1 heure", price: 200, speed: "5 Mbps", color: "#F59E0B", total: 20, available: 8, active: 3, used: 6, expired: 3 },
-  { id: "2", name: "Standard", duration: "3 heures", price: 500, speed: "10 Mbps", color: "#2B7FFF", total: 30, available: 15, active: 5, used: 7, expired: 3 },
-  { id: "3", name: "Journée", duration: "24 heures", price: 1000, speed: "15 Mbps", color: "#10B981", total: 25, available: 12, active: 4, used: 6, expired: 3 },
-  { id: "4", name: "Semaine", duration: "7 jours", price: 5000, speed: "20 Mbps", color: "#8B5CF6", total: 15, available: 8, active: 2, used: 3, expired: 2 },
-  { id: "5", name: "Mensuel", duration: "30 jours", price: 15000, speed: "30 Mbps", color: "#EC4899", total: 10, available: 4, active: 3, used: 2, expired: 1 },
-];
-
-interface ActiveUser {
-  id: string;
-  code: string;
-  profile: string;
-  profileColor: string;
-  ip: string;
-  mac: string;
-  router: string;
-  connectedAt: string;
-  timeLeft: string;
-  download: number;
-  upload: number;
-}
-
-const activeUsers: ActiveUser[] = [
-  { id: "1", code: "8F3A-2D7C", profile: "Standard", profileColor: "#2B7FFF", ip: "10.0.0.15", mac: "AA:BB:CC:11:22:33", router: "MK-Café-01", connectedAt: "14:32", timeLeft: "1h 36min", download: 312, upload: 45 },
-  { id: "2", code: "C7E9-01AB", profile: "Express", profileColor: "#F59E0B", ip: "10.0.0.22", mac: "DD:EE:FF:44:55:66", router: "MK-Café-01", connectedAt: "15:10", timeLeft: "14min", download: 87, upload: 12 },
-  { id: "3", code: "1B4F-8A3E", profile: "Journée", profileColor: "#10B981", ip: "10.0.1.8", mac: "11:22:33:AA:BB:CC", router: "MK-Hotel-03", connectedAt: "12:05", timeLeft: "20h 09min", download: 1840, upload: 230 },
-  { id: "4", code: "F5A1-B3D9", profile: "Semaine", profileColor: "#8B5CF6", ip: "10.0.2.5", mac: "55:66:77:11:22:33", router: "MK-Campus-02", connectedAt: "13:58", timeLeft: "6j 21h", download: 920, upload: 156 },
-  { id: "5", code: "FREE-0001", profile: "Gratuit", profileColor: "#6B7280", ip: "10.0.1.15", mac: "77:88:99:DD:EE:FF", router: "MK-Hotel-03", connectedAt: "09:45", timeLeft: "Illimité", download: 42, upload: 8 },
-];
-
-type ViewMode = "stock" | "users";
+const statusLabels: Record<TicketStatus, { label: string; color: string }> = {
+  available: { label: "disponible", color: "text-emerald-600" },
+  active: { label: "actif", color: "text-blue-600" },
+  used: { label: "utilisé", color: "text-slate-400" },
+  expired: { label: "expiré", color: "text-red-500" },
+};
 
 export default function StockPage() {
   const { currency } = useCurrency();
-  const [viewMode, setViewMode] = useState<ViewMode>("stock");
-  const [searchQuery, setSearchQuery] = useState("");
-  const [copiedCode, setCopiedCode] = useState<string | null>(null);
+  const { tickets, profiles, loading, deleteTicket } = useTickets();
+  const [selectedProfile, setSelectedProfile] = useState("");
+  const [loaded, setLoaded] = useState(false);
+  const [sortOrder, setSortOrder] = useState("recent");
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [deleting, setDeleting] = useState(false);
 
-  const totalAvailable = profiles.reduce((s, p) => s + p.available, 0);
-  const totalActive = profiles.reduce((s, p) => s + p.active, 0);
-  const totalTickets = profiles.reduce((s, p) => s + p.total, 0);
+  function handleCharger() {
+    setLoaded(true);
+    setSelectedIds(new Set());
+  }
 
-  const filteredUsers = activeUsers.filter((u) =>
-    u.code.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    u.ip.includes(searchQuery) ||
-    u.router.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    u.profile.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredTickets = loaded && selectedProfile
+    ? tickets
+        .filter((t) => t.profile_id === selectedProfile)
+        .sort((a, b) =>
+          sortOrder === "recent"
+            ? new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+            : new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+        )
+    : [];
 
-  function copyCode(code: string) {
-    navigator.clipboard.writeText(code);
-    setCopiedCode(code);
-    setTimeout(() => setCopiedCode(null), 2000);
+  function toggleSelect(id: string) {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  function toggleAll() {
+    if (selectedIds.size === filteredTickets.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(filteredTickets.map((t) => t.id)));
+    }
+  }
+
+  async function handleDeleteSelected() {
+    setDeleting(true);
+    for (const id of selectedIds) {
+      await deleteTicket(id);
+    }
+    setSelectedIds(new Set());
+    setDeleting(false);
+  }
+
+  async function handleViderProfil() {
+    if (!selectedProfile) return;
+    setDeleting(true);
+    const toDelete = tickets.filter(
+      (t) => t.profile_id === selectedProfile && t.status === "available"
+    );
+    for (const t of toDelete) {
+      await deleteTicket(t.id);
+    }
+    setDeleting(false);
+  }
+
+  function handleImprimer() {
+    const toPrint = filteredTickets.filter(
+      (t) => selectedIds.size === 0 || selectedIds.has(t.id)
+    );
+    if (toPrint.length === 0) return;
+    const profile = profiles.find((p) => p.id === selectedProfile);
+    const win = window.open("", "_blank");
+    if (!win) return;
+    win.document.write(`<!DOCTYPE html><html><head><title>Tickets - ${profile?.name || ""}</title>
+      <style>body{font-family:monospace;padding:20px}
+      .ticket{border:2px dashed #333;padding:16px;margin:10px 0;text-align:center;page-break-inside:avoid}
+      .code{font-size:24px;font-weight:bold;letter-spacing:4px}
+      .info{font-size:12px;color:#666;margin-top:8px}
+      @media print{body{padding:0}}</style></head><body>`);
+    toPrint.forEach((t) => {
+      win.document.write(`<div class="ticket">
+        <div style="font-size:14px;font-weight:bold;margin-bottom:8px">${profile?.name || ""}</div>
+        <div class="code">${t.code}</div>
+        <div class="info">${(profile?.price || 0).toLocaleString("fr-FR")} ${currency} | FLUXIONWIFI</div>
+      </div>`);
+    });
+    win.document.write("</body></html>");
+    win.document.close();
+    win.print();
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin text-[#2B7FFF]" />
+      </div>
+    );
   }
 
   return (
-    <div className="space-y-6">
-      {/* Stats */}
-      <div className="grid gap-4 sm:grid-cols-3">
-        <div className="rounded-2xl border border-[#E8ECF1] bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
-          <div className="flex items-center gap-3">
-            <div className="rounded-xl bg-blue-50 p-2.5"><Package className="h-5 w-5 text-[#2B7FFF]" /></div>
-            <div>
-              <p className="text-2xl font-bold text-[#1A1D26]">{totalAvailable}</p>
-              <p className="text-xs text-[#6B7280]">Tickets disponibles</p>
+    <div className="-m-4 lg:-m-6 min-h-full bg-[#F3F4F6] p-4 lg:p-6">
+      {/* Header */}
+      <h1 className="text-2xl font-bold text-[#1A1D26] mb-5">
+        Stock / Utilisateurs
+      </h1>
+
+      {/* Stock par profil section */}
+      <div className="rounded-xl border border-[#E5E7EB] bg-white overflow-hidden">
+        <div className="px-5 py-4 border-b border-[#E5E7EB]">
+          <div className="flex items-center gap-2">
+            <Package className="h-5 w-5 text-[#6B7280]" />
+            <h2 className="text-base font-semibold text-[#1A1D26]">
+              Stock par profil
+            </h2>
+          </div>
+        </div>
+
+        {/* Filter bar */}
+        <div className="px-5 py-4 border-b border-[#E5E7EB]">
+          <div className="flex flex-wrap items-center gap-3">
+            <span className="text-sm font-medium text-[#374151]">
+              Profil :
+            </span>
+            <div className="relative">
+              <select
+                value={selectedProfile}
+                onChange={(e) => {
+                  setSelectedProfile(e.target.value);
+                  setLoaded(false);
+                }}
+                className="h-9 pl-3 pr-8 rounded-lg border border-[#D1D5DB] bg-white text-sm text-[#1A1D26] appearance-none focus:outline-none focus:border-[#2B7FFF] min-w-[200px]"
+              >
+                <option value="">— Choisir un profil —</option>
+                {profiles.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.name}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-[#9CA3AF] pointer-events-none" />
             </div>
-          </div>
-        </div>
-        <div className="rounded-2xl border border-[#E8ECF1] bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
-          <div className="flex items-center gap-3">
-            <div className="rounded-xl bg-emerald-50 p-2.5"><Users className="h-5 w-5 text-emerald-500" /></div>
-            <div>
-              <p className="text-2xl font-bold text-[#1A1D26]">{totalActive}</p>
-              <p className="text-xs text-[#6B7280]">Utilisateurs connectés</p>
+
+            <button
+              onClick={handleCharger}
+              disabled={!selectedProfile}
+              className="inline-flex items-center gap-2 h-9 px-4 rounded-lg bg-emerald-500 text-sm font-medium text-white hover:bg-emerald-600 transition-colors disabled:opacity-50"
+            >
+              <Search className="h-4 w-4" />
+              Charger
+            </button>
+
+            <span className="text-sm font-medium text-[#374151] ml-4">
+              Lot :
+            </span>
+            <div className="relative">
+              <select className="h-9 pl-3 pr-8 rounded-lg border border-[#D1D5DB] bg-white text-sm text-[#1A1D26] appearance-none focus:outline-none min-w-[130px]">
+                <option>Tous les lots</option>
+              </select>
+              <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-[#9CA3AF] pointer-events-none" />
             </div>
-          </div>
-        </div>
-        <div className="rounded-2xl border border-[#E8ECF1] bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
-          <div className="flex items-center gap-3">
-            <div className="rounded-xl bg-violet-50 p-2.5"><Ticket className="h-5 w-5 text-violet-500" /></div>
-            <div>
-              <p className="text-2xl font-bold text-[#1A1D26]">{totalTickets}</p>
-              <p className="text-xs text-[#6B7280]">Tickets générés (total)</p>
+
+            <div className="relative">
+              <select
+                value={sortOrder}
+                onChange={(e) => setSortOrder(e.target.value)}
+                className="h-9 pl-3 pr-8 rounded-lg border border-[#D1D5DB] bg-white text-sm text-[#1A1D26] appearance-none focus:outline-none min-w-[120px]"
+              >
+                <option value="recent">Plus r&eacute;cents</option>
+                <option value="oldest">Plus anciens</option>
+              </select>
+              <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-[#9CA3AF] pointer-events-none" />
             </div>
-          </div>
-        </div>
-      </div>
 
-      {/* View toggle */}
-      <div className="flex items-center gap-1 bg-[#F5F7FA] rounded-xl p-1 w-fit">
-        <button
-          onClick={() => setViewMode("stock")}
-          className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-            viewMode === "stock" ? "bg-white text-[#1A1D26] shadow-sm" : "text-[#6B7280] hover:text-[#1A1D26]"
-          }`}
-        >
-          <Package className="h-4 w-4" />
-          Stock par profil
-        </button>
-        <button
-          onClick={() => setViewMode("users")}
-          className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-            viewMode === "users" ? "bg-white text-[#1A1D26] shadow-sm" : "text-[#6B7280] hover:text-[#1A1D26]"
-          }`}
-        >
-          <Users className="h-4 w-4" />
-          Utilisateurs actifs
-        </button>
-      </div>
-
-      {/* Stock view */}
-      {viewMode === "stock" && (
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          {profiles.map((p) => {
-            const usedPercent = ((p.total - p.available) / p.total) * 100;
-            return (
-              <div key={p.id} className="rounded-2xl border border-[#E8ECF1] bg-white shadow-[0_1px_3px_rgba(0,0,0,0.04)] overflow-hidden">
-                <div className="h-1" style={{ backgroundColor: p.color }} />
-                <div className="p-5 space-y-4">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <h3 className="text-sm font-semibold text-[#1A1D26]">{p.name}</h3>
-                      <p className="text-xs text-[#6B7280]">{p.duration} · {p.speed}</p>
-                    </div>
-                    <span className="text-sm font-bold" style={{ color: p.color }}>{p.price.toLocaleString()} {currency}</span>
-                  </div>
-
-                  {/* Stock bar */}
-                  <div>
-                    <div className="flex justify-between text-xs mb-1.5">
-                      <span className="text-[#6B7280]">Stock utilisé</span>
-                      <span className="font-medium text-[#1A1D26]">{p.total - p.available}/{p.total}</span>
-                    </div>
-                    <div className="w-full h-2.5 rounded-full bg-[#F1F3F7] overflow-hidden">
-                      <div className="h-full rounded-full transition-all" style={{ width: `${usedPercent}%`, backgroundColor: p.color }} />
-                    </div>
-                  </div>
-
-                  {/* Breakdown */}
-                  <div className="grid grid-cols-2 gap-2 pt-3 border-t border-[#F1F3F7]">
-                    <div className="flex items-center gap-2">
-                      <span className="h-2 w-2 rounded-full bg-emerald-500" />
-                      <span className="text-xs text-[#6B7280]">Disponibles</span>
-                      <span className="text-xs font-semibold text-[#1A1D26] ml-auto">{p.available}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="h-2 w-2 rounded-full bg-[#2B7FFF]" />
-                      <span className="text-xs text-[#6B7280]">Actifs</span>
-                      <span className="text-xs font-semibold text-[#1A1D26] ml-auto">{p.active}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="h-2 w-2 rounded-full bg-[#9CA3AF]" />
-                      <span className="text-xs text-[#6B7280]">Utilisés</span>
-                      <span className="text-xs font-semibold text-[#1A1D26] ml-auto">{p.used}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="h-2 w-2 rounded-full bg-red-400" />
-                      <span className="text-xs text-[#6B7280]">Expirés</span>
-                      <span className="text-xs font-semibold text-[#1A1D26] ml-auto">{p.expired}</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
-
-      {/* Users view */}
-      {viewMode === "users" && (
-        <div className="space-y-4">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#9CA3AF]" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Rechercher par code, IP, routeur, profil..."
-              className="w-full h-10 pl-10 pr-4 rounded-xl border border-[#E8ECF1] bg-white text-sm text-[#1A1D26] placeholder:text-[#9CA3AF] focus:outline-none focus:border-[#2B7FFF] focus:ring-1 focus:ring-[#2B7FFF]/20 transition-colors"
-            />
+            <button
+              onClick={handleImprimer}
+              disabled={!loaded || filteredTickets.length === 0}
+              className="inline-flex items-center gap-1.5 h-9 px-4 rounded-lg border border-[#D1D5DB] text-sm text-[#374151] hover:bg-[#F3F4F6] transition-colors disabled:opacity-50"
+            >
+              <Printer className="h-4 w-4" />
+              Imprimer
+            </button>
           </div>
 
-          <div className="rounded-2xl border border-[#E8ECF1] bg-white shadow-[0_1px_3px_rgba(0,0,0,0.04)] overflow-hidden">
-            {/* Desktop */}
-            <div className="hidden lg:block overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-[#E8ECF1] bg-[#FAFBFC]">
-                    <th className="text-left px-4 py-3 text-xs font-semibold text-[#6B7280] uppercase tracking-wider">Code ticket</th>
-                    <th className="text-left px-4 py-3 text-xs font-semibold text-[#6B7280] uppercase tracking-wider">Profil</th>
-                    <th className="text-left px-4 py-3 text-xs font-semibold text-[#6B7280] uppercase tracking-wider">IP / MAC</th>
-                    <th className="text-left px-4 py-3 text-xs font-semibold text-[#6B7280] uppercase tracking-wider">Routeur</th>
-                    <th className="text-left px-4 py-3 text-xs font-semibold text-[#6B7280] uppercase tracking-wider">Temps restant</th>
-                    <th className="text-left px-4 py-3 text-xs font-semibold text-[#6B7280] uppercase tracking-wider">Trafic</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-[#F1F3F7]">
-                  {filteredUsers.map((u) => (
-                    <tr key={u.id} className="hover:bg-[#FAFBFC] transition-colors">
-                      <td className="px-4 py-3">
-                        <div className="flex items-center gap-2">
-                          <span className="font-mono text-xs font-semibold text-[#1A1D26]">{u.code}</span>
-                          <button
-                            onClick={() => copyCode(u.code)}
-                            className="p-1 rounded hover:bg-[#F5F7FA] text-[#9CA3AF] hover:text-[#6B7280] transition-colors"
-                          >
-                            {copiedCode === u.code ? <Check className="h-3 w-3 text-emerald-500" /> : <Copy className="h-3 w-3" />}
-                          </button>
-                        </div>
+          {/* Action buttons */}
+          {loaded && selectedProfile && (
+            <div className="flex items-center gap-3 mt-3">
+              <button
+                onClick={() => {
+                  const lotTickets = filteredTickets.filter(
+                    (t) => t.status === "available"
+                  );
+                  if (lotTickets.length === 0) return;
+                  setSelectedIds(new Set(lotTickets.map((t) => t.id)));
+                }}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-300 px-3 py-1.5 text-xs font-medium text-emerald-600 hover:bg-emerald-50 transition-colors"
+              >
+                <CheckCircle className="h-3.5 w-3.5" />
+                Vider ce lot
+              </button>
+              <button
+                onClick={handleViderProfil}
+                disabled={deleting}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-red-300 px-3 py-1.5 text-xs font-medium text-red-500 hover:bg-red-50 transition-colors disabled:opacity-50"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+                Vider ce profil
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Table */}
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-[#E5E7EB] bg-[#FAFBFC]">
+                <th className="text-left px-4 py-3 w-10">
+                  <input
+                    type="checkbox"
+                    checked={
+                      filteredTickets.length > 0 &&
+                      selectedIds.size === filteredTickets.length
+                    }
+                    onChange={toggleAll}
+                    className="rounded border-[#D1D5DB]"
+                  />
+                </th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-[#6B7280]">
+                  Utilisateur
+                </th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-[#6B7280]">
+                  Mot de passe
+                </th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-[#6B7280]">
+                  Prix
+                </th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-[#6B7280]">
+                  Statut
+                </th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-[#6B7280]">
+                  Imprim&eacute;
+                </th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-[#6B7280]">
+                  Cr&eacute;&eacute; le
+                </th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-[#F1F3F7]">
+              {!loaded || !selectedProfile ? (
+                <tr>
+                  <td
+                    colSpan={7}
+                    className="px-4 py-12 text-center text-sm text-[#9CA3AF]"
+                  >
+                    Choisissez un profil puis &laquo; Charger &raquo;.
+                  </td>
+                </tr>
+              ) : filteredTickets.length === 0 ? (
+                <tr>
+                  <td
+                    colSpan={7}
+                    className="px-4 py-12 text-center text-sm text-[#9CA3AF]"
+                  >
+                    Aucun ticket pour ce profil.
+                  </td>
+                </tr>
+              ) : (
+                filteredTickets.map((t) => {
+                  const st = statusLabels[t.status];
+                  return (
+                    <tr
+                      key={t.id}
+                      className="hover:bg-[#FAFBFC] transition-colors"
+                    >
+                      <td className="px-4 py-2.5">
+                        <input
+                          type="checkbox"
+                          checked={selectedIds.has(t.id)}
+                          onChange={() => toggleSelect(t.id)}
+                          className="rounded border-[#D1D5DB]"
+                        />
                       </td>
-                      <td className="px-4 py-3">
-                        <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11px] font-medium" style={{ backgroundColor: u.profileColor + "15", color: u.profileColor }}>
-                          <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: u.profileColor }} />
-                          {u.profile}
+                      <td className="px-4 py-2.5 font-mono text-xs font-bold text-[#1A1D26]">
+                        {t.code}
+                      </td>
+                      <td className="px-4 py-2.5 font-mono text-xs text-[#6B7280]">
+                        {t.code}
+                      </td>
+                      <td className="px-4 py-2.5 text-xs text-[#1A1D26]">
+                        {(t.profile?.price || 0).toLocaleString("fr-FR")}{" "}
+                        {currency}
+                      </td>
+                      <td className="px-4 py-2.5">
+                        <span className={`text-xs font-medium ${st.color}`}>
+                          {st.label}
                         </span>
                       </td>
-                      <td className="px-4 py-3">
-                        <p className="font-mono text-xs text-[#1A1D26]">{u.ip}</p>
-                        <p className="font-mono text-[10px] text-[#9CA3AF]">{u.mac}</p>
+                      <td className="px-4 py-2.5 text-xs text-[#9CA3AF]">
+                        —
                       </td>
-                      <td className="px-4 py-3 text-xs text-[#6B7280]">{u.router}</td>
-                      <td className="px-4 py-3">
-                        <div className="flex items-center gap-1.5 text-xs">
-                          <Clock className="h-3 w-3 text-[#9CA3AF]" />
-                          <span className="font-medium text-[#1A1D26]">{u.timeLeft}</span>
-                        </div>
-                      </td>
-                      <td className="px-4 py-3">
-                        <div className="text-xs text-[#6B7280]">
-                          <span className="text-emerald-600">↓ {u.download} Mo</span>
-                          <span className="mx-1 text-[#D1D5DB]">·</span>
-                          <span className="text-[#2B7FFF]">↑ {u.upload} Mo</span>
-                        </div>
+                      <td className="px-4 py-2.5 text-xs text-[#6B7280]">
+                        {new Date(t.created_at).toLocaleDateString("fr-FR")}
                       </td>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-
-            {/* Mobile */}
-            <div className="lg:hidden divide-y divide-[#F1F3F7]">
-              {filteredUsers.map((u) => (
-                <div key={u.id} className="p-4 space-y-2">
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-center gap-2">
-                      <span className="font-mono text-sm font-semibold text-[#1A1D26]">{u.code}</span>
-                      <button onClick={() => copyCode(u.code)} className="p-1 text-[#9CA3AF]">
-                        {copiedCode === u.code ? <Check className="h-3 w-3 text-emerald-500" /> : <Copy className="h-3 w-3" />}
-                      </button>
-                    </div>
-                    <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium" style={{ backgroundColor: u.profileColor + "15", color: u.profileColor }}>
-                      {u.profile}
-                    </span>
-                  </div>
-                  <div className="flex flex-wrap gap-3 text-xs text-[#6B7280]">
-                    <span>{u.router}</span>
-                    <span className="flex items-center gap-1"><Clock className="h-3 w-3" />{u.timeLeft}</span>
-                    <span className="text-emerald-600">↓ {u.download} Mo</span>
-                    <span className="text-[#2B7FFF]">↑ {u.upload} Mo</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {filteredUsers.length === 0 && (
-              <div className="p-12 text-center">
-                <Users className="h-8 w-8 text-[#D1D5DB] mx-auto mb-3" />
-                <p className="text-sm text-[#6B7280]">Aucun utilisateur trouvé</p>
-              </div>
-            )}
-          </div>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
         </div>
-      )}
+
+        {/* Delete selected */}
+        {selectedIds.size > 0 && (
+          <div className="px-5 py-3 border-t border-[#E5E7EB] flex items-center justify-end">
+            <button
+              onClick={handleDeleteSelected}
+              disabled={deleting}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-red-300 px-4 py-2 text-xs font-medium text-red-500 hover:bg-red-50 transition-colors disabled:opacity-50"
+            >
+              {deleting ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <Trash2 className="h-3.5 w-3.5" />
+              )}
+              Supprimer la s&eacute;lection ({selectedIds.size})
+            </button>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
