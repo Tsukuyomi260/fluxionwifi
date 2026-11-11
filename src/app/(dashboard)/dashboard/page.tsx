@@ -1,246 +1,290 @@
 "use client";
 
-import {
-  Globe,
-  Ticket,
-  Terminal,
-  Users,
-  Wallet,
-  Receipt,
-  Shield,
-  Network,
-  Palette,
-  HeadphonesIcon,
-  BookOpen,
-  Gift,
-  TrendingUp,
-  TrendingDown,
-  Banknote,
-  Activity,
-  ShoppingCart,
-  Printer,
-  Settings,
-} from "lucide-react";
 import Link from "next/link";
 import { useCurrency } from "@/hooks/use-currency";
-
-function getStats(cur: string) {
-  return [
-    {
-      label: "Ventes aujourd'hui",
-      value: "0",
-      change: "+0%",
-      trend: "up" as const,
-      sublabel: "vs hier",
-      icon: ShoppingCart,
-      iconBg: "bg-blue-50",
-      iconColor: "text-[#2B7FFF]",
-    },
-    {
-      label: "Revenu du mois",
-      value: `0 ${cur}`,
-      change: "+0%",
-      trend: "up" as const,
-      sublabel: "vs mois dernier",
-      icon: Banknote,
-      iconBg: "bg-emerald-50",
-      iconColor: "text-emerald-500",
-    },
-    {
-      label: "Tickets actifs",
-      value: "0",
-      change: "+0%",
-      trend: "up" as const,
-      sublabel: "en cours",
-      icon: Ticket,
-      iconBg: "bg-violet-50",
-      iconColor: "text-violet-500",
-    },
-    {
-      label: "Routeurs en ligne",
-      value: "0",
-      change: "0%",
-      trend: "down" as const,
-      sublabel: "connectés",
-      icon: Activity,
-      iconBg: "bg-orange-50",
-      iconColor: "text-orange-500",
-    },
-  ];
-}
+import { useTickets } from "@/hooks/use-tickets";
+import { useRouters } from "@/hooks/use-routers";
+import { useSessions } from "@/hooks/use-sessions";
+import { useSellers } from "@/hooks/use-sellers";
+import { useTransactions } from "@/hooks/use-transactions";
+import {
+  Wallet,
+  Printer,
+  Users,
+  Terminal,
+  Ticket,
+  UserCircle,
+  Network,
+  Shield,
+  Plug,
+  Wrench,
+  Palette,
+  BookOpen,
+  Receipt,
+  Globe,
+  Download,
+  Database,
+  UsersRound,
+  BookText,
+  Gift,
+  ChevronDown,
+  Loader2,
+  TrendingUp,
+  Star,
+} from "lucide-react";
 
 const navTabs = [
   { name: "Facturation", href: "/finance/billing", icon: Receipt },
   { name: "Portail Captif", href: "/portal", icon: Globe },
-  { name: "Interopérabilité", href: "/interop", icon: Network },
-  { name: "Services Connectés", href: "/vpn", icon: Shield },
-  { name: "Comptes Associés", href: "/sellers", icon: Users },
-  { name: "Studio", href: "/studio", icon: Palette },
-  { name: "Support", href: "/support", icon: HeadphonesIcon },
-  { name: "Tutoriels", href: "/tutorials", icon: BookOpen },
-  { name: "Affiliation", href: "/affiliation", icon: Gift },
-  { name: "Paramètres", href: "/settings", icon: Settings },
+  { name: "Télécharger", href: "#", icon: Download },
+  { name: "Gestion Données", href: "#", icon: Database },
+  { name: "Comptes Associés", href: "/sellers", icon: UsersRound },
+  { name: "Journal", href: "/finance/balance", icon: BookText },
 ];
 
-const quickActions = [
-  {
-    name: "Mon Solde",
-    href: "/finance/balance",
-    icon: Wallet,
-    gradient: "from-[#2B7FFF] to-[#0B1E4D]",
-  },
-  {
-    name: "Vente / Impression\nde Tickets",
-    href: "/console/print",
-    icon: Printer,
-    gradient: "from-orange-500 to-red-500",
-  },
-  {
-    name: "Inventé / Clé\nVendeurs",
-    href: "/sellers",
-    icon: Users,
-    gradient: "from-emerald-500 to-teal-600",
-  },
-  {
-    name: "Système\nConsole",
-    href: "/console",
-    icon: Terminal,
-    gradient: "from-violet-500 to-purple-700",
-  },
-];
-
-function getRecentActivity(cur: string) {
-  return [
-    { type: "Vente", detail: "Ticket 24h vendu", amount: `500 ${cur}`, time: "Il y a 2 min" },
-    { type: "Connexion", detail: "Routeur MK-01 connecté", amount: null as string | null, time: "Il y a 15 min" },
-    { type: "Vente", detail: "Ticket 1h vendu", amount: `200 ${cur}`, time: "Il y a 30 min" },
-    { type: "Paiement", detail: "Paiement reçu via FedaPay", amount: `1 500 ${cur}`, time: "Il y a 1h" },
-  ];
+interface DashCard {
+  name: string;
+  href: string;
+  icon: typeof Wallet;
+  iconBg: string;
+  iconColor: string;
+  badge?: string | null;
+  badgeColor?: string;
+  subtitle?: string;
+  subtitleColor?: string;
+  specialBg?: string;
+  tag?: string;
 }
 
 export default function DashboardPage() {
   const { currency } = useCurrency();
-  const stats = getStats(currency);
-  const recentActivity = getRecentActivity(currency);
+  const { tickets, profiles, loading: tl } = useTickets();
+  const { routers, online, loading: rl } = useRouters();
+  const { activeSessions, loading: sl } = useSessions();
+  const { sellers, loading: sel } = useSellers();
+  const { balance, loading: bl } = useTransactions();
+
+  const loading = tl || rl || sl || sel || bl;
+
+  const availableTickets = tickets.filter((t) => t.status === "available").length;
+  const totalStock = tickets.length;
+  const activeSellers = sellers.filter((s) => s.status === "active").length;
+  const totalSellersStock = sellers.reduce((acc, s) => acc + (s.stock_remaining || 0), 0);
+
+  const cards: DashCard[] = [
+    {
+      name: "Mon Solde",
+      href: "/finance/balance",
+      icon: Wallet,
+      iconBg: "bg-orange-100",
+      iconColor: "text-orange-500",
+      badge: balance > 0 ? `${balance >= 1000 ? (balance / 1000).toFixed(1) + "k" : balance}` : null,
+      badgeColor: "bg-emerald-500",
+      subtitle: `Retirable : ${balance.toLocaleString("fr-FR")} ${currency}`,
+      subtitleColor: "text-emerald-500",
+    },
+    {
+      name: "Vente/Impression de Tickets",
+      href: "/tickets",
+      icon: Printer,
+      iconBg: "bg-blue-100",
+      iconColor: "text-[#2B7FFF]",
+      badge: totalStock > 0 ? `${totalStock >= 1000 ? (totalStock / 1000).toFixed(1) + "k" : totalStock}` : null,
+      badgeColor: "bg-emerald-500",
+      subtitle: profiles.length > 0 ? `${profiles[0].name}: ${profiles[0].price?.toLocaleString("fr-FR")} ${currency}` : "Aucun profil",
+      subtitleColor: "text-[#2B7FFF]",
+    },
+    {
+      name: "Inventaire Vendeurs",
+      href: "/sellers",
+      icon: Users,
+      iconBg: "bg-amber-100",
+      iconColor: "text-amber-600",
+      badge: activeSellers > 0 ? String(activeSellers) : null,
+      badgeColor: "bg-[#2B7FFF]",
+      subtitle: `Stock confié : ${totalSellersStock} tickets`,
+      subtitleColor: "text-amber-600",
+    },
+    {
+      name: "Console",
+      href: "/console",
+      icon: Terminal,
+      iconBg: "bg-violet-100",
+      iconColor: "text-violet-600",
+      subtitle: `Tickets pré-créés : profils & ...`,
+      subtitleColor: "text-violet-500",
+    },
+    {
+      name: "Administration Tickets",
+      href: "/console/stock",
+      icon: Ticket,
+      iconBg: "bg-teal-100",
+      iconColor: "text-teal-600",
+      badge: String(availableTickets),
+      badgeColor: availableTickets > 0 ? "bg-emerald-500" : "bg-red-500",
+      subtitle: `Stock Total : ${availableTickets}`,
+      subtitleColor: availableTickets > 0 ? "text-emerald-500" : "text-red-500",
+    },
+    {
+      name: "Mon Compte",
+      href: "/settings",
+      icon: UserCircle,
+      iconBg: "bg-slate-100",
+      iconColor: "text-slate-500",
+      subtitle: "Piloter les comptes administrateurs.",
+      subtitleColor: "text-[#6B7280]",
+    },
+    {
+      name: "Interopérabilité",
+      href: "/interop",
+      icon: Network,
+      iconBg: "bg-cyan-100",
+      iconColor: "text-cyan-600",
+      subtitle: "Synchroniser plusieurs routeurs",
+      subtitleColor: "text-cyan-600",
+    },
+    {
+      name: "VPN accès distant",
+      href: "/vpn",
+      icon: Shield,
+      iconBg: "bg-emerald-100",
+      iconColor: "text-emerald-600",
+      subtitle: `${online} routeur${online !== 1 ? "s" : ""} connecté${online !== 1 ? "s" : ""}`,
+      subtitleColor: "text-emerald-600",
+    },
+    {
+      name: "Mon intégration",
+      href: "/integration",
+      icon: Plug,
+      iconBg: "bg-violet-100",
+      iconColor: "text-violet-500",
+      specialBg: "bg-violet-50 border-violet-200",
+      subtitle: "Integration : 8/10 · 80%",
+      subtitleColor: "text-violet-500",
+    },
+    {
+      name: "Services & Boutique",
+      href: "#",
+      icon: Wrench,
+      iconBg: "bg-amber-100",
+      iconColor: "text-amber-500",
+      specialBg: "bg-[#1E293B] border-[#334155]",
+      subtitle: "Dépannage à distance",
+      subtitleColor: "text-slate-400",
+    },
+    {
+      name: "Studio Visibilité",
+      href: "/studio",
+      icon: Palette,
+      iconBg: "bg-pink-100",
+      iconColor: "text-pink-500",
+      tag: "NOUVEAU",
+      subtitle: "Affiches, bâches & vidéos",
+      subtitleColor: "text-pink-500",
+    },
+    {
+      name: "Tutoriels",
+      href: "/tutorials",
+      icon: BookOpen,
+      iconBg: "bg-red-100",
+      iconColor: "text-red-500",
+      subtitle: "Guides vidéo et documentation",
+      subtitleColor: "text-red-500",
+    },
+  ];
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin text-[#2B7FFF]" />
+      </div>
+    );
+  }
 
   return (
-    <div className="space-y-5">
-      {/* Navigation bar - compact horizontal tabs like EVISIONS CONNECT */}
-      <div className="rounded-2xl border border-[#E8ECF1] bg-white shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
-        <div className="flex items-center overflow-x-auto scrollbar-hide">
-          {navTabs.map((tab) => (
-            <Link
-              key={tab.name}
-              href={tab.href}
-              className="flex items-center gap-1.5 whitespace-nowrap px-4 py-3 text-[13px] font-medium text-[#6B7280] hover:text-[#2B7FFF] hover:bg-blue-50/50 transition-colors border-r border-[#F1F3F7] last:border-r-0"
-            >
-              <tab.icon className="h-3.5 w-3.5 shrink-0" />
-              {tab.name}
-            </Link>
-          ))}
-        </div>
-      </div>
-
-      {/* Quick action tiles */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        {quickActions.map((action) => (
+    <div className="-m-4 lg:-m-6 min-h-full bg-[#1F2937] p-4 lg:p-6">
+      {/* Navigation tabs */}
+      <div className="flex items-center gap-1 overflow-x-auto scrollbar-hide mb-5 bg-[#374151] rounded-2xl p-1.5">
+        {navTabs.map((tab) => (
           <Link
-            key={action.name}
-            href={action.href}
-            className={`group relative rounded-2xl bg-gradient-to-br ${action.gradient} p-5 text-white shadow-lg hover:shadow-xl transition-all hover:scale-[1.02] overflow-hidden`}
+            key={tab.name}
+            href={tab.href}
+            className="flex items-center gap-2 whitespace-nowrap px-4 py-2.5 rounded-xl text-[13px] font-medium text-slate-300 hover:text-white hover:bg-[#4B5563] transition-colors"
           >
-            <div className="absolute top-0 right-0 w-20 h-20 bg-white/10 rounded-full -translate-y-6 translate-x-6" />
-            <action.icon className="h-8 w-8 mb-3 opacity-90" />
-            <p className="text-sm font-semibold leading-tight whitespace-pre-line">{action.name}</p>
+            <tab.icon className="h-4 w-4 shrink-0" />
+            {tab.name}
           </Link>
         ))}
       </div>
 
-      {/* Stats cards */}
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        {stats.map((stat) => (
-          <div
-            key={stat.label}
-            className="rounded-2xl border border-[#E8ECF1] bg-white p-4 shadow-[0_1px_3px_rgba(0,0,0,0.04)]"
-          >
-            <div className="flex items-start justify-between">
-              <div className={`rounded-xl p-2 ${stat.iconBg}`}>
-                <stat.icon className={`h-4.5 w-4.5 ${stat.iconColor}`} />
-              </div>
-              <span
-                className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${
-                  stat.trend === "up"
-                    ? "bg-emerald-50 text-emerald-600"
-                    : "bg-red-50 text-red-500"
-                }`}
-              >
-                {stat.trend === "up" ? (
-                  <TrendingUp className="h-3 w-3" />
-                ) : (
-                  <TrendingDown className="h-3 w-3" />
-                )}
-                {stat.change}
-              </span>
-            </div>
-            <p className="mt-3 text-2xl font-bold text-[#1A1D26]">{stat.value}</p>
-            <p className="mt-0.5 text-[12px] text-[#6B7280]">
-              {stat.label} · {stat.sublabel}
-            </p>
-          </div>
-        ))}
+      {/* Affiliation banner */}
+      <div className="flex items-center gap-3 mb-4 rounded-2xl bg-gradient-to-r from-emerald-600 to-emerald-500 px-5 py-3 text-white overflow-x-auto">
+        <Gift className="h-5 w-5 shrink-0" />
+        <span className="text-sm font-semibold shrink-0">Affiliation</span>
+        <span className="shrink-0 rounded-md bg-white/20 px-2 py-0.5 text-[11px] font-bold uppercase">Gagnez</span>
+        <span className="text-xs text-emerald-100 shrink-0">Gains : 0 {currency}</span>
+        <span className="text-xs text-emerald-100 shrink-0">✂ 10% commission</span>
+        <div className="ml-auto shrink-0">
+          <ChevronDown className="h-4 w-4" />
+        </div>
       </div>
 
-      {/* Charts + Activity */}
-      <div className="grid gap-4 lg:grid-cols-3">
-        <div className="lg:col-span-2 rounded-2xl border border-[#E8ECF1] bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
-          <div className="flex items-center justify-between mb-5">
-            <div>
-              <h3 className="text-sm font-semibold text-[#1A1D26]">Revenus de la semaine</h3>
-              <p className="text-xs text-[#6B7280]">Suivi de vos ventes quotidiennes</p>
-            </div>
-            <select className="text-xs border border-[#E8ECF1] rounded-lg px-2.5 py-1.5 text-[#6B7280] bg-white">
-              <option>Cette semaine</option>
-              <option>Ce mois</option>
-              <option>Cette année</option>
-            </select>
-          </div>
-          <div className="flex items-end gap-3 h-44">
-            {["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"].map((day, i) => {
-              const heights = [40, 65, 45, 80, 55, 70, 30];
-              return (
-                <div key={day} className="flex-1 flex flex-col items-center gap-2">
-                  <div
-                    className="w-full rounded-lg bg-[#2B7FFF] opacity-80 hover:opacity-100 transition-opacity"
-                    style={{ height: `${heights[i]}%` }}
-                  />
-                  <span className="text-[11px] text-[#6B7280]">{day}</span>
-                </div>
-              );
-            })}
-          </div>
+      {/* Ventes partenaires banner */}
+      <div className="flex items-center gap-3 mb-5 rounded-2xl bg-gradient-to-r from-orange-500 to-amber-500 px-5 py-3 text-white overflow-x-auto">
+        <TrendingUp className="h-5 w-5 shrink-0" />
+        <span className="text-sm font-semibold shrink-0">Ventes partenaires</span>
+        <span className="shrink-0 rounded-md bg-white/20 px-2 py-0.5 text-[11px] font-bold uppercase">Vendez plus</span>
+        <span className="text-xs text-orange-100 shrink-0">Boutiques, cabines, kiosques</span>
+        <span className="text-xs text-orange-100 shrink-0">Stock confié à chaque revendeur</span>
+        <div className="ml-auto shrink-0">
+          <ChevronDown className="h-4 w-4" />
         </div>
+      </div>
 
-        <div className="rounded-2xl border border-[#E8ECF1] bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-semibold text-[#1A1D26]">Activité récente</h3>
-            <Link href="/finance/balance" className="text-xs text-primary hover:underline">
-              Voir tout
-            </Link>
-          </div>
-          <ul className="space-y-2.5">
-            {recentActivity.map((item, i) => (
-              <li key={i} className="flex items-center justify-between py-2 border-b border-[#F1F3F7] last:border-0">
-                <div>
-                  <p className="text-sm font-medium text-[#1A1D26]">{item.detail}</p>
-                  <p className="text-xs text-[#6B7280]">{item.time}</p>
-                </div>
-                {item.amount && (
-                  <span className="text-sm font-semibold text-emerald-600">+{item.amount}</span>
-                )}
-              </li>
-            ))}
-          </ul>
-        </div>
+      {/* Cards grid — 4 columns */}
+      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {cards.map((card) => (
+          <Link
+            key={card.name}
+            href={card.href}
+            className={`group relative rounded-2xl border p-5 transition-all hover:shadow-lg hover:scale-[1.02] ${
+              card.specialBg || "bg-white border-[#E8ECF1]"
+            }`}
+          >
+            {/* Badge */}
+            {card.badge && (
+              <span className={`absolute -top-2 -right-2 z-10 inline-flex items-center justify-center min-w-[28px] h-7 rounded-full ${card.badgeColor || "bg-emerald-500"} px-2 text-xs font-bold text-white shadow-md`}>
+                {card.badge}
+              </span>
+            )}
+
+            {/* Tag */}
+            {card.tag && (
+              <span className="absolute top-3 right-3 rounded-md bg-red-500 px-2 py-0.5 text-[10px] font-bold text-white uppercase">
+                {card.tag}
+              </span>
+            )}
+
+            {/* Icon */}
+            <div className={`mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-xl ${card.iconBg}`}>
+              <card.icon className={`h-6 w-6 ${card.iconColor}`} />
+            </div>
+
+            {/* Title */}
+            <h3 className={`text-center text-sm font-semibold leading-tight ${
+              card.specialBg?.includes("1E293B") ? "text-white" : "text-[#1A1D26]"
+            }`}>
+              {card.name}
+            </h3>
+
+            {/* Subtitle */}
+            {card.subtitle && (
+              <p className={`mt-1.5 text-center text-xs ${card.subtitleColor || "text-[#6B7280]"}`}>
+                {card.subtitle}
+              </p>
+            )}
+          </Link>
+        ))}
       </div>
     </div>
   );

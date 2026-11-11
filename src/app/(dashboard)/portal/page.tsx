@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { usePortals } from "@/hooks/use-portals";
+import type { Portal, PortalStatus } from "@/lib/supabase/types";
 import {
   Globe,
   Plus,
@@ -20,24 +22,10 @@ import {
   Ticket,
   CreditCard,
   Share2,
+  Loader2,
 } from "lucide-react";
 
 type AuthMethod = "ticket" | "free" | "mobile_money" | "social";
-type PortalStatus = "active" | "inactive" | "draft";
-
-interface Portal {
-  id: string;
-  name: string;
-  description: string;
-  status: PortalStatus;
-  theme: string;
-  themeColor: string;
-  authMethods: AuthMethod[];
-  connectedRouters: number;
-  totalConnections: number;
-  createdAt: string;
-  logoUrl?: string;
-}
 
 const authMethodLabels: Record<AuthMethod, { label: string; icon: typeof Ticket }> = {
   ticket: { label: "Ticket / Code", icon: Ticket },
@@ -53,61 +41,23 @@ const statusConfig: Record<PortalStatus, { label: string; bg: string; text: stri
 };
 
 const themePresets = [
-  { name: "Moderne Bleu", color: "#2B7FFF", bg: "bg-[#2B7FFF]" },
-  { name: "Émeraude", color: "#10B981", bg: "bg-emerald-500" },
-  { name: "Violet Royal", color: "#8B5CF6", bg: "bg-violet-500" },
-  { name: "Orange Chaleur", color: "#F97316", bg: "bg-orange-500" },
-  { name: "Rose Élégant", color: "#EC4899", bg: "bg-pink-500" },
-  { name: "Sombre Premium", color: "#0B1E4D", bg: "bg-[#0B1E4D]" },
-];
-
-const demoPortals: Portal[] = [
-  {
-    id: "1",
-    name: "Café Connect",
-    description: "Portail pour le café-restaurant principal",
-    status: "active",
-    theme: "Moderne Bleu",
-    themeColor: "#2B7FFF",
-    authMethods: ["ticket", "mobile_money"],
-    connectedRouters: 2,
-    totalConnections: 847,
-    createdAt: "2026-10-15",
-  },
-  {
-    id: "2",
-    name: "Hôtel Prestige WiFi",
-    description: "Portail premium pour l'hôtel",
-    status: "active",
-    theme: "Sombre Premium",
-    themeColor: "#0B1E4D",
-    authMethods: ["ticket", "free"],
-    connectedRouters: 5,
-    totalConnections: 2341,
-    createdAt: "2026-09-28",
-  },
-  {
-    id: "3",
-    name: "Campus UniKin",
-    description: "Portail étudiant - Université de Kinshasa",
-    status: "draft",
-    theme: "Violet Royal",
-    themeColor: "#8B5CF6",
-    authMethods: ["ticket"],
-    connectedRouters: 0,
-    totalConnections: 0,
-    createdAt: "2026-10-24",
-  },
+  { name: "Moderne Bleu", color: "#2B7FFF" },
+  { name: "Émeraude", color: "#10B981" },
+  { name: "Violet Royal", color: "#8B5CF6" },
+  { name: "Orange Chaleur", color: "#F97316" },
+  { name: "Rose Élégant", color: "#EC4899" },
+  { name: "Sombre Premium", color: "#0B1E4D" },
 ];
 
 export default function PortalPage() {
-  const [portals, setPortals] = useState<Portal[]>(demoPortals);
+  const { portals, loading, addPortal, toggleStatus, duplicatePortal, deletePortal } = usePortals();
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showPreview, setShowPreview] = useState<Portal | null>(null);
   const [previewDevice, setPreviewDevice] = useState<"mobile" | "desktop">("mobile");
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState<"all" | PortalStatus>("all");
   const [openMenu, setOpenMenu] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
 
   const [newPortal, setNewPortal] = useState({
     name: "",
@@ -119,7 +69,7 @@ export default function PortalPage() {
   const filtered = portals.filter((p) => {
     const matchSearch =
       p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      p.description.toLowerCase().includes(searchQuery.toLowerCase());
+      (p.description || "").toLowerCase().includes(searchQuery.toLowerCase());
     const matchStatus = filterStatus === "all" || p.status === filterStatus;
     return matchSearch && matchStatus;
   });
@@ -127,24 +77,22 @@ export default function PortalPage() {
   const stats = [
     { label: "Total portails", value: portals.length, icon: Globe, iconBg: "bg-blue-50", iconColor: "text-[#2B7FFF]" },
     { label: "Portails actifs", value: portals.filter((p) => p.status === "active").length, icon: Wifi, iconBg: "bg-emerald-50", iconColor: "text-emerald-500" },
-    { label: "Routeurs connectés", value: portals.reduce((s, p) => s + p.connectedRouters, 0), icon: Monitor, iconBg: "bg-violet-50", iconColor: "text-violet-500" },
-    { label: "Connexions totales", value: portals.reduce((s, p) => s + p.totalConnections, 0).toLocaleString("fr-FR"), icon: Users, iconBg: "bg-orange-50", iconColor: "text-orange-500" },
+    { label: "Brouillons", value: portals.filter((p) => p.status === "draft").length, icon: Palette, iconBg: "bg-amber-50", iconColor: "text-amber-500" },
+    { label: "Inactifs", value: portals.filter((p) => p.status === "inactive").length, icon: Monitor, iconBg: "bg-gray-50", iconColor: "text-gray-500" },
   ];
 
-  function handleCreate() {
-    const portal: Portal = {
-      id: Date.now().toString(),
+  async function handleCreate() {
+    if (!newPortal.name.trim()) return;
+    setSubmitting(true);
+    await addPortal({
       name: newPortal.name,
       description: newPortal.description,
       status: "draft",
-      theme: newPortal.theme.name,
-      themeColor: newPortal.theme.color,
-      authMethods: newPortal.authMethods,
-      connectedRouters: 0,
-      totalConnections: 0,
-      createdAt: new Date().toISOString().split("T")[0],
-    };
-    setPortals([portal, ...portals]);
+      theme_name: newPortal.theme.name,
+      theme_color: newPortal.theme.color,
+      auth_methods: newPortal.authMethods,
+    });
+    setSubmitting(false);
     setShowCreateModal(false);
     setNewPortal({ name: "", description: "", theme: themePresets[0], authMethods: ["ticket"] });
   }
@@ -158,32 +106,27 @@ export default function PortalPage() {
     }));
   }
 
-  function toggleStatus(id: string) {
-    setPortals((prev) =>
-      prev.map((p) =>
-        p.id === id ? { ...p, status: p.status === "active" ? "inactive" : "active" } : p
-      )
+  async function handleToggleStatus(id: string) {
+    await toggleStatus(id);
+    setOpenMenu(null);
+  }
+
+  async function handleDuplicate(portal: Portal) {
+    await duplicatePortal(portal);
+    setOpenMenu(null);
+  }
+
+  async function handleDelete(id: string) {
+    await deletePortal(id);
+    setOpenMenu(null);
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin text-[#2B7FFF]" />
+      </div>
     );
-    setOpenMenu(null);
-  }
-
-  function duplicatePortal(portal: Portal) {
-    const dup: Portal = {
-      ...portal,
-      id: Date.now().toString(),
-      name: `${portal.name} (copie)`,
-      status: "draft",
-      connectedRouters: 0,
-      totalConnections: 0,
-      createdAt: new Date().toISOString().split("T")[0],
-    };
-    setPortals([dup, ...portals]);
-    setOpenMenu(null);
-  }
-
-  function deletePortal(id: string) {
-    setPortals((prev) => prev.filter((p) => p.id !== id));
-    setOpenMenu(null);
   }
 
   return (
@@ -278,13 +221,13 @@ export default function PortalPage() {
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {filtered.map((portal) => {
             const sc = statusConfig[portal.status];
+            const methods = (portal.auth_methods || []) as AuthMethod[];
             return (
               <div
                 key={portal.id}
                 className="rounded-2xl border border-[#E8ECF1] bg-white shadow-[0_1px_3px_rgba(0,0,0,0.04)] overflow-hidden group hover:shadow-md hover:border-[#2B7FFF]/20 transition-all"
               >
-                {/* Theme preview bar */}
-                <div className="h-2" style={{ backgroundColor: portal.themeColor }} />
+                <div className="h-2" style={{ backgroundColor: portal.theme_color || "#2B7FFF" }} />
 
                 <div className="p-5">
                   <div className="flex items-start justify-between gap-3">
@@ -292,9 +235,9 @@ export default function PortalPage() {
                       <div className="flex items-center gap-2.5">
                         <div
                           className="h-10 w-10 rounded-xl flex items-center justify-center shrink-0"
-                          style={{ backgroundColor: `${portal.themeColor}15` }}
+                          style={{ backgroundColor: `${portal.theme_color || "#2B7FFF"}15` }}
                         >
-                          <Globe className="h-5 w-5" style={{ color: portal.themeColor }} />
+                          <Globe className="h-5 w-5" style={{ color: portal.theme_color || "#2B7FFF" }} />
                         </div>
                         <div className="min-w-0">
                           <h3 className="text-sm font-semibold text-[#1A1D26] truncate">{portal.name}</h3>
@@ -306,7 +249,6 @@ export default function PortalPage() {
                       </div>
                     </div>
 
-                    {/* Actions menu */}
                     <div className="relative">
                       <button
                         onClick={() => setOpenMenu(openMenu === portal.id ? null : portal.id)}
@@ -324,14 +266,14 @@ export default function PortalPage() {
                             Aperçu
                           </button>
                           <button
-                            onClick={() => toggleStatus(portal.id)}
+                            onClick={() => handleToggleStatus(portal.id)}
                             className="flex items-center gap-2.5 w-full px-3.5 py-2.5 text-sm text-[#374151] hover:bg-[#F5F7FA] transition-colors"
                           >
                             <Wifi className="h-4 w-4 text-[#9CA3AF]" />
                             {portal.status === "active" ? "Désactiver" : "Activer"}
                           </button>
                           <button
-                            onClick={() => duplicatePortal(portal)}
+                            onClick={() => handleDuplicate(portal)}
                             className="flex items-center gap-2.5 w-full px-3.5 py-2.5 text-sm text-[#374151] hover:bg-[#F5F7FA] transition-colors"
                           >
                             <Copy className="h-4 w-4 text-[#9CA3AF]" />
@@ -339,7 +281,7 @@ export default function PortalPage() {
                           </button>
                           <div className="border-t border-[#E8ECF1]" />
                           <button
-                            onClick={() => deletePortal(portal.id)}
+                            onClick={() => handleDelete(portal.id)}
                             className="flex items-center gap-2.5 w-full px-3.5 py-2.5 text-sm text-red-500 hover:bg-red-50 transition-colors"
                           >
                             <Trash2 className="h-4 w-4" />
@@ -350,12 +292,14 @@ export default function PortalPage() {
                     </div>
                   </div>
 
-                  <p className="mt-3 text-xs text-[#6B7280] line-clamp-2">{portal.description}</p>
+                  <p className="mt-3 text-xs text-[#6B7280] line-clamp-2">{portal.description || "Aucune description"}</p>
 
                   {/* Auth methods */}
                   <div className="mt-4 flex flex-wrap gap-1.5">
-                    {portal.authMethods.map((method) => {
-                      const { label, icon: Icon } = authMethodLabels[method];
+                    {methods.map((method) => {
+                      const config = authMethodLabels[method];
+                      if (!config) return null;
+                      const { label, icon: Icon } = config;
                       return (
                         <span
                           key={method}
@@ -368,17 +312,10 @@ export default function PortalPage() {
                     })}
                   </div>
 
-                  {/* Footer stats */}
+                  {/* Footer */}
                   <div className="mt-4 pt-4 border-t border-[#F1F3F7] flex items-center justify-between">
-                    <div className="flex items-center gap-4 text-xs text-[#6B7280]">
-                      <span className="flex items-center gap-1">
-                        <Monitor className="h-3.5 w-3.5" />
-                        {portal.connectedRouters} routeur{portal.connectedRouters !== 1 ? "s" : ""}
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <Users className="h-3.5 w-3.5" />
-                        {portal.totalConnections.toLocaleString("fr-FR")} connexions
-                      </span>
+                    <div className="text-xs text-[#9CA3AF]">
+                      Créé le {new Date(portal.created_at).toLocaleDateString("fr-FR")}
                     </div>
                     <button
                       onClick={() => setShowPreview(portal)}
@@ -414,11 +351,8 @@ export default function PortalPage() {
             </div>
 
             <div className="px-6 py-5 space-y-5">
-              {/* Name */}
               <div>
-                <label className="block text-sm font-medium text-[#1A1D26] mb-1.5">
-                  Nom du portail
-                </label>
+                <label className="block text-sm font-medium text-[#1A1D26] mb-1.5">Nom du portail</label>
                 <input
                   type="text"
                   value={newPortal.name}
@@ -428,11 +362,8 @@ export default function PortalPage() {
                 />
               </div>
 
-              {/* Description */}
               <div>
-                <label className="block text-sm font-medium text-[#1A1D26] mb-1.5">
-                  Description
-                </label>
+                <label className="block text-sm font-medium text-[#1A1D26] mb-1.5">Description</label>
                 <textarea
                   value={newPortal.description}
                   onChange={(e) => setNewPortal({ ...newPortal, description: e.target.value })}
@@ -442,11 +373,8 @@ export default function PortalPage() {
                 />
               </div>
 
-              {/* Theme */}
               <div>
-                <label className="block text-sm font-medium text-[#1A1D26] mb-2">
-                  Thème couleur
-                </label>
+                <label className="block text-sm font-medium text-[#1A1D26] mb-2">Thème couleur</label>
                 <div className="grid grid-cols-3 gap-2">
                   {themePresets.map((theme) => (
                     <button
@@ -458,7 +386,7 @@ export default function PortalPage() {
                           : "border-[#E8ECF1] hover:border-[#D1D5DB]"
                       }`}
                     >
-                      <div className={`h-5 w-5 rounded-full shrink-0 ${theme.bg}`} />
+                      <div className="h-5 w-5 rounded-full shrink-0" style={{ backgroundColor: theme.color }} />
                       <span className="text-xs font-medium text-[#1A1D26] truncate">{theme.name}</span>
                       {newPortal.theme.name === theme.name && (
                         <Check className="absolute top-1.5 right-1.5 h-3.5 w-3.5 text-[#2B7FFF]" />
@@ -468,7 +396,6 @@ export default function PortalPage() {
                 </div>
               </div>
 
-              {/* Auth methods */}
               <div>
                 <label className="block text-sm font-medium text-[#1A1D26] mb-2">
                   Méthodes d&apos;authentification
@@ -507,9 +434,10 @@ export default function PortalPage() {
               </button>
               <button
                 onClick={handleCreate}
-                disabled={!newPortal.name.trim() || newPortal.authMethods.length === 0}
-                className="h-10 px-5 rounded-xl bg-[#2B7FFF] text-sm font-medium text-white hover:bg-[#1A6BE6] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={!newPortal.name.trim() || newPortal.authMethods.length === 0 || submitting}
+                className="inline-flex items-center gap-2 h-10 px-5 rounded-xl bg-[#2B7FFF] text-sm font-medium text-white hover:bg-[#1A6BE6] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
+                {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
                 Créer le portail
               </button>
             </div>
@@ -522,7 +450,6 @@ export default function PortalPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowPreview(null)} />
           <div className="relative w-full max-w-2xl bg-white rounded-2xl shadow-2xl max-h-[90vh] overflow-hidden flex flex-col">
-            {/* Preview header */}
             <div className="flex items-center justify-between px-6 py-4 border-b border-[#E8ECF1]">
               <div>
                 <h3 className="text-lg font-semibold text-[#1A1D26]">Aperçu : {showPreview.name}</h3>
@@ -552,20 +479,18 @@ export default function PortalPage() {
               </div>
             </div>
 
-            {/* Preview body */}
             <div className="flex-1 overflow-y-auto bg-[#F5F7FA] p-6 flex items-center justify-center">
               <div
                 className={`bg-white rounded-2xl shadow-xl overflow-hidden transition-all ${
                   previewDevice === "mobile" ? "w-[320px]" : "w-full max-w-xl"
                 }`}
               >
-                {/* Simulated portal */}
-                <div className="h-40 relative flex items-center justify-center" style={{ backgroundColor: showPreview.themeColor }}>
+                <div className="h-40 relative flex items-center justify-center" style={{ backgroundColor: showPreview.theme_color || "#2B7FFF" }}>
                   <div className="absolute inset-0 bg-gradient-to-b from-black/10 to-transparent" />
                   <div className="relative text-center text-white px-4">
                     <Wifi className="h-10 w-10 mx-auto mb-2 opacity-90" />
-                    <h4 className="text-lg font-bold">{showPreview.name}</h4>
-                    <p className="text-xs opacity-80 mt-1">Connectez-vous au WiFi</p>
+                    <h4 className="text-lg font-bold">{showPreview.title || showPreview.name}</h4>
+                    <p className="text-xs opacity-80 mt-1">{showPreview.subtitle || "Connectez-vous au WiFi"}</p>
                   </div>
                 </div>
 
@@ -574,7 +499,7 @@ export default function PortalPage() {
                     <p className="text-sm text-[#6B7280]">Bienvenue ! Choisissez votre méthode de connexion :</p>
                   </div>
 
-                  {showPreview.authMethods.includes("ticket") && (
+                  {((showPreview.auth_methods || []) as AuthMethod[]).includes("ticket") && (
                     <div className="space-y-2">
                       <input
                         type="text"
@@ -584,26 +509,26 @@ export default function PortalPage() {
                       />
                       <button
                         className="w-full h-11 rounded-xl text-sm font-medium text-white transition-colors"
-                        style={{ backgroundColor: showPreview.themeColor }}
+                        style={{ backgroundColor: showPreview.theme_color || "#2B7FFF" }}
                       >
-                        Se connecter
+                        {showPreview.button_text || "Se connecter"}
                       </button>
                     </div>
                   )}
 
-                  {showPreview.authMethods.includes("mobile_money") && (
-                    <button className="w-full h-11 rounded-xl border-2 text-sm font-medium transition-colors" style={{ borderColor: showPreview.themeColor, color: showPreview.themeColor }}>
+                  {((showPreview.auth_methods || []) as AuthMethod[]).includes("mobile_money") && (
+                    <button className="w-full h-11 rounded-xl border-2 text-sm font-medium transition-colors" style={{ borderColor: showPreview.theme_color || "#2B7FFF", color: showPreview.theme_color || "#2B7FFF" }}>
                       Payer via Mobile Money
                     </button>
                   )}
 
-                  {showPreview.authMethods.includes("free") && (
+                  {((showPreview.auth_methods || []) as AuthMethod[]).includes("free") && (
                     <button className="w-full h-11 rounded-xl bg-[#F5F7FA] text-sm font-medium text-[#374151] hover:bg-[#E8ECF1] transition-colors">
                       Accès gratuit
                     </button>
                   )}
 
-                  {showPreview.authMethods.includes("social") && (
+                  {((showPreview.auth_methods || []) as AuthMethod[]).includes("social") && (
                     <button className="w-full h-11 rounded-xl bg-[#F5F7FA] text-sm font-medium text-[#374151] hover:bg-[#E8ECF1] transition-colors flex items-center justify-center gap-2">
                       <Share2 className="h-4 w-4" />
                       Continuer avec un réseau social
@@ -620,7 +545,7 @@ export default function PortalPage() {
             <div className="border-t border-[#E8ECF1] px-6 py-3 flex items-center justify-between bg-white">
               <div className="flex items-center gap-2 text-xs text-[#6B7280]">
                 <Palette className="h-3.5 w-3.5" />
-                Thème : {showPreview.theme}
+                Thème : {showPreview.theme_name || "Personnalisé"}
               </div>
               <button
                 onClick={() => setShowPreview(null)}

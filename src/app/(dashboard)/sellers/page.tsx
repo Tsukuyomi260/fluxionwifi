@@ -2,50 +2,28 @@
 
 import { useState } from "react";
 import { useCurrency } from "@/hooks/use-currency";
+import { useSellers } from "@/hooks/use-sellers";
+import { useTickets } from "@/hooks/use-tickets";
+import type { Seller, SellerStatus } from "@/lib/supabase/types";
 import {
   Users,
   Plus,
   Search,
   ChevronDown,
-  Phone,
   MapPin,
   Ticket,
   Package,
-  TrendingUp,
   MoreHorizontal,
   X,
   Eye,
   Edit3,
   Power,
   Send,
-  Clock,
-  CheckCircle2,
-  XCircle,
-  Copy,
-  Check,
   Banknote,
-  BarChart3,
   UserPlus,
   AlertTriangle,
+  Loader2,
 } from "lucide-react";
-
-type SellerStatus = "active" | "inactive" | "suspended";
-
-interface Seller {
-  id: string;
-  name: string;
-  phone: string;
-  location: string;
-  status: SellerStatus;
-  joinedAt: string;
-  commission: number;
-  totalAssigned: number;
-  totalSold: number;
-  totalRevenue: number;
-  stockRemaining: number;
-  lastActive: string;
-  avatar: string;
-}
 
 const statusConfig: Record<SellerStatus, { label: string; bg: string; text: string; dot: string }> = {
   active: { label: "Actif", bg: "bg-emerald-50", text: "text-emerald-700", dot: "bg-emerald-500" },
@@ -53,77 +31,13 @@ const statusConfig: Record<SellerStatus, { label: string; bg: string; text: stri
   suspended: { label: "Suspendu", bg: "bg-red-50", text: "text-red-600", dot: "bg-red-500" },
 };
 
-const demoSellers: Seller[] = [
-  {
-    id: "1", name: "Patrick Mboma", phone: "+243 812 345 678", location: "Gombe, Kinshasa",
-    status: "active", joinedAt: "15 mars 2026", commission: 15, totalAssigned: 120,
-    totalSold: 98, totalRevenue: 48500, stockRemaining: 22, lastActive: "Il y a 5 min",
-    avatar: "PM",
-  },
-  {
-    id: "2", name: "Grace Landu", phone: "+243 823 456 789", location: "Lingwala, Kinshasa",
-    status: "active", joinedAt: "02 avril 2026", commission: 15, totalAssigned: 85,
-    totalSold: 71, totalRevenue: 35200, stockRemaining: 14, lastActive: "Il y a 20 min",
-    avatar: "GL",
-  },
-  {
-    id: "3", name: "David Kasongo", phone: "+243 834 567 890", location: "Matete, Kinshasa",
-    status: "active", joinedAt: "18 mai 2026", commission: 10, totalAssigned: 60,
-    totalSold: 45, totalRevenue: 22000, stockRemaining: 15, lastActive: "Il y a 1h",
-    avatar: "DK",
-  },
-  {
-    id: "4", name: "Sarah Mbuyi", phone: "+243 845 678 901", location: "Lemba, Kinshasa",
-    status: "inactive", joinedAt: "10 juin 2026", commission: 10, totalAssigned: 40,
-    totalSold: 32, totalRevenue: 15800, stockRemaining: 8, lastActive: "Il y a 3j",
-    avatar: "SM",
-  },
-  {
-    id: "5", name: "Jean Kalala", phone: "+243 856 789 012", location: "Barumbu, Kinshasa",
-    status: "suspended", joinedAt: "22 juillet 2026", commission: 15, totalAssigned: 25,
-    totalSold: 10, totalRevenue: 5000, stockRemaining: 0, lastActive: "Il y a 2 sem",
-    avatar: "JK",
-  },
-];
-
-interface StockAssignment {
-  id: string;
-  sellerName: string;
-  profile: string;
-  profileColor: string;
-  quantity: number;
-  date: string;
-  type: "assign" | "return";
-}
-
-const recentAssignments: StockAssignment[] = [
-  { id: "1", sellerName: "Patrick Mboma", profile: "Standard", profileColor: "#2B7FFF", quantity: 20, date: "Aujourd'hui, 14:30", type: "assign" },
-  { id: "2", sellerName: "Grace Landu", profile: "Express", profileColor: "#F59E0B", quantity: 15, date: "Aujourd'hui, 11:00", type: "assign" },
-  { id: "3", sellerName: "David Kasongo", profile: "Journée", profileColor: "#10B981", quantity: 10, date: "Hier, 16:45", type: "assign" },
-  { id: "4", sellerName: "Patrick Mboma", profile: "Express", profileColor: "#F59E0B", quantity: 5, date: "Hier, 09:20", type: "return" },
-  { id: "5", sellerName: "Sarah Mbuyi", profile: "Standard", profileColor: "#2B7FFF", quantity: 8, date: "Il y a 3j", type: "assign" },
-];
-
-interface TicketProfile {
-  id: string;
-  name: string;
-  color: string;
-  available: number;
-}
-
-const ticketProfiles: TicketProfile[] = [
-  { id: "1", name: "Express (1h)", color: "#F59E0B", available: 8 },
-  { id: "2", name: "Standard (3h)", color: "#2B7FFF", available: 15 },
-  { id: "3", name: "Journée (24h)", color: "#10B981", available: 12 },
-  { id: "4", name: "Semaine (7j)", color: "#8B5CF6", available: 8 },
-  { id: "5", name: "Mensuel (30j)", color: "#EC4899", available: 4 },
-];
-
 type ViewTab = "list" | "assignments";
 
 export default function SellersPage() {
   const { currency, phonePrefix } = useCurrency();
-  const [sellers, setSellers] = useState(demoSellers);
+  const { sellers, assignments, loading, addSeller, toggleStatus, assignStock, refetch } = useSellers();
+  const { profiles } = useTickets();
+
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | SellerStatus>("all");
   const [viewTab, setViewTab] = useState<ViewTab>("list");
@@ -134,6 +48,9 @@ export default function SellersPage() {
   const [assignTarget, setAssignTarget] = useState<Seller | null>(null);
   const [assignProfile, setAssignProfile] = useState("");
   const [assignQty, setAssignQty] = useState(10);
+  const [submitting, setSubmitting] = useState(false);
+
+  const [addForm, setAddForm] = useState({ name: "", phone: "", location: "", commission: 15 });
 
   const filtered = sellers.filter((s) => {
     const matchSearch =
@@ -145,19 +62,12 @@ export default function SellersPage() {
   });
 
   const activeSellers = sellers.filter((s) => s.status === "active").length;
-  const totalRevenue = sellers.reduce((s, v) => s + v.totalRevenue, 0);
-  const totalSold = sellers.reduce((s, v) => s + v.totalSold, 0);
-  const lowStock = sellers.filter((s) => s.stockRemaining <= 5 && s.status === "active");
+  const totalRevenue = sellers.reduce((s, v) => s + v.total_revenue, 0);
+  const totalSold = sellers.reduce((s, v) => s + v.total_sold, 0);
+  const lowStock = sellers.filter((s) => s.stock_remaining <= 5 && s.status === "active");
 
-  function toggleStatus(id: string) {
-    setSellers((prev) =>
-      prev.map((s) =>
-        s.id === id
-          ? { ...s, status: (s.status === "active" ? "inactive" : "active") as SellerStatus }
-          : s
-      )
-    );
-    setOpenMenu(null);
+  function getInitials(name: string) {
+    return name.split(" ").map((w) => w[0]).join("").toUpperCase().slice(0, 2);
   }
 
   function openAssign(seller: Seller) {
@@ -166,6 +76,41 @@ export default function SellersPage() {
     setAssignQty(10);
     setShowAssignModal(true);
     setOpenMenu(null);
+  }
+
+  async function handleAddSeller() {
+    if (!addForm.name || !addForm.phone) return;
+    setSubmitting(true);
+    await addSeller({
+      name: addForm.name,
+      phone: `${phonePrefix} ${addForm.phone}`,
+      location: addForm.location,
+      commission_rate: addForm.commission,
+    });
+    setSubmitting(false);
+    setShowAddModal(false);
+    setAddForm({ name: "", phone: "", location: "", commission: 15 });
+  }
+
+  async function handleAssignStock() {
+    if (!assignTarget || !assignProfile) return;
+    setSubmitting(true);
+    await assignStock(assignTarget.id, assignProfile, assignQty);
+    setSubmitting(false);
+    setShowAssignModal(false);
+  }
+
+  async function handleToggle(id: string) {
+    await toggleStatus(id);
+    setOpenMenu(null);
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin text-[#2B7FFF]" />
+      </div>
+    );
   }
 
   return (
@@ -180,7 +125,7 @@ export default function SellersPage() {
         </div>
         <button
           onClick={() => setShowAddModal(true)}
-          className="inline-flex items-center gap-2 h-10 px-5 rounded-xl bg-[#2B7FFF] text-sm font-medium text-white hover:bg-[#2B7FFF]/90 transition-colors shadow-sm"
+          className="inline-flex items-center gap-2 h-10 px-5 rounded-xl bg-[#2B7FFF] text-sm font-medium text-white hover:bg-[#1A6BE6] transition-colors shadow-sm w-full sm:w-auto justify-center"
         >
           <UserPlus className="h-4 w-4" />
           Ajouter un vendeur
@@ -215,7 +160,7 @@ export default function SellersPage() {
           <div className="flex items-center gap-3">
             <div className="rounded-xl bg-emerald-50 p-2.5"><Banknote className="h-5 w-5 text-emerald-500" /></div>
             <div>
-              <p className="text-2xl font-bold text-[#1A1D26]">{totalRevenue.toLocaleString()} {currency}</p>
+              <p className="text-2xl font-bold text-[#1A1D26]">{totalRevenue.toLocaleString("fr-FR")} {currency}</p>
               <p className="text-xs text-[#6B7280]">Revenus vendeurs (total)</p>
             </div>
           </div>
@@ -233,7 +178,7 @@ export default function SellersPage() {
           <div className="flex items-center gap-3">
             <div className="rounded-xl bg-orange-50 p-2.5"><Package className="h-5 w-5 text-orange-500" /></div>
             <div>
-              <p className="text-2xl font-bold text-[#1A1D26]">{sellers.reduce((s, v) => s + v.stockRemaining, 0)}</p>
+              <p className="text-2xl font-bold text-[#1A1D26]">{sellers.reduce((s, v) => s + v.stock_remaining, 0)}</p>
               <p className="text-xs text-[#6B7280]">Tickets en stock (vendeurs)</p>
             </div>
           </div>
@@ -265,7 +210,6 @@ export default function SellersPage() {
       {/* Vendors list tab */}
       {viewTab === "list" && (
         <div className="space-y-4">
-          {/* Toolbar */}
           <div className="flex flex-col sm:flex-row gap-3">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#9CA3AF]" />
@@ -292,8 +236,8 @@ export default function SellersPage() {
             </div>
           </div>
 
-          {/* Desktop table */}
           <div className="rounded-2xl border border-[#E8ECF1] bg-white shadow-[0_1px_3px_rgba(0,0,0,0.04)] overflow-hidden">
+            {/* Desktop table */}
             <div className="hidden lg:block overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
@@ -311,12 +255,13 @@ export default function SellersPage() {
                 <tbody className="divide-y divide-[#F1F3F7]">
                   {filtered.map((seller) => {
                     const sc = statusConfig[seller.status];
+                    const initials = getInitials(seller.name);
                     return (
                       <tr key={seller.id} className="hover:bg-[#FAFBFC] transition-colors">
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-3">
                             <div className="h-9 w-9 rounded-full bg-[#2B7FFF]/10 flex items-center justify-center shrink-0">
-                              <span className="text-xs font-semibold text-[#2B7FFF]">{seller.avatar}</span>
+                              <span className="text-xs font-semibold text-[#2B7FFF]">{initials}</span>
                             </div>
                             <div>
                               <p className="text-sm font-medium text-[#1A1D26]">{seller.name}</p>
@@ -338,31 +283,31 @@ export default function SellersPage() {
                         </td>
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-1.5">
-                            <span className={`text-sm font-semibold ${seller.stockRemaining <= 5 ? "text-amber-600" : "text-[#1A1D26]"}`}>
-                              {seller.stockRemaining}
+                            <span className={`text-sm font-semibold ${seller.stock_remaining <= 5 ? "text-amber-600" : "text-[#1A1D26]"}`}>
+                              {seller.stock_remaining}
                             </span>
-                            {seller.stockRemaining <= 5 && seller.status === "active" && (
+                            {seller.stock_remaining <= 5 && seller.status === "active" && (
                               <AlertTriangle className="h-3.5 w-3.5 text-amber-500" />
                             )}
                           </div>
                         </td>
                         <td className="px-4 py-3">
                           <div className="text-xs">
-                            <span className="font-medium text-[#1A1D26]">{seller.totalSold}</span>
-                            <span className="text-[#9CA3AF]"> / {seller.totalAssigned}</span>
+                            <span className="font-medium text-[#1A1D26]">{seller.total_sold}</span>
+                            <span className="text-[#9CA3AF]"> / {seller.total_assigned}</span>
                           </div>
                           <div className="w-20 h-1.5 rounded-full bg-[#F1F3F7] mt-1 overflow-hidden">
                             <div
                               className="h-full rounded-full bg-emerald-500"
-                              style={{ width: `${seller.totalAssigned > 0 ? (seller.totalSold / seller.totalAssigned) * 100 : 0}%` }}
+                              style={{ width: `${seller.total_assigned > 0 ? (seller.total_sold / seller.total_assigned) * 100 : 0}%` }}
                             />
                           </div>
                         </td>
                         <td className="px-4 py-3 text-sm font-medium text-[#1A1D26]">
-                          {seller.totalRevenue.toLocaleString()} {currency}
+                          {seller.total_revenue.toLocaleString("fr-FR")} {currency}
                         </td>
                         <td className="px-4 py-3">
-                          <span className="text-xs font-semibold text-[#2B7FFF]">{seller.commission}%</span>
+                          <span className="text-xs font-semibold text-[#2B7FFF]">{seller.commission_rate}%</span>
                         </td>
                         <td className="px-4 py-3 text-right">
                           <div className="relative inline-block">
@@ -389,14 +334,7 @@ export default function SellersPage() {
                                   Attribuer du stock
                                 </button>
                                 <button
-                                  onClick={() => setOpenMenu(null)}
-                                  className="flex items-center gap-2.5 w-full px-3.5 py-2.5 text-sm text-[#374151] hover:bg-[#F5F7FA] transition-colors"
-                                >
-                                  <Edit3 className="h-4 w-4 text-[#9CA3AF]" />
-                                  Modifier
-                                </button>
-                                <button
-                                  onClick={() => toggleStatus(seller.id)}
+                                  onClick={() => handleToggle(seller.id)}
                                   className={`flex items-center gap-2.5 w-full px-3.5 py-2.5 text-sm transition-colors ${
                                     seller.status === "active" ? "text-amber-600 hover:bg-amber-50" : "text-emerald-600 hover:bg-emerald-50"
                                   }`}
@@ -419,12 +357,13 @@ export default function SellersPage() {
             <div className="lg:hidden divide-y divide-[#F1F3F7]">
               {filtered.map((seller) => {
                 const sc = statusConfig[seller.status];
+                const initials = getInitials(seller.name);
                 return (
                   <div key={seller.id} className="p-4 space-y-3">
                     <div className="flex items-start justify-between">
                       <div className="flex items-center gap-3">
                         <div className="h-10 w-10 rounded-full bg-[#2B7FFF]/10 flex items-center justify-center">
-                          <span className="text-xs font-semibold text-[#2B7FFF]">{seller.avatar}</span>
+                          <span className="text-xs font-semibold text-[#2B7FFF]">{initials}</span>
                         </div>
                         <div>
                           <p className="text-sm font-semibold text-[#1A1D26]">{seller.name}</p>
@@ -443,31 +382,25 @@ export default function SellersPage() {
                     <div className="grid grid-cols-3 gap-3 pt-3 border-t border-[#F1F3F7]">
                       <div>
                         <p className="text-[11px] text-[#9CA3AF]">Stock</p>
-                        <p className={`text-sm font-semibold ${seller.stockRemaining <= 5 ? "text-amber-600" : "text-[#1A1D26]"}`}>
-                          {seller.stockRemaining}
+                        <p className={`text-sm font-semibold ${seller.stock_remaining <= 5 ? "text-amber-600" : "text-[#1A1D26]"}`}>
+                          {seller.stock_remaining}
                         </p>
                       </div>
                       <div>
                         <p className="text-[11px] text-[#9CA3AF]">Vendus</p>
-                        <p className="text-sm font-semibold text-[#1A1D26]">{seller.totalSold}</p>
+                        <p className="text-sm font-semibold text-[#1A1D26]">{seller.total_sold}</p>
                       </div>
                       <div>
                         <p className="text-[11px] text-[#9CA3AF]">Revenus</p>
-                        <p className="text-sm font-semibold text-[#1A1D26]">{seller.totalRevenue.toLocaleString()}</p>
+                        <p className="text-sm font-semibold text-[#1A1D26]">{seller.total_revenue.toLocaleString("fr-FR")}</p>
                       </div>
                     </div>
                     <div className="flex gap-2 pt-2">
-                      <button
-                        onClick={() => openAssign(seller)}
-                        className="inline-flex items-center gap-1.5 text-xs font-medium text-[#2B7FFF] hover:text-[#2B7FFF]/80"
-                      >
+                      <button onClick={() => openAssign(seller)} className="inline-flex items-center gap-1.5 text-xs font-medium text-[#2B7FFF] hover:text-[#1A6BE6]">
                         <Send className="h-3 w-3" />
                         Attribuer
                       </button>
-                      <button
-                        onClick={() => setSelectedSeller(seller)}
-                        className="inline-flex items-center gap-1.5 text-xs font-medium text-[#6B7280] hover:text-[#1A1D26]"
-                      >
+                      <button onClick={() => setSelectedSeller(seller)} className="inline-flex items-center gap-1.5 text-xs font-medium text-[#6B7280] hover:text-[#1A1D26]">
                         <Eye className="h-3 w-3" />
                         Détails
                       </button>
@@ -494,39 +427,50 @@ export default function SellersPage() {
             <h3 className="text-sm font-semibold text-[#1A1D26]">Historique des attributions</h3>
             <p className="text-xs text-[#6B7280] mt-0.5">Suivi des stocks attribués et retournés</p>
           </div>
-          <div className="divide-y divide-[#F1F3F7]">
-            {recentAssignments.map((a) => (
-              <div key={a.id} className="flex items-center gap-4 px-5 py-3.5 hover:bg-[#FAFBFC] transition-colors">
-                <div className={`rounded-xl p-2 ${a.type === "assign" ? "bg-emerald-50" : "bg-amber-50"}`}>
-                  {a.type === "assign" ? (
-                    <Send className="h-4 w-4 text-emerald-500" />
-                  ) : (
-                    <Package className="h-4 w-4 text-amber-500" />
-                  )}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm text-[#1A1D26]">
-                    <span className="font-medium">{a.sellerName}</span>
-                    {a.type === "assign" ? " — " : " — retour de "}
-                    <span className="font-semibold">{a.quantity}</span> tickets
-                  </p>
-                  <div className="flex items-center gap-2 mt-0.5">
-                    <span
-                      className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium"
-                      style={{ backgroundColor: a.profileColor + "15", color: a.profileColor }}
-                    >
-                      <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: a.profileColor }} />
-                      {a.profile}
-                    </span>
-                    <span className="text-xs text-[#9CA3AF]">{a.date}</span>
+          {assignments.length === 0 ? (
+            <div className="p-12 text-center">
+              <Send className="h-8 w-8 text-[#D1D5DB] mx-auto mb-3" />
+              <p className="text-sm text-[#6B7280]">Aucune attribution pour le moment</p>
+            </div>
+          ) : (
+            <div className="divide-y divide-[#F1F3F7]">
+              {assignments.map((a) => (
+                <div key={a.id} className="flex items-center gap-4 px-5 py-3.5 hover:bg-[#FAFBFC] transition-colors">
+                  <div className={`rounded-xl p-2 ${a.type === "assign" ? "bg-emerald-50" : "bg-amber-50"}`}>
+                    {a.type === "assign" ? (
+                      <Send className="h-4 w-4 text-emerald-500" />
+                    ) : (
+                      <Package className="h-4 w-4 text-amber-500" />
+                    )}
                   </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm text-[#1A1D26]">
+                      <span className="font-medium">{a.seller?.name || "—"}</span>
+                      {a.type === "assign" ? " — " : " — retour de "}
+                      <span className="font-semibold">{a.quantity}</span> tickets
+                    </p>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      {a.profile && (
+                        <span
+                          className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium"
+                          style={{ backgroundColor: (a.profile.color || "#999") + "15", color: a.profile.color }}
+                        >
+                          <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: a.profile.color }} />
+                          {a.profile.name}
+                        </span>
+                      )}
+                      <span className="text-xs text-[#9CA3AF]">
+                        {new Date(a.created_at).toLocaleDateString("fr-FR")}
+                      </span>
+                    </div>
+                  </div>
+                  <span className={`text-sm font-semibold ${a.type === "assign" ? "text-emerald-600" : "text-amber-600"}`}>
+                    {a.type === "assign" ? "+" : "−"}{a.quantity}
+                  </span>
                 </div>
-                <span className={`text-sm font-semibold ${a.type === "assign" ? "text-emerald-600" : "text-amber-600"}`}>
-                  {a.type === "assign" ? "+" : "−"}{a.quantity}
-                </span>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
 
@@ -538,11 +482,11 @@ export default function SellersPage() {
             <div className="flex items-center justify-between px-6 py-4 border-b border-[#E8ECF1]">
               <div className="flex items-center gap-3">
                 <div className="h-10 w-10 rounded-full bg-[#2B7FFF]/10 flex items-center justify-center">
-                  <span className="text-sm font-semibold text-[#2B7FFF]">{selectedSeller.avatar}</span>
+                  <span className="text-sm font-semibold text-[#2B7FFF]">{getInitials(selectedSeller.name)}</span>
                 </div>
                 <div>
                   <h3 className="text-lg font-semibold text-[#1A1D26]">{selectedSeller.name}</h3>
-                  <p className="text-xs text-[#9CA3AF]">Vendeur depuis {selectedSeller.joinedAt}</p>
+                  <p className="text-xs text-[#9CA3AF]">Vendeur depuis {new Date(selectedSeller.created_at).toLocaleDateString("fr-FR")}</p>
                 </div>
               </div>
               <button onClick={() => setSelectedSeller(null)} className="p-1.5 rounded-lg hover:bg-[#F5F7FA] text-[#9CA3AF]">
@@ -553,8 +497,8 @@ export default function SellersPage() {
               {[
                 { label: "Téléphone", value: selectedSeller.phone },
                 { label: "Localisation", value: selectedSeller.location },
-                { label: "Commission", value: `${selectedSeller.commission}%` },
-                { label: "Dernière activité", value: selectedSeller.lastActive },
+                { label: "Commission", value: `${selectedSeller.commission_rate}%` },
+                { label: "Dernière activité", value: selectedSeller.last_active ? new Date(selectedSeller.last_active).toLocaleDateString("fr-FR") : "—" },
               ].map((row) => (
                 <div key={row.label} className="flex items-center justify-between">
                   <span className="text-sm text-[#6B7280]">{row.label}</span>
@@ -578,21 +522,21 @@ export default function SellersPage() {
                 <h4 className="text-sm font-semibold text-[#1A1D26] mb-3">Performance</h4>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="rounded-xl bg-[#F5F7FA] p-3 text-center">
-                    <p className="text-lg font-bold text-[#1A1D26]">{selectedSeller.totalSold}</p>
+                    <p className="text-lg font-bold text-[#1A1D26]">{selectedSeller.total_sold}</p>
                     <p className="text-[11px] text-[#6B7280]">Tickets vendus</p>
                   </div>
                   <div className="rounded-xl bg-[#F5F7FA] p-3 text-center">
-                    <p className="text-lg font-bold text-[#1A1D26]">{selectedSeller.totalRevenue.toLocaleString()}</p>
+                    <p className="text-lg font-bold text-[#1A1D26]">{selectedSeller.total_revenue.toLocaleString("fr-FR")}</p>
                     <p className="text-[11px] text-[#6B7280]">Revenus ({currency})</p>
                   </div>
                   <div className="rounded-xl bg-[#F5F7FA] p-3 text-center">
-                    <p className="text-lg font-bold text-[#1A1D26]">{selectedSeller.stockRemaining}</p>
+                    <p className="text-lg font-bold text-[#1A1D26]">{selectedSeller.stock_remaining}</p>
                     <p className="text-[11px] text-[#6B7280]">Stock restant</p>
                   </div>
                   <div className="rounded-xl bg-[#F5F7FA] p-3 text-center">
                     <p className="text-lg font-bold text-[#1A1D26]">
-                      {selectedSeller.totalAssigned > 0
-                        ? Math.round((selectedSeller.totalSold / selectedSeller.totalAssigned) * 100)
+                      {selectedSeller.total_assigned > 0
+                        ? Math.round((selectedSeller.total_sold / selectedSeller.total_assigned) * 100)
                         : 0}%
                     </p>
                     <p className="text-[11px] text-[#6B7280]">Taux de vente</p>
@@ -603,7 +547,7 @@ export default function SellersPage() {
             <div className="px-6 py-4 border-t border-[#E8ECF1] flex justify-end gap-3">
               <button
                 onClick={() => { openAssign(selectedSeller); setSelectedSeller(null); }}
-                className="inline-flex items-center gap-2 h-10 px-5 rounded-xl bg-[#2B7FFF] text-sm font-medium text-white hover:bg-[#2B7FFF]/90 transition-colors"
+                className="inline-flex items-center gap-2 h-10 px-5 rounded-xl bg-[#2B7FFF] text-sm font-medium text-white hover:bg-[#1A6BE6] transition-colors"
               >
                 <Send className="h-4 w-4" />
                 Attribuer du stock
@@ -627,18 +571,36 @@ export default function SellersPage() {
             <div className="px-6 py-5 space-y-4">
               <div>
                 <label className="block text-sm font-medium text-[#374151] mb-1.5">Nom complet</label>
-                <input type="text" placeholder="Ex: Patrick Mboma" className="w-full h-10 px-4 rounded-xl border border-[#E8ECF1] bg-white text-sm text-[#1A1D26] placeholder:text-[#9CA3AF] focus:outline-none focus:border-[#2B7FFF] focus:ring-1 focus:ring-[#2B7FFF]/20" />
+                <input
+                  type="text"
+                  value={addForm.name}
+                  onChange={(e) => setAddForm({ ...addForm, name: e.target.value })}
+                  placeholder="Ex: Patrick Mboma"
+                  className="w-full h-10 px-4 rounded-xl border border-[#E8ECF1] bg-white text-sm text-[#1A1D26] placeholder:text-[#9CA3AF] focus:outline-none focus:border-[#2B7FFF] focus:ring-1 focus:ring-[#2B7FFF]/20"
+                />
               </div>
               <div>
                 <label className="block text-sm font-medium text-[#374151] mb-1.5">Téléphone</label>
                 <div className="flex gap-2">
                   <span className="inline-flex items-center h-10 px-3 rounded-xl border border-[#E8ECF1] bg-[#F5F7FA] text-sm text-[#6B7280]">{phonePrefix}</span>
-                  <input type="tel" placeholder="812 345 678" className="flex-1 h-10 px-4 rounded-xl border border-[#E8ECF1] bg-white text-sm text-[#1A1D26] placeholder:text-[#9CA3AF] focus:outline-none focus:border-[#2B7FFF] focus:ring-1 focus:ring-[#2B7FFF]/20" />
+                  <input
+                    type="tel"
+                    value={addForm.phone}
+                    onChange={(e) => setAddForm({ ...addForm, phone: e.target.value })}
+                    placeholder="812 345 678"
+                    className="flex-1 h-10 px-4 rounded-xl border border-[#E8ECF1] bg-white text-sm text-[#1A1D26] placeholder:text-[#9CA3AF] focus:outline-none focus:border-[#2B7FFF] focus:ring-1 focus:ring-[#2B7FFF]/20"
+                  />
                 </div>
               </div>
               <div>
                 <label className="block text-sm font-medium text-[#374151] mb-1.5">Localisation</label>
-                <input type="text" placeholder="Ex: Gombe, Kinshasa" className="w-full h-10 px-4 rounded-xl border border-[#E8ECF1] bg-white text-sm text-[#1A1D26] placeholder:text-[#9CA3AF] focus:outline-none focus:border-[#2B7FFF] focus:ring-1 focus:ring-[#2B7FFF]/20" />
+                <input
+                  type="text"
+                  value={addForm.location}
+                  onChange={(e) => setAddForm({ ...addForm, location: e.target.value })}
+                  placeholder="Ex: Gombe, Kinshasa"
+                  className="w-full h-10 px-4 rounded-xl border border-[#E8ECF1] bg-white text-sm text-[#1A1D26] placeholder:text-[#9CA3AF] focus:outline-none focus:border-[#2B7FFF] focus:ring-1 focus:ring-[#2B7FFF]/20"
+                />
               </div>
               <div>
                 <label className="block text-sm font-medium text-[#374151] mb-1.5">Taux de commission</label>
@@ -646,7 +608,12 @@ export default function SellersPage() {
                   {[10, 15, 20].map((c) => (
                     <button
                       key={c}
-                      className="h-10 px-5 rounded-xl border border-[#E8ECF1] text-sm font-medium text-[#374151] hover:border-[#2B7FFF]/30 transition-colors"
+                      onClick={() => setAddForm({ ...addForm, commission: c })}
+                      className={`h-10 px-5 rounded-xl text-sm font-medium transition-all ${
+                        addForm.commission === c
+                          ? "bg-[#2B7FFF] text-white"
+                          : "border border-[#E8ECF1] text-[#374151] hover:border-[#2B7FFF]/30"
+                      }`}
                     >
                       {c}%
                     </button>
@@ -655,7 +622,8 @@ export default function SellersPage() {
                     type="number"
                     min={1}
                     max={50}
-                    placeholder="%"
+                    value={addForm.commission}
+                    onChange={(e) => setAddForm({ ...addForm, commission: Number(e.target.value) })}
                     className="h-10 w-20 px-3 rounded-xl border border-[#E8ECF1] text-sm text-center text-[#1A1D26] focus:outline-none focus:border-[#2B7FFF] focus:ring-1 focus:ring-[#2B7FFF]/20"
                   />
                 </div>
@@ -665,7 +633,12 @@ export default function SellersPage() {
               <button onClick={() => setShowAddModal(false)} className="h-10 px-5 rounded-xl border border-[#E8ECF1] text-sm font-medium text-[#374151] hover:bg-[#F5F7FA] transition-colors">
                 Annuler
               </button>
-              <button className="h-10 px-5 rounded-xl bg-[#2B7FFF] text-sm font-medium text-white hover:bg-[#2B7FFF]/90 transition-colors">
+              <button
+                onClick={handleAddSeller}
+                disabled={!addForm.name || !addForm.phone || submitting}
+                className="inline-flex items-center gap-2 h-10 px-5 rounded-xl bg-[#2B7FFF] text-sm font-medium text-white hover:bg-[#1A6BE6] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
                 Créer le vendeur
               </button>
             </div>
@@ -688,60 +661,67 @@ export default function SellersPage() {
               </button>
             </div>
             <div className="px-6 py-5 space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-[#374151] mb-2">Profil tarifaire</label>
-                <div className="space-y-2">
-                  {ticketProfiles.map((p) => (
-                    <button
-                      key={p.id}
-                      onClick={() => setAssignProfile(p.id)}
-                      className={`flex items-center gap-3 w-full px-3 py-2.5 rounded-xl border text-left transition-all ${
-                        assignProfile === p.id
-                          ? "border-[#2B7FFF] bg-[#2B7FFF]/5 ring-1 ring-[#2B7FFF]/20"
-                          : "border-[#E8ECF1] hover:border-[#2B7FFF]/30"
-                      }`}
-                    >
-                      <span className="h-3 w-3 rounded-full" style={{ backgroundColor: p.color }} />
-                      <span className="flex-1 text-sm font-medium text-[#1A1D26]">{p.name}</span>
-                      <span className="text-xs text-[#9CA3AF]">{p.available} dispo</span>
-                    </button>
-                  ))}
+              {profiles.length === 0 ? (
+                <div className="text-center py-6">
+                  <p className="text-sm text-[#6B7280]">Aucun profil tarifaire disponible.</p>
                 </div>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-[#374151] mb-1.5">Quantité</label>
-                <div className="flex flex-wrap gap-2">
-                  {[5, 10, 25, 50].map((q) => (
-                    <button
-                      key={q}
-                      onClick={() => setAssignQty(q)}
-                      className={`h-10 px-5 rounded-xl text-sm font-medium transition-all ${
-                        assignQty === q
-                          ? "bg-[#2B7FFF] text-white"
-                          : "border border-[#E8ECF1] text-[#374151] hover:border-[#2B7FFF]/30"
-                      }`}
-                    >
-                      {q}
-                    </button>
-                  ))}
-                  <input
-                    type="number"
-                    min={1}
-                    max={100}
-                    value={assignQty}
-                    onChange={(e) => setAssignQty(Math.max(1, Number(e.target.value)))}
-                    className="h-10 w-20 px-3 rounded-xl border border-[#E8ECF1] text-sm text-center text-[#1A1D26] focus:outline-none focus:border-[#2B7FFF]"
-                  />
-                </div>
-              </div>
-              {assignProfile && (
-                <div className="rounded-xl bg-[#F5F7FA] p-4">
-                  <p className="text-sm text-[#1A1D26]">
-                    <span className="font-semibold">{assignQty}</span> tickets{" "}
-                    <span className="font-semibold">{ticketProfiles.find((p) => p.id === assignProfile)?.name}</span>
-                    {" → "}<span className="font-semibold">{assignTarget.name}</span>
-                  </p>
-                </div>
+              ) : (
+                <>
+                  <div>
+                    <label className="block text-sm font-medium text-[#374151] mb-2">Profil tarifaire</label>
+                    <div className="space-y-2">
+                      {profiles.map((p) => (
+                        <button
+                          key={p.id}
+                          onClick={() => setAssignProfile(p.id)}
+                          className={`flex items-center gap-3 w-full px-3 py-2.5 rounded-xl border text-left transition-all ${
+                            assignProfile === p.id
+                              ? "border-[#2B7FFF] bg-[#2B7FFF]/5 ring-1 ring-[#2B7FFF]/20"
+                              : "border-[#E8ECF1] hover:border-[#2B7FFF]/30"
+                          }`}
+                        >
+                          <span className="h-3 w-3 rounded-full" style={{ backgroundColor: p.color }} />
+                          <span className="flex-1 text-sm font-medium text-[#1A1D26]">{p.name}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-[#374151] mb-1.5">Quantité</label>
+                    <div className="flex flex-wrap gap-2">
+                      {[5, 10, 25, 50].map((q) => (
+                        <button
+                          key={q}
+                          onClick={() => setAssignQty(q)}
+                          className={`h-10 px-5 rounded-xl text-sm font-medium transition-all ${
+                            assignQty === q
+                              ? "bg-[#2B7FFF] text-white"
+                              : "border border-[#E8ECF1] text-[#374151] hover:border-[#2B7FFF]/30"
+                          }`}
+                        >
+                          {q}
+                        </button>
+                      ))}
+                      <input
+                        type="number"
+                        min={1}
+                        max={100}
+                        value={assignQty}
+                        onChange={(e) => setAssignQty(Math.max(1, Number(e.target.value)))}
+                        className="h-10 w-20 px-3 rounded-xl border border-[#E8ECF1] text-sm text-center text-[#1A1D26] focus:outline-none focus:border-[#2B7FFF]"
+                      />
+                    </div>
+                  </div>
+                  {assignProfile && (
+                    <div className="rounded-xl bg-[#F5F7FA] p-4">
+                      <p className="text-sm text-[#1A1D26]">
+                        <span className="font-semibold">{assignQty}</span> tickets{" "}
+                        <span className="font-semibold">{profiles.find((p) => p.id === assignProfile)?.name}</span>
+                        {" → "}<span className="font-semibold">{assignTarget.name}</span>
+                      </p>
+                    </div>
+                  )}
+                </>
               )}
             </div>
             <div className="px-6 py-4 border-t border-[#E8ECF1] flex justify-end gap-3">
@@ -749,9 +729,11 @@ export default function SellersPage() {
                 Annuler
               </button>
               <button
-                disabled={!assignProfile}
-                className="inline-flex items-center gap-2 h-10 px-5 rounded-xl bg-[#2B7FFF] text-sm font-medium text-white hover:bg-[#2B7FFF]/90 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                onClick={handleAssignStock}
+                disabled={!assignProfile || submitting}
+                className="inline-flex items-center gap-2 h-10 px-5 rounded-xl bg-[#2B7FFF] text-sm font-medium text-white hover:bg-[#1A6BE6] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
               >
+                {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
                 <Send className="h-4 w-4" />
                 Attribuer
               </button>

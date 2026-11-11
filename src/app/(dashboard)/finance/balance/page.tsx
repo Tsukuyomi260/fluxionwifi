@@ -13,29 +13,15 @@ import {
   CheckCircle,
   Clock,
   XCircle,
-  Filter,
-  Calendar,
   Banknote,
   CreditCard,
   Eye,
   EyeOff,
+  Loader2,
 } from "lucide-react";
 import { useCurrency } from "@/hooks/use-currency";
-
-type TransactionType = "sale" | "withdrawal" | "commission" | "refund" | "topup";
-type TransactionStatus = "completed" | "pending" | "failed";
-
-interface Transaction {
-  id: string;
-  type: TransactionType;
-  label: string;
-  description: string;
-  amount: number;
-  status: TransactionStatus;
-  date: string;
-  time: string;
-  method: string;
-}
+import { useTransactions } from "@/hooks/use-transactions";
+import type { TransactionType, TransactionStatus } from "@/lib/supabase/types";
 
 const typeConfig: Record<TransactionType, { label: string; icon: typeof ArrowDownLeft; color: string; bgColor: string; sign: "+" | "-" }> = {
   sale: { label: "Vente", icon: ArrowDownLeft, color: "text-emerald-600", bgColor: "bg-emerald-50", sign: "+" },
@@ -51,38 +37,29 @@ const statusConfig: Record<TransactionStatus, { label: string; icon: typeof Chec
   failed: { label: "Échoué", icon: XCircle, color: "text-red-500", bgColor: "bg-red-50" },
 };
 
-const transactions: Transaction[] = [
-  { id: "tx-001", type: "sale", label: "Vente ticket 24h", description: "Ticket ABCD-1234 vendu", amount: 500, status: "completed", date: "27 Oct 2026", time: "14:32", method: "Mobile Money" },
-  { id: "tx-002", type: "sale", label: "Vente ticket 1h", description: "Ticket EFGH-5678 vendu", amount: 200, status: "completed", date: "27 Oct 2026", time: "13:15", method: "Mobile Money" },
-  { id: "tx-003", type: "withdrawal", label: "Retrait Mobile Money", description: "Vers +229 97 xx xx xx", amount: 5000, status: "completed", date: "26 Oct 2026", time: "18:00", method: "MTN MoMo" },
-  { id: "tx-004", type: "sale", label: "Vente ticket 7j", description: "Ticket IJKL-9012 vendu", amount: 1500, status: "completed", date: "26 Oct 2026", time: "11:45", method: "Mobile Money" },
-  { id: "tx-005", type: "commission", label: "Commission vendeur", description: "15% sur vente de Koffi A.", amount: 75, status: "completed", date: "26 Oct 2026", time: "10:20", method: "Système" },
-  { id: "tx-006", type: "withdrawal", label: "Retrait Mobile Money", description: "Vers +229 97 xx xx xx", amount: 3000, status: "pending", date: "25 Oct 2026", time: "16:30", method: "Moov Money" },
-  { id: "tx-007", type: "sale", label: "Vente ticket 24h", description: "Ticket MNOP-3456 vendu", amount: 500, status: "completed", date: "25 Oct 2026", time: "09:10", method: "Mobile Money" },
-  { id: "tx-008", type: "refund", label: "Remboursement client", description: "Ticket QRST-7890 annulé", amount: 200, status: "completed", date: "24 Oct 2026", time: "15:50", method: "Système" },
-  { id: "tx-009", type: "sale", label: "Vente ticket 3j", description: "Ticket UVWX-1234 vendu", amount: 1000, status: "completed", date: "24 Oct 2026", time: "08:30", method: "Mobile Money" },
-  { id: "tx-010", type: "topup", label: "Recharge compte", description: "Via FedaPay", amount: 10000, status: "completed", date: "23 Oct 2026", time: "12:00", method: "FedaPay" },
-];
-
 export default function BalancePage() {
   const { currency, format } = useCurrency();
+  const { transactions, loading, balance, pendingBalance, totalRevenue, totalWithdrawn } = useTransactions();
   const [search, setSearch] = useState("");
   const [filterType, setFilterType] = useState<"all" | TransactionType>("all");
   const [filterStatus, setFilterStatus] = useState<"all" | TransactionStatus>("all");
   const [showWithdrawModal, setShowWithdrawModal] = useState(false);
   const [showBalance, setShowBalance] = useState(true);
 
-  const balance = 12575;
-  const pendingBalance = 3000;
-  const totalRevenue = 25750;
-  const totalWithdrawn = 13175;
-
   const filtered = transactions.filter((t) => {
-    if (search && !t.label.toLowerCase().includes(search.toLowerCase()) && !t.description.toLowerCase().includes(search.toLowerCase())) return false;
+    if (search && !t.description?.toLowerCase().includes(search.toLowerCase()) && !t.type.toLowerCase().includes(search.toLowerCase())) return false;
     if (filterType !== "all" && t.type !== filterType) return false;
     if (filterStatus !== "all" && t.status !== filterStatus) return false;
     return true;
   });
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin text-[#2B7FFF]" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -164,7 +141,7 @@ export default function BalancePage() {
             </div>
             <div>
               <p className="text-lg font-bold text-[#1A1D26]">{transactions.filter(t => t.type === "sale").length}</p>
-              <p className="text-xs text-[#6B7280]">Ventes ce mois</p>
+              <p className="text-xs text-[#6B7280]">Ventes totales</p>
             </div>
           </div>
         </div>
@@ -214,6 +191,7 @@ export default function BalancePage() {
         {filtered.map((tx) => {
           const tc = typeConfig[tx.type];
           const sc = statusConfig[tx.status];
+          const date = new Date(tx.created_at);
           return (
             <div key={tx.id} className="flex items-center justify-between px-5 py-4 hover:bg-[#F9FAFB] transition-colors">
               <div className="flex items-center gap-3.5 min-w-0">
@@ -221,9 +199,9 @@ export default function BalancePage() {
                   <tc.icon className={`h-4 w-4 ${tc.color}`} />
                 </div>
                 <div className="min-w-0">
-                  <p className="text-sm font-medium text-[#1A1D26] truncate">{tx.label}</p>
+                  <p className="text-sm font-medium text-[#1A1D26] truncate">{tc.label}</p>
                   <div className="flex items-center gap-2 mt-0.5">
-                    <p className="text-xs text-[#9CA3AF]">{tx.description}</p>
+                    <p className="text-xs text-[#9CA3AF] truncate">{tx.description || "—"}</p>
                     <span className={`hidden sm:inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] font-medium ${sc.bgColor} ${sc.color}`}>
                       <sc.icon className="h-2.5 w-2.5" />
                       {sc.label}
@@ -235,7 +213,9 @@ export default function BalancePage() {
                 <p className={`text-sm font-semibold ${tc.sign === "+" ? "text-emerald-600" : "text-[#1A1D26]"}`}>
                   {tc.sign}{format(tx.amount)}
                 </p>
-                <p className="text-[11px] text-[#9CA3AF] mt-0.5">{tx.date} · {tx.time}</p>
+                <p className="text-[11px] text-[#9CA3AF] mt-0.5">
+                  {date.toLocaleDateString("fr-FR")} · {date.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}
+                </p>
               </div>
             </div>
           );
@@ -261,13 +241,10 @@ export default function BalancePage() {
               </button>
             </div>
             <div className="px-6 py-5 space-y-4">
-              {/* Available balance */}
               <div className="rounded-xl bg-[#F5F7FA] p-4 text-center">
                 <p className="text-xs text-[#6B7280] mb-1">Solde disponible</p>
                 <p className="text-2xl font-bold text-[#1A1D26]">{format(balance)}</p>
               </div>
-
-              {/* Amount */}
               <div>
                 <label className="block text-sm font-medium text-[#374151] mb-1.5">Montant à retirer</label>
                 <div className="relative">
@@ -278,20 +255,17 @@ export default function BalancePage() {
                   />
                   <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm font-medium text-[#9CA3AF]">{currency}</span>
                 </div>
-                {/* Quick amounts */}
                 <div className="flex gap-2 mt-2">
                   {[1000, 2000, 5000, 10000].map((amt) => (
                     <button
                       key={amt}
                       className="flex-1 h-8 rounded-lg border border-[#E8ECF1] text-xs font-medium text-[#6B7280] hover:border-[#2B7FFF] hover:text-[#2B7FFF] hover:bg-[#EBF2FF] transition-colors"
                     >
-                      {amt.toLocaleString()}
+                      {amt.toLocaleString("fr-FR")}
                     </button>
                   ))}
                 </div>
               </div>
-
-              {/* Method */}
               <div>
                 <label className="block text-sm font-medium text-[#374151] mb-1.5">Méthode de retrait</label>
                 <div className="space-y-2">
@@ -317,8 +291,6 @@ export default function BalancePage() {
                   </label>
                 </div>
               </div>
-
-              {/* Phone number */}
               <div>
                 <label className="block text-sm font-medium text-[#374151] mb-1.5">Numéro de téléphone</label>
                 <input
