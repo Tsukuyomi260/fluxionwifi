@@ -1,287 +1,382 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
 import { useCurrency } from "@/hooks/use-currency";
 import { useTickets } from "@/hooks/use-tickets";
 import { useRouters } from "@/hooks/use-routers";
 import { useSessions } from "@/hooks/use-sessions";
-import type { Router as RouterType } from "@/lib/supabase/types";
 import {
   Ticket,
-  Users,
+  Wifi,
   Layers,
   Router,
-  Activity,
-  TrendingUp,
-  ArrowRight,
-  Printer,
-  Plus,
-  Package,
-  Wifi,
-  Clock,
-  CheckCircle2,
   AlertTriangle,
-  Monitor,
   RefreshCw,
+  Clock,
   Loader2,
+  ChevronDown,
+  BarChart3,
+  Globe,
 } from "lucide-react";
-
-const quickActions = [
-  { name: "Générer des tickets", href: "/tickets", icon: Plus, desc: "Créer de nouveaux tickets WiFi" },
-  { name: "Impression rapide", href: "/console/print", icon: Printer, desc: "Imprimer vos tickets en lot" },
-  { name: "Voir le stock", href: "/console/stock", icon: Package, desc: "Stock et utilisateurs actifs" },
-  { name: "Sessions en cours", href: "/console/sessions", icon: Activity, desc: "Monitorer les connexions" },
-];
 
 export default function ConsoleDashboard() {
   const { currency } = useCurrency();
-  const { tickets, profiles, loading: ticketsLoading } = useTickets();
-  const { routers, loading: routersLoading, online } = useRouters();
-  const { activeSessions, loading: sessionsLoading } = useSessions();
+  const { tickets, profiles, loading: tl } = useTickets();
+  const { routers, loading: rl, online } = useRouters();
+  const { activeSessions, loading: sl } = useSessions();
 
-  const loading = ticketsLoading || routersLoading || sessionsLoading;
-
+  const anyLoading = tl || rl || sl;
   const availableTickets = tickets.filter((t) => t.status === "available").length;
   const offlineRouters = routers.filter((r) => r.status === "offline");
 
-  const stats = [
-    {
-      label: "Tickets en stock",
-      value: String(availableTickets),
-      sublabel: "disponibles",
-      icon: Ticket,
-      iconBg: "bg-blue-50",
-      iconColor: "text-[#2B7FFF]",
-    },
-    {
-      label: "Sessions actives",
-      value: String(activeSessions.length),
-      sublabel: "connectés maintenant",
-      icon: Users,
-      iconBg: "bg-emerald-50",
-      iconColor: "text-emerald-500",
-    },
-    {
-      label: "Profils tarifaires",
-      value: String(profiles.length),
-      sublabel: "configurés",
-      icon: Layers,
-      iconBg: "bg-violet-50",
-      iconColor: "text-violet-500",
-    },
-    {
-      label: "Routeurs en ligne",
-      value: `${online}/${routers.length}`,
-      sublabel: offlineRouters.length > 0 ? `${offlineRouters.length} hors ligne` : "tous connectés",
-      icon: Router,
-      iconBg: "bg-orange-50",
-      iconColor: "text-orange-500",
-    },
-  ];
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 className="h-8 w-8 animate-spin text-[#2B7FFF]" />
-      </div>
-    );
-  }
+  const stockByProfile = profiles.map((p) => {
+    const profileTickets = tickets.filter((t) => t.profile_id === p.id);
+    const stock = profileTickets.filter((t) => t.status === "available").length;
+    const actifs = profileTickets.filter((t) => t.status === "active").length;
+    const epuises = profileTickets.filter(
+      (t) => t.status === "used" || t.status === "expired"
+    ).length;
+    return { name: p.name, stock, actifs, epuises };
+  });
 
   return (
-    <div className="space-y-6">
-      {/* Alert banner for offline routers */}
-      {offlineRouters.length > 0 && (
-        <div className="flex items-center gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-5 py-3.5">
-          <AlertTriangle className="h-5 w-5 text-amber-500 shrink-0" />
-          <div className="flex-1">
-            <p className="text-sm font-medium text-amber-800">
-              {offlineRouters.length} routeur{offlineRouters.length > 1 ? "s" : ""} hors ligne
-            </p>
-            <p className="text-xs text-amber-600 mt-0.5">
-              {offlineRouters.map((r) => r.name).join(", ")}
-            </p>
-          </div>
-          <Link
-            href="/console/routers"
-            className="text-xs font-medium text-amber-700 hover:text-amber-900 whitespace-nowrap"
-          >
-            Voir les routeurs →
-          </Link>
+    <div className="-m-4 lg:-m-6 min-h-full bg-[#F3F4F6] p-0">
+      {/* Top bar */}
+      <div className="bg-[#1F2937] px-5 py-3 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <h1 className="text-lg font-bold">
+            <span className="text-[#2B7FFF]">FLUXION</span>
+            <span className="text-emerald-400"> CONSOLE</span>
+          </h1>
         </div>
-      )}
+        <div className="flex items-center gap-3">
+          <div className="relative">
+            <select className="h-8 pl-3 pr-8 rounded-lg bg-[#374151] text-white text-xs appearance-none focus:outline-none min-w-[200px]">
+              <option>Tous les routeurs (global)</option>
+              {routers.map((r) => (
+                <option key={r.id} value={r.id}>
+                  {r.name}
+                </option>
+              ))}
+            </select>
+            <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 h-3 w-3 text-white/60 pointer-events-none" />
+          </div>
+          <span className="text-xs font-semibold text-white bg-[#374151] px-3 py-1.5 rounded-lg">
+            FLUXIONWIFI
+          </span>
+        </div>
+      </div>
 
-      {/* Stats cards */}
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        {stats.map((stat) => (
-          <div
-            key={stat.label}
-            className="rounded-2xl border border-[#E8ECF1] bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]"
-          >
-            <div className="flex items-start justify-between">
-              <div className={`rounded-xl p-2.5 ${stat.iconBg}`}>
-                <stat.icon className={`h-5 w-5 ${stat.iconColor}`} />
+      {/* Portal alert banner */}
+      <div className="mx-5 mt-4 flex items-center justify-between rounded-lg bg-amber-400 px-4 py-2">
+        <div className="flex items-center gap-2">
+          <AlertTriangle className="h-4 w-4 text-amber-900" />
+          <span className="text-sm font-semibold text-amber-900">
+            Portail &agrave; publier
+          </span>
+          <span className="rounded bg-amber-600 px-2 py-0.5 text-[10px] font-bold text-white">
+            1
+          </span>
+        </div>
+        <Link
+          href="/portal"
+          className="text-xs font-semibold text-amber-900 hover:text-amber-700 flex items-center gap-1"
+        >
+          <Globe className="h-3.5 w-3.5" />
+          Publier
+          <ChevronDown className="h-3 w-3 -rotate-90" />
+        </Link>
+      </div>
+
+      {/* Stat cards */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mx-5 mt-4">
+        <div className="rounded-xl bg-emerald-500 p-5 text-white relative overflow-hidden">
+          <Ticket className="absolute -right-2 -bottom-2 h-16 w-16 text-white/10" />
+          <p className="text-3xl font-bold">
+            {tl ? (
+              <span className="inline-block h-8 w-16 rounded bg-white/20 animate-pulse" />
+            ) : (
+              availableTickets
+            )}
+          </p>
+          <p className="text-sm mt-1 text-emerald-100">Tickets en stock</p>
+        </div>
+        <div className="rounded-xl bg-orange-500 p-5 text-white relative overflow-hidden">
+          <Wifi className="absolute -right-2 -bottom-2 h-16 w-16 text-white/10" />
+          <p className="text-3xl font-bold">
+            {sl ? (
+              <span className="inline-block h-8 w-12 rounded bg-white/20 animate-pulse" />
+            ) : (
+              activeSessions.length
+            )}
+          </p>
+          <p className="text-sm mt-1 text-orange-100">Sessions actives</p>
+        </div>
+        <div className="rounded-xl bg-violet-500 p-5 text-white relative overflow-hidden">
+          <Layers className="absolute -right-2 -bottom-2 h-16 w-16 text-white/10" />
+          <p className="text-3xl font-bold">
+            {tl ? (
+              <span className="inline-block h-8 w-10 rounded bg-white/20 animate-pulse" />
+            ) : (
+              profiles.length
+            )}
+          </p>
+          <p className="text-sm mt-1 text-violet-100">Profils</p>
+        </div>
+        <div className="rounded-xl bg-amber-500 p-5 text-white relative overflow-hidden">
+          <Router className="absolute -right-2 -bottom-2 h-16 w-16 text-white/10" />
+          <p className="text-3xl font-bold">
+            {rl ? (
+              <span className="inline-block h-8 w-10 rounded bg-white/20 animate-pulse" />
+            ) : (
+              online
+            )}
+          </p>
+          <p className="text-sm mt-1 text-amber-100">Routeurs en ligne</p>
+        </div>
+      </div>
+
+      {/* Main content — two columns */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mx-5 mt-4 pb-6">
+        {/* Left column (2/3) */}
+        <div className="lg:col-span-2 space-y-4">
+          {/* Traffic chart placeholder */}
+          <div className="rounded-xl border border-[#E5E7EB] bg-white p-5">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <BarChart3 className="h-5 w-5 text-[#6B7280]" />
+                <h3 className="text-sm font-semibold text-[#1A1D26]">
+                  Trafic clients (agr&eacute;g&eacute; via RADIUS)
+                </h3>
               </div>
+              <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700">
+                0 Mbps
+              </span>
             </div>
-            <p className="mt-4 text-[28px] font-bold text-[#1A1D26]">{stat.value}</p>
-            <p className="mt-0.5 text-[13px] text-[#6B7280]">
-              {stat.label} · {stat.sublabel}
+            <div className="h-48 flex items-center justify-center rounded-lg bg-[#F9FAFB] border border-dashed border-[#E5E7EB]">
+              <p className="text-sm text-[#9CA3AF]">
+                Graphique de trafic en temps r&eacute;el
+              </p>
+            </div>
+            <p className="text-[11px] text-[#9CA3AF] mt-2">
+              D&eacute;bit d&eacute;duit des compteurs d&apos;accounting RADIUS
+              (granularit&eacute; = interim-update).
             </p>
           </div>
-        ))}
-      </div>
 
-      {/* Quick actions */}
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        {quickActions.map((action) => (
-          <Link
-            key={action.name}
-            href={action.href}
-            className="group flex items-center gap-3 rounded-2xl border border-[#E8ECF1] bg-white p-4 shadow-[0_1px_3px_rgba(0,0,0,0.04)] hover:border-[#2B7FFF]/20 hover:shadow-md transition-all"
-          >
-            <div className="rounded-xl bg-[#2B7FFF]/10 p-2.5">
-              <action.icon className="h-5 w-5 text-[#2B7FFF]" />
+          {/* Journal de connexion */}
+          <div className="rounded-xl border border-[#E5E7EB] bg-white overflow-hidden">
+            <div className="flex items-center justify-between px-5 py-3 border-b border-[#E5E7EB]">
+              <div className="flex items-center gap-2">
+                <Clock className="h-4 w-4 text-[#6B7280]" />
+                <h3 className="text-sm font-semibold text-[#1A1D26]">
+                  Journal de connexion (RADIUS)
+                </h3>
+              </div>
+              <button className="p-1.5 rounded-lg hover:bg-[#F3F4F6] text-[#9CA3AF]">
+                <RefreshCw className="h-4 w-4" />
+              </button>
             </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-[#1A1D26]">{action.name}</p>
-              <p className="text-xs text-[#6B7280] truncate">{action.desc}</p>
-            </div>
-            <ArrowRight className="h-4 w-4 text-[#D1D5DB] group-hover:text-[#2B7FFF] transition-colors shrink-0" />
-          </Link>
-        ))}
-      </div>
-
-      {/* Routeurs panel */}
-      <div className="rounded-2xl border border-[#E8ECF1] bg-white shadow-[0_1px_3px_rgba(0,0,0,0.04)] overflow-hidden">
-        <div className="flex items-center justify-between px-5 py-4 border-b border-[#E8ECF1]">
-          <div className="flex items-center gap-2">
-            <Router className="h-5 w-5 text-[#2B7FFF]" />
-            <h3 className="text-base font-semibold text-[#1A1D26]">Routeurs MikroTik</h3>
-          </div>
-          <Link href="/console/routers" className="text-xs text-[#2B7FFF] hover:underline">
-            Gérer les routeurs →
-          </Link>
-        </div>
-
-        {routers.length === 0 ? (
-          <div className="p-12 text-center">
-            <Router className="h-8 w-8 text-[#D1D5DB] mx-auto mb-3" />
-            <p className="text-sm text-[#6B7280]">Aucun routeur configuré</p>
-            <Link href="/console/routers" className="text-xs text-[#2B7FFF] hover:underline mt-1 inline-block">
-              Ajouter un routeur
-            </Link>
-          </div>
-        ) : (
-          <>
-            {/* Desktop table */}
-            <div className="hidden lg:block overflow-x-auto">
+            <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-[#E8ECF1] bg-[#FAFBFC]">
-                    <th className="text-left px-5 py-3 text-xs font-semibold text-[#6B7280] uppercase tracking-wider">Routeur</th>
-                    <th className="text-left px-5 py-3 text-xs font-semibold text-[#6B7280] uppercase tracking-wider">Modèle</th>
-                    <th className="text-left px-5 py-3 text-xs font-semibold text-[#6B7280] uppercase tracking-wider">Statut</th>
-                    <th className="text-left px-5 py-3 text-xs font-semibold text-[#6B7280] uppercase tracking-wider">Clients</th>
-                    <th className="text-left px-5 py-3 text-xs font-semibold text-[#6B7280] uppercase tracking-wider">Uptime</th>
-                    <th className="text-left px-5 py-3 text-xs font-semibold text-[#6B7280] uppercase tracking-wider">CPU / RAM</th>
+                  <tr className="border-b border-[#F1F3F7] bg-[#FAFBFC]">
+                    <th className="text-left px-4 py-2.5 text-xs font-semibold text-[#6B7280]">
+                      Heure
+                    </th>
+                    <th className="text-left px-4 py-2.5 text-xs font-semibold text-[#6B7280]">
+                      Utilisateur
+                    </th>
+                    <th className="text-left px-4 py-2.5 text-xs font-semibold text-[#6B7280]">
+                      IP / MAC
+                    </th>
+                    <th className="text-left px-4 py-2.5 text-xs font-semibold text-[#6B7280]">
+                      &Eacute;v&eacute;nement
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#F1F3F7]">
-                  {routers.map((r) => (
-                    <tr key={r.id} className="hover:bg-[#FAFBFC] transition-colors">
-                      <td className="px-5 py-3.5">
-                        <div className="flex items-center gap-2.5">
-                          <div className={`h-2 w-2 rounded-full ${r.status === "online" ? "bg-emerald-500" : r.status === "warning" ? "bg-amber-500" : "bg-red-500"}`} />
-                          <div>
-                            <p className="text-sm font-medium text-[#1A1D26]">{r.name}</p>
-                            <p className="font-mono text-xs text-[#9CA3AF]">{r.ip_address}</p>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-5 py-3.5 text-xs text-[#6B7280]">{r.model ? `MikroTik ${r.model}` : "—"}</td>
-                      <td className="px-5 py-3.5">
-                        <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11px] font-medium ${
-                          r.status === "online" ? "bg-emerald-50 text-emerald-700"
-                            : r.status === "warning" ? "bg-amber-50 text-amber-700"
-                            : "bg-red-50 text-red-600"
-                        }`}>
-                          {r.status === "online" ? (
-                            <><CheckCircle2 className="h-3 w-3" />En ligne</>
-                          ) : r.status === "warning" ? (
-                            <><AlertTriangle className="h-3 w-3" />Attention</>
-                          ) : (
-                            <><AlertTriangle className="h-3 w-3" />Hors ligne</>
-                          )}
-                        </span>
-                      </td>
-                      <td className="px-5 py-3.5">
-                        <span className="text-sm font-medium text-[#1A1D26]">{r.clients_connected ?? 0}</span>
-                        <span className="text-xs text-[#9CA3AF] ml-1">connecté{(r.clients_connected ?? 0) !== 1 ? "s" : ""}</span>
-                      </td>
-                      <td className="px-5 py-3.5 text-xs text-[#6B7280]">
-                        <div className="flex items-center gap-1">
-                          <Clock className="h-3 w-3" />
-                          {r.uptime || "—"}
-                        </div>
-                      </td>
-                      <td className="px-5 py-3.5">
-                        {r.status === "online" ? (
-                          <div className="flex items-center gap-3">
-                            <div className="flex items-center gap-1.5">
-                              <div className="w-16 h-1.5 rounded-full bg-[#F1F3F7] overflow-hidden">
-                                <div className="h-full rounded-full bg-[#2B7FFF]" style={{ width: `${r.cpu_usage ?? 0}%` }} />
-                              </div>
-                              <span className="text-[11px] text-[#6B7280]">{r.cpu_usage ?? 0}%</span>
-                            </div>
-                            <div className="flex items-center gap-1.5">
-                              <div className="w-16 h-1.5 rounded-full bg-[#F1F3F7] overflow-hidden">
-                                <div className="h-full rounded-full bg-violet-400" style={{ width: `${r.memory_usage ?? 0}%` }} />
-                              </div>
-                              <span className="text-[11px] text-[#6B7280]">{r.memory_usage ?? 0}%</span>
-                            </div>
-                          </div>
-                        ) : (
-                          <span className="text-xs text-[#9CA3AF]">—</span>
-                        )}
+                  {sl ? (
+                    <tr>
+                      <td colSpan={4} className="px-4 py-6 text-center">
+                        <Loader2 className="h-5 w-5 animate-spin text-[#2B7FFF] mx-auto" />
                       </td>
                     </tr>
-                  ))}
+                  ) : activeSessions.length === 0 ? (
+                    <tr>
+                      <td
+                        colSpan={4}
+                        className="px-4 py-6 text-center text-sm text-[#9CA3AF]"
+                      >
+                        Aucune session r&eacute;cente.
+                      </td>
+                    </tr>
+                  ) : (
+                    activeSessions.slice(0, 10).map((s) => (
+                      <tr
+                        key={s.id}
+                        className="hover:bg-[#FAFBFC] transition-colors"
+                      >
+                        <td className="px-4 py-2.5 text-xs text-[#6B7280] whitespace-nowrap">
+                          {new Date(s.started_at).toLocaleString("fr-FR", {
+                            day: "2-digit",
+                            month: "2-digit",
+                            year: "2-digit",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
+                        </td>
+                        <td className="px-4 py-2.5 text-xs font-bold text-[#1A1D26]">
+                          {s.device_name || s.device_mac || "—"}
+                        </td>
+                        <td className="px-4 py-2.5 text-xs text-[#6B7280] font-mono">
+                          {s.ip_address || "—"}
+                        </td>
+                        <td className="px-4 py-2.5 text-xs text-[#6B7280]">
+                          {s.ended_at
+                            ? "déconnecté"
+                            : "connecté (session active)"}
+                        </td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>
+          </div>
+        </div>
 
-            {/* Mobile cards */}
-            <div className="lg:hidden divide-y divide-[#F1F3F7]">
-              {routers.map((r) => (
-                <div key={r.id} className="p-4 space-y-3">
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-center gap-2.5">
-                      <div className={`h-2.5 w-2.5 rounded-full ${r.status === "online" ? "bg-emerald-500" : r.status === "warning" ? "bg-amber-500" : "bg-red-500"}`} />
-                      <div>
-                        <p className="text-sm font-semibold text-[#1A1D26]">{r.name}</p>
-                        <p className="font-mono text-xs text-[#9CA3AF]">{r.ip_address} · {r.model || "—"}</p>
-                      </div>
-                    </div>
-                    <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium ${
-                      r.status === "online" ? "bg-emerald-50 text-emerald-700"
-                        : r.status === "warning" ? "bg-amber-50 text-amber-700"
-                        : "bg-red-50 text-red-600"
-                    }`}>
-                      {r.status === "online" ? "En ligne" : r.status === "warning" ? "Attention" : "Hors ligne"}
-                    </span>
-                  </div>
-                  {r.status !== "offline" && (
-                    <div className="flex items-center gap-4 text-xs text-[#6B7280]">
-                      <span>{r.clients_connected ?? 0} client{(r.clients_connected ?? 0) !== 1 ? "s" : ""}</span>
-                      <span>Uptime: {r.uptime || "—"}</span>
-                      <span>CPU: {r.cpu_usage ?? 0}%</span>
-                    </div>
-                  )}
-                </div>
-              ))}
+        {/* Right column (1/3) */}
+        <div className="space-y-4">
+          {/* Routeurs panel */}
+          <div className="rounded-xl border border-[#E5E7EB] bg-white overflow-hidden">
+            <div className="flex items-center justify-between px-4 py-3 border-b border-[#E5E7EB]">
+              <div className="flex items-center gap-2">
+                <Router className="h-4 w-4 text-[#6B7280]" />
+                <h3 className="text-sm font-semibold text-[#1A1D26]">
+                  Routeurs
+                </h3>
+              </div>
+              <button className="p-1 rounded hover:bg-[#F3F4F6] text-[#9CA3AF]">
+                <RefreshCw className="h-3.5 w-3.5" />
+              </button>
             </div>
-          </>
-        )}
+            <div className="divide-y divide-[#F1F3F7]">
+              {rl ? (
+                <div className="p-4">
+                  <Loader2 className="h-5 w-5 animate-spin text-[#2B7FFF] mx-auto" />
+                </div>
+              ) : routers.length === 0 ? (
+                <div className="p-6 text-center text-sm text-[#9CA3AF]">
+                  Aucun routeur.
+                </div>
+              ) : (
+                routers.map((r) => (
+                  <div
+                    key={r.id}
+                    className="flex items-start gap-2.5 px-4 py-3 hover:bg-[#FAFBFC] transition-colors"
+                  >
+                    <div
+                      className={`mt-1.5 h-2.5 w-2.5 rounded-full shrink-0 ${
+                        r.status === "online"
+                          ? "bg-emerald-500"
+                          : r.status === "warning"
+                          ? "bg-amber-500"
+                          : "bg-red-500"
+                      }`}
+                    />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-bold text-[#1A1D26] truncate">
+                        {r.name}
+                      </p>
+                      <p className="text-[11px] text-[#9CA3AF]">
+                        {r.model ? `ROS ${r.model}` : "—"}
+                      </p>
+                    </div>
+                    <div className="text-right shrink-0">
+                      <p className="text-[11px] text-[#9CA3AF]">
+                        {r.status === "online" ? "il y a" : ""}
+                      </p>
+                      <p className="text-[11px] text-[#9CA3AF]">
+                        {r.status === "online" ? "1s" : "hors ligne"}
+                      </p>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+
+          {/* Stock par profil */}
+          <div className="rounded-xl border border-[#E5E7EB] bg-white overflow-hidden">
+            <div className="px-4 py-3 border-b border-[#E5E7EB]">
+              <div className="flex items-center gap-2">
+                <Layers className="h-4 w-4 text-[#6B7280]" />
+                <h3 className="text-sm font-semibold text-[#1A1D26]">
+                  Stock par profil
+                </h3>
+              </div>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-[#F1F3F7] bg-[#FAFBFC]">
+                    <th className="text-left px-4 py-2 text-xs font-semibold text-[#6B7280]">
+                      Profil
+                    </th>
+                    <th className="text-right px-4 py-2 text-xs font-semibold text-[#6B7280]">
+                      Stock
+                    </th>
+                    <th className="text-right px-4 py-2 text-xs font-semibold text-emerald-500">
+                      Actifs
+                    </th>
+                    <th className="text-right px-4 py-2 text-xs font-semibold text-red-500">
+                      &Eacute;puis&eacute;s
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#F1F3F7]">
+                  {tl ? (
+                    <tr>
+                      <td colSpan={4} className="px-4 py-4 text-center">
+                        <Loader2 className="h-4 w-4 animate-spin text-[#2B7FFF] mx-auto" />
+                      </td>
+                    </tr>
+                  ) : stockByProfile.length === 0 ? (
+                    <tr>
+                      <td
+                        colSpan={4}
+                        className="px-4 py-4 text-center text-xs text-[#9CA3AF]"
+                      >
+                        Aucun profil.
+                      </td>
+                    </tr>
+                  ) : (
+                    stockByProfile.map((sp) => (
+                      <tr
+                        key={sp.name}
+                        className="hover:bg-[#FAFBFC] transition-colors"
+                      >
+                        <td className="px-4 py-2.5 text-xs font-medium text-[#1A1D26]">
+                          {sp.name}
+                        </td>
+                        <td className="px-4 py-2.5 text-xs text-right text-[#1A1D26] font-semibold">
+                          {sp.stock}
+                        </td>
+                        <td className="px-4 py-2.5 text-xs text-right text-emerald-600 font-medium">
+                          {sp.actifs}
+                        </td>
+                        <td className="px-4 py-2.5 text-xs text-right text-red-500 font-medium">
+                          {sp.epuises}
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
