@@ -162,7 +162,7 @@ export default function DashboardPage() {
     },
     {
       name: "Services & Boutique",
-      href: "#",
+      href: "/services",
       icon: Wrench,
       iconBg: "bg-amber-100",
       iconColor: "text-amber-500",
