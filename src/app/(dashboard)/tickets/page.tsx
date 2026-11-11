@@ -3,91 +3,59 @@
 import { useState } from "react";
 import { useCurrency } from "@/hooks/use-currency";
 import { useTickets } from "@/hooks/use-tickets";
-import type { TicketStatus } from "@/lib/supabase/types";
 import {
-  Ticket,
-  Plus,
-  Search,
-  ChevronDown,
-  MoreHorizontal,
-  Copy,
-  Trash2,
-  Eye,
+  Printer,
+  Monitor,
+  CheckCircle,
+  Clock,
+  Loader2,
   X,
   Check,
-  Clock,
-  Wifi,
-  Users,
-  Banknote,
-  Package,
-  CheckCircle2,
-  XCircle,
-  Zap,
-  Share2,
-  Loader2,
+  Copy,
 } from "lucide-react";
-
-const durationLabels: Record<string, string> = {
-  "1h": "1 heure",
-  "3h": "3 heures",
-  "6h": "6 heures",
-  "12h": "12 heures",
-  "24h": "24 heures",
-  "3j": "3 jours",
-  "7j": "7 jours",
-  "30j": "30 jours",
-};
-
-const statusConfig: Record<TicketStatus, { label: string; bg: string; text: string; icon: typeof CheckCircle2 }> = {
-  available: { label: "Disponible", bg: "bg-blue-50", text: "text-[#2B7FFF]", icon: Ticket },
-  active: { label: "En cours", bg: "bg-emerald-50", text: "text-emerald-700", icon: Wifi },
-  used: { label: "Utilisé", bg: "bg-gray-100", text: "text-gray-600", icon: CheckCircle2 },
-  expired: { label: "Expiré", bg: "bg-red-50", text: "text-red-600", icon: XCircle },
-};
-
-type Tab = "tickets" | "profiles";
 
 export default function TicketsPage() {
   const { currency } = useCurrency();
-  const { tickets, profiles, loading, generate, deleteTicket } = useTickets();
-  const [activeTab, setActiveTab] = useState<Tab>("tickets");
-  const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState<"all" | TicketStatus>("all");
-  const [profileFilter, setProfileFilter] = useState("all");
-  const [openMenu, setOpenMenu] = useState<string | null>(null);
-  const [showGenerateModal, setShowGenerateModal] = useState(false);
-  const [showDetailModal, setShowDetailModal] = useState<typeof tickets[0] | null>(null);
+  const { tickets, profiles, loading, generate } = useTickets();
+  const [generating, setGenerating] = useState<string | null>(null);
+  const [showSaleModal, setShowSaleModal] = useState<string | null>(null);
+  const [showHistorique, setShowHistorique] = useState(false);
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
-  const [generating, setGenerating] = useState(false);
 
-  const [generateForm, setGenerateForm] = useState({
-    profileId: "",
-    quantity: 10,
-  });
+  const soldTickets = tickets.filter((t) => t.status === "used" || t.status === "active");
 
-  const filteredTickets = tickets.filter((t) => {
-    const matchSearch = t.code.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (t.profile?.name || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (t.seller?.name || "").toLowerCase().includes(searchQuery.toLowerCase());
-    const matchStatus = statusFilter === "all" || t.status === statusFilter;
-    const matchProfile = profileFilter === "all" || t.profile_id === profileFilter;
-    return matchSearch && matchStatus && matchProfile;
-  });
+  async function handleVendre(profileId: string) {
+    setGenerating(profileId);
+    await generate(profileId, 1);
+    setGenerating(null);
+    setShowSaleModal(profileId);
+  }
 
-  const stats = [
-    { label: "Total tickets", value: tickets.length, icon: Package, iconBg: "bg-blue-50", iconColor: "text-[#2B7FFF]" },
-    { label: "Disponibles", value: tickets.filter((t) => t.status === "available").length, icon: Ticket, iconBg: "bg-emerald-50", iconColor: "text-emerald-500" },
-    { label: "En cours", value: tickets.filter((t) => t.status === "active").length, icon: Wifi, iconBg: "bg-violet-50", iconColor: "text-violet-500" },
-    { label: "Revenu potentiel", value: tickets.filter((t) => t.status === "available").reduce((s, t) => s + (t.profile?.price || 0), 0).toLocaleString("fr-FR") + ` ${currency}`, icon: Banknote, iconBg: "bg-orange-50", iconColor: "text-orange-500" },
-  ];
-
-  async function handleGenerate() {
-    if (!generateForm.profileId) return;
-    setGenerating(true);
-    await generate(generateForm.profileId, generateForm.quantity);
-    setGenerating(false);
-    setShowGenerateModal(false);
-    setGenerateForm({ profileId: "", quantity: 10 });
+  function handleImprimer(profileId: string) {
+    const profileTickets = tickets.filter(
+      (t) => t.profile_id === profileId && t.status === "available"
+    );
+    if (profileTickets.length === 0) return;
+    const codes = profileTickets.slice(0, 10).map((t) => t.code);
+    const win = window.open("", "_blank");
+    if (!win) return;
+    const profile = profiles.find((p) => p.id === profileId);
+    win.document.write(`<!DOCTYPE html><html><head><title>Tickets - ${profile?.name || ""}</title>
+      <style>body{font-family:monospace;padding:20px}
+      .ticket{border:2px dashed #333;padding:16px;margin:10px 0;text-align:center;page-break-inside:avoid}
+      .code{font-size:24px;font-weight:bold;letter-spacing:4px}
+      .info{font-size:12px;color:#666;margin-top:8px}
+      @media print{body{padding:0}}</style></head><body>`);
+    codes.forEach((code) => {
+      win.document.write(`<div class="ticket">
+        <div style="font-size:14px;font-weight:bold;margin-bottom:8px">${profile?.name || ""}</div>
+        <div class="code">${code}</div>
+        <div class="info">${profile?.price?.toLocaleString("fr-FR")} ${currency} | FLUXIONWIFI</div>
+      </div>`);
+    });
+    win.document.write("</body></html>");
+    win.document.close();
+    win.print();
   }
 
   function copyCode(code: string) {
@@ -95,18 +63,6 @@ export default function TicketsPage() {
     setCopiedCode(code);
     setTimeout(() => setCopiedCode(null), 2000);
   }
-
-  async function handleDelete(id: string) {
-    await deleteTicket(id);
-    setOpenMenu(null);
-  }
-
-  const selectedProfile = profiles.find((p) => p.id === generateForm.profileId);
-
-  const tabs: { id: Tab; label: string; icon: typeof Ticket }[] = [
-    { id: "tickets", label: "Tickets", icon: Ticket },
-    { id: "profiles", label: "Profils", icon: Zap },
-  ];
 
   if (loading) {
     return (
@@ -117,506 +73,296 @@ export default function TicketsPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="-m-4 lg:-m-6 min-h-full bg-[#1F2937] p-4 lg:p-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h2 className="text-xl font-bold text-[#1A1D26]">Tickets WiFi</h2>
-          <p className="text-sm text-[#6B7280] mt-0.5">
-            Générez, gérez et distribuez vos tickets d&apos;accès WiFi
-          </p>
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-3">
+          <h1 className="text-xl font-bold text-orange-400">
+            Vente de Tickets WiFi
+          </h1>
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/20 px-3 py-1 text-xs font-medium text-emerald-400">
+            <CheckCircle className="h-3.5 w-3.5" />
+            Synchronis&eacute;
+          </span>
         </div>
-        <button
-          onClick={() => {
-            if (profiles.length > 0 && !generateForm.profileId) {
-              setGenerateForm((f) => ({ ...f, profileId: profiles[0].id }));
-            }
-            setShowGenerateModal(true);
-          }}
-          className="inline-flex h-10 items-center gap-2 rounded-xl bg-[#2B7FFF] px-5 text-sm font-medium text-white hover:bg-[#1A6BE6] transition-colors shadow-sm w-full sm:w-auto justify-center"
-        >
-          <Plus className="h-4 w-4" />
-          Générer des tickets
-        </button>
       </div>
 
-      {/* Stats */}
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        {stats.map((stat) => (
-          <div key={stat.label} className="rounded-2xl border border-[#E8ECF1] bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
-            <div className="flex items-center gap-3">
-              <div className={`rounded-xl p-2.5 ${stat.iconBg}`}>
-                <stat.icon className={`h-5 w-5 ${stat.iconColor}`} />
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-[#1A1D26]">{stat.value}</p>
-                <p className="text-xs text-[#6B7280]">{stat.label}</p>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* Tabs */}
-      <div className="flex items-center gap-1 bg-[#F5F7FA] rounded-xl p-1 w-fit">
-        {tabs.map((tab) => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-              activeTab === tab.id ? "bg-white text-[#1A1D26] shadow-sm" : "text-[#6B7280] hover:text-[#1A1D26]"
-            }`}
-          >
-            <tab.icon className="h-4 w-4" />
-            {tab.label}
-          </button>
-        ))}
-      </div>
-
-      {/* Tickets Tab */}
-      {activeTab === "tickets" && (
-        <div className="space-y-4">
-          {/* Filters */}
-          <div className="flex flex-col sm:flex-row gap-3">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#9CA3AF]" />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Rechercher par code, profil, vendeur..."
-                className="w-full h-10 pl-10 pr-4 rounded-xl border border-[#E8ECF1] bg-white text-sm text-[#1A1D26] placeholder:text-[#9CA3AF] focus:outline-none focus:border-[#2B7FFF] focus:ring-1 focus:ring-[#2B7FFF]/20 transition-colors"
-              />
-            </div>
-            <div className="flex gap-2">
-              <div className="relative">
-                <select
-                  value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value as typeof statusFilter)}
-                  className="h-10 pl-3 pr-8 rounded-xl border border-[#E8ECF1] bg-white text-sm text-[#1A1D26] appearance-none focus:outline-none focus:border-[#2B7FFF] transition-colors"
-                >
-                  <option value="all">Statut</option>
-                  <option value="available">Disponible</option>
-                  <option value="active">En cours</option>
-                  <option value="used">Utilisé</option>
-                  <option value="expired">Expiré</option>
-                </select>
-                <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-[#9CA3AF] pointer-events-none" />
-              </div>
-              <div className="relative">
-                <select
-                  value={profileFilter}
-                  onChange={(e) => setProfileFilter(e.target.value)}
-                  className="h-10 pl-3 pr-8 rounded-xl border border-[#E8ECF1] bg-white text-sm text-[#1A1D26] appearance-none focus:outline-none focus:border-[#2B7FFF] transition-colors"
-                >
-                  <option value="all">Profil</option>
-                  {profiles.map((p) => (
-                    <option key={p.id} value={p.id}>{p.name}</option>
-                  ))}
-                </select>
-                <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-[#9CA3AF] pointer-events-none" />
-              </div>
-            </div>
-          </div>
-
-          {/* Empty state */}
-          {filteredTickets.length === 0 ? (
-            <div className="rounded-2xl border border-[#E8ECF1] bg-white p-12 text-center shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
-              <Ticket className="h-8 w-8 text-[#D1D5DB] mx-auto mb-3" />
-              <h3 className="text-base font-semibold text-[#1A1D26]">Aucun ticket trouvé</h3>
-              <p className="mt-1 text-sm text-[#6B7280]">
-                {searchQuery || statusFilter !== "all" || profileFilter !== "all"
-                  ? "Aucun ticket ne correspond à vos filtres."
-                  : "Générez vos premiers tickets WiFi pour commencer à vendre."}
-              </p>
-              {!searchQuery && statusFilter === "all" && profileFilter === "all" && profiles.length > 0 && (
-                <button
-                  onClick={() => {
-                    setGenerateForm((f) => ({ ...f, profileId: profiles[0].id }));
-                    setShowGenerateModal(true);
-                  }}
-                  className="mt-5 inline-flex h-10 items-center gap-2 rounded-xl bg-[#2B7FFF] px-5 text-sm font-medium text-white hover:bg-[#1A6BE6] transition-colors"
-                >
-                  <Plus className="h-4 w-4" />
-                  Générer des tickets
-                </button>
-              )}
-              {profiles.length === 0 && (
-                <p className="mt-3 text-xs text-amber-600">Créez d&apos;abord un profil tarifaire dans l&apos;onglet Profils.</p>
-              )}
-            </div>
-          ) : (
-            <div className="rounded-2xl border border-[#E8ECF1] bg-white shadow-[0_1px_3px_rgba(0,0,0,0.04)] overflow-hidden">
-              {/* Desktop table */}
-              <div className="hidden lg:block overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b border-[#E8ECF1] bg-[#FAFBFC]">
-                      <th className="text-left px-4 py-3 text-xs font-semibold text-[#6B7280] uppercase tracking-wider">Code</th>
-                      <th className="text-left px-4 py-3 text-xs font-semibold text-[#6B7280] uppercase tracking-wider">Profil</th>
-                      <th className="text-left px-4 py-3 text-xs font-semibold text-[#6B7280] uppercase tracking-wider">Durée</th>
-                      <th className="text-left px-4 py-3 text-xs font-semibold text-[#6B7280] uppercase tracking-wider">Prix</th>
-                      <th className="text-left px-4 py-3 text-xs font-semibold text-[#6B7280] uppercase tracking-wider">Vendeur</th>
-                      <th className="text-left px-4 py-3 text-xs font-semibold text-[#6B7280] uppercase tracking-wider">Statut</th>
-                      <th className="text-right px-4 py-3 text-xs font-semibold text-[#6B7280] uppercase tracking-wider">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-[#F1F3F7]">
-                    {filteredTickets.map((ticket) => {
-                      const sc = statusConfig[ticket.status];
-                      const Icon = sc.icon;
-                      return (
-                        <tr key={ticket.id} className="hover:bg-[#FAFBFC] transition-colors">
-                          <td className="px-4 py-3">
-                            <div className="flex items-center gap-2">
-                              <span className="font-mono text-sm font-bold text-[#1A1D26] tracking-wider">{ticket.code}</span>
-                              <button
-                                onClick={() => copyCode(ticket.code)}
-                                className="p-1 rounded hover:bg-[#F5F7FA] text-[#9CA3AF] hover:text-[#2B7FFF] transition-colors"
-                              >
-                                {copiedCode === ticket.code ? <Check className="h-3.5 w-3.5 text-emerald-500" /> : <Copy className="h-3.5 w-3.5" />}
-                              </button>
-                            </div>
-                          </td>
-                          <td className="px-4 py-3">
-                            <div className="flex items-center gap-2">
-                              <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ backgroundColor: ticket.profile?.color || "#ccc" }} />
-                              <span className="text-sm text-[#1A1D26]">{ticket.profile?.name || "—"}</span>
-                            </div>
-                          </td>
-                          <td className="px-4 py-3">
-                            <span className="flex items-center gap-1 text-xs text-[#6B7280]">
-                              <Clock className="h-3 w-3" />
-                              {durationLabels[ticket.profile?.duration || ""] || ticket.profile?.duration || "—"}
-                            </span>
-                          </td>
-                          <td className="px-4 py-3">
-                            <span className="text-sm font-semibold text-[#1A1D26]">{(ticket.profile?.price || 0).toLocaleString("fr-FR")} {currency}</span>
-                          </td>
-                          <td className="px-4 py-3">
-                            <span className="text-xs text-[#6B7280]">{ticket.seller?.name || "—"}</span>
-                          </td>
-                          <td className="px-4 py-3">
-                            <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium ${sc.bg} ${sc.text}`}>
-                              <Icon className="h-3 w-3" />
-                              {sc.label}
-                            </span>
-                          </td>
-                          <td className="px-4 py-3 text-right">
-                            <div className="relative inline-block">
-                              <button
-                                onClick={() => setOpenMenu(openMenu === ticket.id ? null : ticket.id)}
-                                className="p-1.5 rounded-lg hover:bg-[#F5F7FA] text-[#9CA3AF] hover:text-[#6B7280] transition-colors"
-                              >
-                                <MoreHorizontal className="h-4 w-4" />
-                              </button>
-                              {openMenu === ticket.id && (
-                                <div className="absolute right-0 top-8 w-44 bg-white rounded-xl border border-[#E8ECF1] shadow-xl z-20 overflow-hidden">
-                                  <button
-                                    onClick={() => { setShowDetailModal(ticket); setOpenMenu(null); }}
-                                    className="flex items-center gap-2.5 w-full px-3.5 py-2.5 text-sm text-[#374151] hover:bg-[#F5F7FA] transition-colors"
-                                  >
-                                    <Eye className="h-4 w-4 text-[#9CA3AF]" />
-                                    Détails
-                                  </button>
-                                  <button
-                                    onClick={() => { copyCode(ticket.code); setOpenMenu(null); }}
-                                    className="flex items-center gap-2.5 w-full px-3.5 py-2.5 text-sm text-[#374151] hover:bg-[#F5F7FA] transition-colors"
-                                  >
-                                    <Copy className="h-4 w-4 text-[#9CA3AF]" />
-                                    Copier le code
-                                  </button>
-                                  {ticket.status === "available" && (
-                                    <button
-                                      onClick={() => setOpenMenu(null)}
-                                      className="flex items-center gap-2.5 w-full px-3.5 py-2.5 text-sm text-[#374151] hover:bg-[#F5F7FA] transition-colors"
-                                    >
-                                      <Share2 className="h-4 w-4 text-[#9CA3AF]" />
-                                      Attribuer
-                                    </button>
-                                  )}
-                                  <div className="border-t border-[#E8ECF1]" />
-                                  <button
-                                    onClick={() => handleDelete(ticket.id)}
-                                    className="flex items-center gap-2.5 w-full px-3.5 py-2.5 text-sm text-red-500 hover:bg-red-50 transition-colors"
-                                  >
-                                    <Trash2 className="h-4 w-4" />
-                                    Supprimer
-                                  </button>
-                                </div>
-                              )}
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-
-              {/* Mobile cards */}
-              <div className="lg:hidden divide-y divide-[#F1F3F7]">
-                {filteredTickets.map((ticket) => {
-                  const sc = statusConfig[ticket.status];
-                  const Icon = sc.icon;
-                  return (
-                    <div key={ticket.id} className="p-4 space-y-3">
-                      <div className="flex items-start justify-between">
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <span className="font-mono text-sm font-bold text-[#1A1D26] tracking-wider">{ticket.code}</span>
-                            <button onClick={() => copyCode(ticket.code)} className="p-1 rounded hover:bg-[#F5F7FA] text-[#9CA3AF]">
-                              {copiedCode === ticket.code ? <Check className="h-3.5 w-3.5 text-emerald-500" /> : <Copy className="h-3.5 w-3.5" />}
-                            </button>
-                          </div>
-                          <div className="flex items-center gap-2 mt-1">
-                            <span className="h-2 w-2 rounded-full" style={{ backgroundColor: ticket.profile?.color || "#ccc" }} />
-                            <span className="text-xs text-[#6B7280]">{ticket.profile?.name || "—"} · {durationLabels[ticket.profile?.duration || ""] || "—"}</span>
-                          </div>
-                        </div>
-                        <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium ${sc.bg} ${sc.text}`}>
-                          <Icon className="h-3 w-3" />
-                          {sc.label}
+      {/* Table */}
+      <div className="rounded-2xl overflow-hidden">
+        {/* Desktop table */}
+        <div className="hidden md:block">
+          <table className="w-full">
+            <thead>
+              <tr className="border-b border-[#374151]">
+                <th className="text-left px-5 py-4 text-sm font-semibold text-slate-300">
+                  Cat&eacute;gorie
+                </th>
+                <th className="text-center px-5 py-4 text-sm font-semibold text-slate-300">
+                  Prix
+                </th>
+                <th className="text-center px-5 py-4 text-sm font-semibold text-slate-300">
+                  Restants
+                </th>
+                <th className="text-center px-5 py-4 text-sm font-semibold text-slate-300">
+                  Action
+                </th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-[#2D3748]">
+              {profiles.map((profile) => {
+                const available = tickets.filter(
+                  (t) => t.profile_id === profile.id && t.status === "available"
+                ).length;
+                return (
+                  <tr
+                    key={profile.id}
+                    className="hover:bg-[#283141] transition-colors"
+                  >
+                    <td className="px-5 py-4">
+                      <div className="flex items-center gap-3">
+                        <span className="text-sm font-medium text-white">
+                          {profile.name}
+                        </span>
+                        <span className="rounded bg-violet-500/30 px-2 py-0.5 text-[10px] font-bold text-violet-300 uppercase">
+                          Beta
                         </span>
                       </div>
-                      <div className="flex items-center justify-between text-xs">
-                        <span className="font-semibold text-[#1A1D26]">{(ticket.profile?.price || 0).toLocaleString("fr-FR")} {currency}</span>
-                        {ticket.seller?.name && <span className="text-[#9CA3AF]">{ticket.seller.name}</span>}
+                    </td>
+                    <td className="px-5 py-4 text-center">
+                      <span className="text-sm font-semibold text-slate-200">
+                        {profile.price.toLocaleString("fr-FR")} {currency}
+                      </span>
+                    </td>
+                    <td className="px-5 py-4 text-center">
+                      <span className="text-lg text-slate-300">
+                        {available > 0 ? available : "∞"}
+                      </span>
+                    </td>
+                    <td className="px-5 py-4">
+                      <div className="flex items-center justify-center gap-3">
                         <button
-                          onClick={() => setShowDetailModal(ticket)}
-                          className="text-[#2B7FFF] font-medium flex items-center gap-1"
+                          onClick={() => handleVendre(profile.id)}
+                          disabled={generating === profile.id}
+                          className="inline-flex items-center gap-2 rounded-lg bg-emerald-500 px-5 py-2 text-sm font-medium text-white hover:bg-emerald-600 transition-colors disabled:opacity-50"
                         >
-                          <Eye className="h-3 w-3" />
-                          Détails
+                          {generating === profile.id ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <Monitor className="h-4 w-4" />
+                          )}
+                          Vendre
+                        </button>
+                        <button
+                          onClick={() => handleImprimer(profile.id)}
+                          className="inline-flex items-center gap-2 rounded-lg bg-[#2B7FFF] px-5 py-2 text-sm font-medium text-white hover:bg-[#1A6BE6] transition-colors"
+                        >
+                          <Printer className="h-4 w-4" />
+                          Imprimer
                         </button>
                       </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Profiles Tab */}
-      {activeTab === "profiles" && (
-        <div>
-          {profiles.length === 0 ? (
-            <div className="rounded-2xl border border-[#E8ECF1] bg-white p-12 text-center shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
-              <Zap className="h-8 w-8 text-[#D1D5DB] mx-auto mb-3" />
-              <h3 className="text-base font-semibold text-[#1A1D26]">Aucun profil tarifaire</h3>
-              <p className="mt-1 text-sm text-[#6B7280]">Créez votre premier profil pour pouvoir générer des tickets.</p>
-            </div>
-          ) : (
-            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-              {profiles.map((profile) => {
-                const ticketCount = tickets.filter((t) => t.profile_id === profile.id).length;
-                const availableCount = tickets.filter((t) => t.profile_id === profile.id && t.status === "available").length;
-                return (
-                  <div key={profile.id} className="rounded-2xl border border-[#E8ECF1] bg-white shadow-[0_1px_3px_rgba(0,0,0,0.04)] overflow-hidden hover:shadow-md hover:border-[#2B7FFF]/20 transition-all">
-                    <div className="h-2" style={{ backgroundColor: profile.color }} />
-                    <div className="p-5">
-                      <div className="flex items-start justify-between">
-                        <div className="flex items-center gap-3">
-                          <div className="h-10 w-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: `${profile.color}15` }}>
-                            <Ticket className="h-5 w-5" style={{ color: profile.color }} />
-                          </div>
-                          <div>
-                            <h3 className="text-sm font-semibold text-[#1A1D26]">{profile.name}</h3>
-                            <p className="text-xs text-[#9CA3AF]">{durationLabels[profile.duration] || profile.duration}</p>
-                          </div>
-                        </div>
-                        <span className="text-lg font-bold text-[#1A1D26]">{profile.price.toLocaleString("fr-FR")} <span className="text-xs font-normal text-[#9CA3AF]">{currency}</span></span>
-                      </div>
-
-                      <div className="mt-4 grid grid-cols-3 gap-3 pt-4 border-t border-[#F1F3F7]">
-                        <div>
-                          <p className="text-[11px] text-[#9CA3AF]">Débit max</p>
-                          <p className="text-xs font-medium text-[#1A1D26] mt-0.5">{profile.speed_limit || "—"}</p>
-                        </div>
-                        <div>
-                          <p className="text-[11px] text-[#9CA3AF]">Appareils</p>
-                          <p className="text-xs font-medium text-[#1A1D26] mt-0.5">{profile.device_limit} max</p>
-                        </div>
-                        <div>
-                          <p className="text-[11px] text-[#9CA3AF]">Tickets</p>
-                          <p className="text-xs font-medium text-[#1A1D26] mt-0.5">{availableCount}/{ticketCount}</p>
-                        </div>
-                      </div>
-
-                      <button
-                        onClick={() => { setGenerateForm({ profileId: profile.id, quantity: 10 }); setShowGenerateModal(true); }}
-                        className="mt-4 w-full h-9 rounded-xl border border-[#E8ECF1] text-xs font-medium text-[#374151] hover:bg-[#F5F7FA] transition-colors flex items-center justify-center gap-1.5"
-                      >
-                        <Plus className="h-3.5 w-3.5" />
-                        Générer des tickets
-                      </button>
-                    </div>
-                  </div>
+                    </td>
+                  </tr>
                 );
               })}
-            </div>
-          )}
+            </tbody>
+          </table>
         </div>
-      )}
 
-      {/* Generate Modal */}
-      {showGenerateModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowGenerateModal(false)} />
-          <div className="relative w-full max-w-md bg-white rounded-2xl shadow-2xl">
-            <div className="flex items-center justify-between px-6 py-4 border-b border-[#E8ECF1]">
-              <div>
-                <h3 className="text-lg font-semibold text-[#1A1D26]">Générer des tickets</h3>
-                <p className="text-xs text-[#6B7280] mt-0.5">Choisissez un profil et la quantité</p>
-              </div>
-              <button onClick={() => setShowGenerateModal(false)} className="p-1.5 rounded-lg hover:bg-[#F5F7FA] text-[#9CA3AF]">
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-
-            <div className="px-6 py-5 space-y-5">
-              {profiles.length === 0 ? (
-                <div className="text-center py-6">
-                  <p className="text-sm text-[#6B7280]">Aucun profil tarifaire. Créez-en un d&apos;abord.</p>
-                </div>
-              ) : (
-                <>
-                  <div>
-                    <label className="block text-sm font-medium text-[#1A1D26] mb-2">Profil de ticket</label>
-                    <div className="space-y-2">
-                      {profiles.map((p) => (
-                        <button
-                          key={p.id}
-                          onClick={() => setGenerateForm({ ...generateForm, profileId: p.id })}
-                          className={`flex items-center justify-between w-full p-3 rounded-xl border-2 transition-all ${
-                            generateForm.profileId === p.id ? "border-[#2B7FFF] bg-[#EBF2FF]/30" : "border-[#E8ECF1] hover:border-[#D1D5DB]"
-                          }`}
-                        >
-                          <div className="flex items-center gap-3">
-                            <span className="h-3 w-3 rounded-full" style={{ backgroundColor: p.color }} />
-                            <div className="text-left">
-                              <p className="text-sm font-medium text-[#1A1D26]">{p.name}</p>
-                              <p className="text-[11px] text-[#9CA3AF]">{durationLabels[p.duration] || p.duration} · {p.speed_limit || "—"}</p>
-                            </div>
-                          </div>
-                          <span className="text-sm font-bold text-[#1A1D26]">{p.price.toLocaleString("fr-FR")} {currency}</span>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-[#1A1D26] mb-1.5">Quantité</label>
-                    <div className="flex items-center gap-3">
-                      {[5, 10, 25, 50, 100].map((q) => (
-                        <button
-                          key={q}
-                          onClick={() => setGenerateForm({ ...generateForm, quantity: q })}
-                          className={`h-10 px-4 rounded-xl text-sm font-medium transition-all ${
-                            generateForm.quantity === q
-                              ? "bg-[#2B7FFF] text-white"
-                              : "border border-[#E8ECF1] text-[#374151] hover:bg-[#F5F7FA]"
-                          }`}
-                        >
-                          {q}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {selectedProfile && (
-                    <div className="rounded-xl bg-[#F5F7FA] p-4">
-                      <p className="text-xs text-[#6B7280]">Récapitulatif</p>
-                      <div className="mt-2 flex items-center justify-between">
-                        <span className="text-sm text-[#1A1D26]">{generateForm.quantity}x {selectedProfile.name}</span>
-                        <span className="text-base font-bold text-[#1A1D26]">
-                          {(selectedProfile.price * generateForm.quantity).toLocaleString("fr-FR")} {currency}
-                        </span>
-                      </div>
-                      <p className="text-[11px] text-[#9CA3AF] mt-1">Valeur totale des tickets générés</p>
-                    </div>
-                  )}
-                </>
-              )}
-            </div>
-
-            <div className="px-6 py-4 border-t border-[#E8ECF1] flex items-center justify-end gap-3">
-              <button onClick={() => setShowGenerateModal(false)} className="h-10 px-5 rounded-xl border border-[#D1D5DB] text-sm font-medium text-[#374151] hover:bg-[#F5F7FA] transition-colors">
-                Annuler
-              </button>
-              <button
-                onClick={handleGenerate}
-                disabled={!generateForm.profileId || generating}
-                className="h-10 px-5 rounded-xl bg-[#2B7FFF] text-sm font-medium text-white hover:bg-[#1A6BE6] transition-colors disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center gap-2"
+        {/* Mobile cards */}
+        <div className="md:hidden space-y-3">
+          {profiles.map((profile) => {
+            const available = tickets.filter(
+              (t) => t.profile_id === profile.id && t.status === "available"
+            ).length;
+            return (
+              <div
+                key={profile.id}
+                className="rounded-xl bg-[#283141] p-4 space-y-3"
               >
-                {generating && <Loader2 className="h-4 w-4 animate-spin" />}
-                Générer {generateForm.quantity} tickets
-              </button>
-            </div>
-          </div>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium text-white">
+                      {profile.name}
+                    </span>
+                    <span className="rounded bg-violet-500/30 px-1.5 py-0.5 text-[9px] font-bold text-violet-300 uppercase">
+                      Beta
+                    </span>
+                  </div>
+                  <span className="text-sm font-semibold text-slate-200">
+                    {profile.price.toLocaleString("fr-FR")} {currency}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between text-xs text-slate-400">
+                  <span>Restants : {available > 0 ? available : "∞"}</span>
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => handleVendre(profile.id)}
+                    disabled={generating === profile.id}
+                    className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-lg bg-emerald-500 py-2 text-xs font-medium text-white hover:bg-emerald-600 transition-colors disabled:opacity-50"
+                  >
+                    {generating === profile.id ? (
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    ) : (
+                      <Monitor className="h-3.5 w-3.5" />
+                    )}
+                    Vendre
+                  </button>
+                  <button
+                    onClick={() => handleImprimer(profile.id)}
+                    className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-lg bg-[#2B7FFF] py-2 text-xs font-medium text-white hover:bg-[#1A6BE6] transition-colors"
+                  >
+                    <Printer className="h-3.5 w-3.5" />
+                    Imprimer
+                  </button>
+                </div>
+              </div>
+            );
+          })}
         </div>
-      )}
 
-      {/* Detail Modal */}
-      {showDetailModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowDetailModal(null)} />
-          <div className="relative w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden">
-            <div className="flex items-center justify-between px-6 py-4 border-b border-[#E8ECF1]">
-              <h3 className="text-lg font-semibold text-[#1A1D26]">Détails du ticket</h3>
-              <button onClick={() => setShowDetailModal(null)} className="p-1.5 rounded-lg hover:bg-[#F5F7FA] text-[#9CA3AF]">
-                <X className="h-5 w-5" />
-              </button>
-            </div>
+        {/* Empty profiles */}
+        {profiles.length === 0 && (
+          <div className="text-center py-16">
+            <p className="text-slate-400">Aucun profil tarifaire configur&eacute;.</p>
+            <p className="text-xs text-slate-500 mt-1">
+              Cr&eacute;ez des profils depuis la Console pour commencer &agrave; vendre.
+            </p>
+          </div>
+        )}
+      </div>
 
-            <div className="px-6 py-5">
-              <div className="rounded-xl p-5 text-center mb-5" style={{ backgroundColor: `${showDetailModal.profile?.color || "#2B7FFF"}10` }}>
-                <p className="font-mono text-2xl font-bold tracking-[0.2em] text-[#1A1D26]">{showDetailModal.code}</p>
+      {/* Historique floating button */}
+      <button
+        onClick={() => setShowHistorique(true)}
+        className="fixed bottom-24 right-6 lg:bottom-8 lg:right-8 z-30 flex items-center gap-2 rounded-full bg-orange-500 px-5 py-3 text-sm font-semibold text-white shadow-lg hover:bg-orange-600 transition-colors"
+      >
+        <Clock className="h-4 w-4" />
+        Historique
+      </button>
+
+      {/* Sale success modal */}
+      {showSaleModal && (() => {
+        const profile = profiles.find((p) => p.id === showSaleModal);
+        const lastTicket = tickets.find(
+          (t) => t.profile_id === showSaleModal && t.status === "available"
+        );
+        return (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div
+              className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+              onClick={() => setShowSaleModal(null)}
+            />
+            <div className="relative w-full max-w-sm bg-[#1F2937] border border-[#374151] rounded-2xl shadow-2xl overflow-hidden">
+              <div className="p-6 text-center">
+                <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-emerald-500/20">
+                  <Check className="h-7 w-7 text-emerald-400" />
+                </div>
+                <h3 className="text-lg font-semibold text-white mb-1">
+                  Ticket g&eacute;n&eacute;r&eacute; !
+                </h3>
+                <p className="text-sm text-slate-400 mb-4">
+                  {profile?.name} &mdash;{" "}
+                  {profile?.price?.toLocaleString("fr-FR")} {currency}
+                </p>
+                {lastTicket && (
+                  <div className="rounded-xl bg-[#111827] p-4 mb-4">
+                    <p className="font-mono text-xl font-bold tracking-[0.15em] text-white">
+                      {lastTicket.code}
+                    </p>
+                    <button
+                      onClick={() => copyCode(lastTicket.code)}
+                      className="mt-2 inline-flex items-center gap-1.5 text-xs font-medium text-[#2B7FFF] hover:text-[#5BA0FF]"
+                    >
+                      {copiedCode === lastTicket.code ? (
+                        <>
+                          <Check className="h-3 w-3" /> Copi&eacute; !
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="h-3 w-3" /> Copier le code
+                        </>
+                      )}
+                    </button>
+                  </div>
+                )}
                 <button
-                  onClick={() => copyCode(showDetailModal.code)}
-                  className="mt-2 inline-flex items-center gap-1.5 text-xs font-medium text-[#2B7FFF] hover:text-[#1A6BE6]"
+                  onClick={() => setShowSaleModal(null)}
+                  className="w-full h-10 rounded-xl bg-emerald-500 text-sm font-medium text-white hover:bg-emerald-600 transition-colors"
                 >
-                  {copiedCode === showDetailModal.code ? <><Check className="h-3 w-3" /> Copié !</> : <><Copy className="h-3 w-3" /> Copier le code</>}
+                  Fermer
                 </button>
               </div>
-
-              <div className="space-y-3.5">
-                {[
-                  { label: "Profil", value: showDetailModal.profile?.name || "—" },
-                  { label: "Durée", value: durationLabels[showDetailModal.profile?.duration || ""] || showDetailModal.profile?.duration || "—" },
-                  { label: "Prix", value: `${(showDetailModal.profile?.price || 0).toLocaleString("fr-FR")} ${currency}` },
-                  { label: "Créé le", value: new Date(showDetailModal.created_at).toLocaleDateString("fr-FR") },
-                  ...(showDetailModal.used_at ? [{ label: "Utilisé le", value: new Date(showDetailModal.used_at).toLocaleString("fr-FR") }] : []),
-                  ...(showDetailModal.expires_at ? [{ label: "Expire le", value: new Date(showDetailModal.expires_at).toLocaleString("fr-FR") }] : []),
-                  ...(showDetailModal.seller?.name ? [{ label: "Vendeur", value: showDetailModal.seller.name }] : []),
-                ].map((row) => (
-                  <div key={row.label} className="flex items-center justify-between">
-                    <span className="text-sm text-[#6B7280]">{row.label}</span>
-                    <span className="text-sm font-medium text-[#1A1D26]">{row.value}</span>
-                  </div>
-                ))}
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-[#6B7280]">Statut</span>
-                  {(() => {
-                    const sc = statusConfig[showDetailModal.status];
-                    const Icon = sc.icon;
-                    return (
-                      <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${sc.bg} ${sc.text}`}>
-                        <Icon className="h-3 w-3" />
-                        {sc.label}
-                      </span>
-                    );
-                  })()}
-                </div>
-              </div>
             </div>
+          </div>
+        );
+      })()}
 
-            <div className="px-6 py-4 border-t border-[#E8ECF1] flex justify-end">
-              <button onClick={() => setShowDetailModal(null)} className="h-9 px-4 rounded-xl bg-[#2B7FFF] text-sm font-medium text-white hover:bg-[#1A6BE6] transition-colors">
-                Fermer
+      {/* Historique modal */}
+      {showHistorique && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div
+            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+            onClick={() => setShowHistorique(false)}
+          />
+          <div className="relative w-full max-w-2xl max-h-[80vh] bg-[#1F2937] border border-[#374151] rounded-2xl shadow-2xl overflow-hidden flex flex-col">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-[#374151]">
+              <h3 className="text-lg font-semibold text-white">
+                Historique des ventes
+              </h3>
+              <button
+                onClick={() => setShowHistorique(false)}
+                className="p-1.5 rounded-lg hover:bg-[#374151] text-slate-400"
+              >
+                <X className="h-5 w-5" />
               </button>
+            </div>
+            <div className="flex-1 overflow-y-auto">
+              {soldTickets.length === 0 ? (
+                <div className="p-8 text-center">
+                  <p className="text-slate-400">Aucune vente enregistr&eacute;e.</p>
+                </div>
+              ) : (
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-[#374151]">
+                      <th className="text-left px-4 py-3 text-xs font-semibold text-slate-400">
+                        Code
+                      </th>
+                      <th className="text-left px-4 py-3 text-xs font-semibold text-slate-400">
+                        Profil
+                      </th>
+                      <th className="text-left px-4 py-3 text-xs font-semibold text-slate-400">
+                        Prix
+                      </th>
+                      <th className="text-left px-4 py-3 text-xs font-semibold text-slate-400">
+                        Date
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[#2D3748]">
+                    {soldTickets.slice(0, 50).map((ticket) => (
+                      <tr key={ticket.id} className="hover:bg-[#283141]">
+                        <td className="px-4 py-3 font-mono text-xs text-white">
+                          {ticket.code}
+                        </td>
+                        <td className="px-4 py-3 text-xs text-slate-300">
+                          {ticket.profile?.name || "—"}
+                        </td>
+                        <td className="px-4 py-3 text-xs text-slate-300">
+                          {(ticket.profile?.price || 0).toLocaleString("fr-FR")}{" "}
+                          {currency}
+                        </td>
+                        <td className="px-4 py-3 text-xs text-slate-400">
+                          {ticket.used_at
+                            ? new Date(ticket.used_at).toLocaleDateString("fr-FR")
+                            : new Date(ticket.created_at).toLocaleDateString("fr-FR")}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
             </div>
           </div>
         </div>
