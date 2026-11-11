@@ -7,76 +7,78 @@ import { useTickets } from "@/hooks/use-tickets";
 import type { Seller, SellerStatus } from "@/lib/supabase/types";
 import {
   Users,
-  Plus,
-  Search,
-  ChevronDown,
-  MapPin,
-  Ticket,
-  Package,
-  MoreHorizontal,
-  X,
-  Eye,
-  Edit3,
-  Power,
-  Send,
-  Banknote,
   UserPlus,
-  AlertTriangle,
+  X,
+  Send,
   Loader2,
+  Trash2,
+  Printer,
+  FileText,
+  FileSpreadsheet,
+  ChevronDown,
+  TrendingUp,
+  Ticket,
+  Trophy,
+  CreditCard,
+  Banknote,
+  Database,
 } from "lucide-react";
-
-const statusConfig: Record<SellerStatus, { label: string; bg: string; text: string; dot: string }> = {
-  active: { label: "Actif", bg: "bg-emerald-50", text: "text-emerald-700", dot: "bg-emerald-500" },
-  inactive: { label: "Inactif", bg: "bg-amber-50", text: "text-amber-700", dot: "bg-amber-500" },
-  suspended: { label: "Suspendu", bg: "bg-red-50", text: "text-red-600", dot: "bg-red-500" },
-};
-
-type ViewTab = "list" | "assignments";
 
 export default function SellersPage() {
   const { currency, phonePrefix } = useCurrency();
-  const { sellers, assignments, loading, addSeller, toggleStatus, assignStock, refetch } = useSellers();
+  const {
+    sellers,
+    assignments,
+    loading,
+    addSeller,
+    toggleStatus,
+    assignStock,
+  } = useSellers();
   const { profiles } = useTickets();
 
-  const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState<"all" | SellerStatus>("all");
-  const [viewTab, setViewTab] = useState<ViewTab>("list");
-  const [selectedSeller, setSelectedSeller] = useState<Seller | null>(null);
-  const [openMenu, setOpenMenu] = useState<string | null>(null);
+  const [vendeurFilter, setVendeurFilter] = useState("all");
+  const [periodeFilter, setPeriodeFilter] = useState("today");
+  const [dateDebut, setDateDebut] = useState("");
+  const [dateFin, setDateFin] = useState("");
+  const [typeVente, setTypeVente] = useState("brute");
+
+  const [rembVendeur, setRembVendeur] = useState("all");
+  const [rembPeriode, setRembPeriode] = useState("all");
+  const [rembMethode, setRembMethode] = useState("all");
+
   const [showAddModal, setShowAddModal] = useState(false);
   const [showAssignModal, setShowAssignModal] = useState(false);
   const [assignTarget, setAssignTarget] = useState<Seller | null>(null);
   const [assignProfile, setAssignProfile] = useState("");
   const [assignQty, setAssignQty] = useState(10);
   const [submitting, setSubmitting] = useState(false);
-
-  const [addForm, setAddForm] = useState({ name: "", phone: "", location: "", commission: 15 });
-
-  const filtered = sellers.filter((s) => {
-    const matchSearch =
-      s.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      s.phone.includes(searchQuery) ||
-      s.location.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchStatus = statusFilter === "all" || s.status === statusFilter;
-    return matchSearch && matchStatus;
+  const [addForm, setAddForm] = useState({
+    name: "",
+    phone: "",
+    location: "",
+    commission: 15,
   });
 
-  const activeSellers = sellers.filter((s) => s.status === "active").length;
+  const activeSellers = sellers.filter((s) => s.status === "active");
   const totalRevenue = sellers.reduce((s, v) => s + v.total_revenue, 0);
   const totalSold = sellers.reduce((s, v) => s + v.total_sold, 0);
-  const lowStock = sellers.filter((s) => s.stock_remaining <= 5 && s.status === "active");
+  const bestSeller = sellers.length > 0
+    ? sellers.reduce((best, s) => (s.total_sold > best.total_sold ? s : best), sellers[0])
+    : null;
 
-  function getInitials(name: string) {
-    return name.split(" ").map((w) => w[0]).join("").toUpperCase().slice(0, 2);
+  const totalRemboursements = assignments
+    .filter((a) => a.type === "return" || a.type === "assign")
+    .reduce((sum, a) => sum + (a.quantity || 0), 0);
+
+  function filterAssignmentsByPeriod() {
+    let filtered = assignments.filter((a) => a.type === "assign");
+    if (vendeurFilter !== "all") {
+      filtered = filtered.filter((a) => a.seller_id === vendeurFilter);
+    }
+    return filtered;
   }
 
-  function openAssign(seller: Seller) {
-    setAssignTarget(seller);
-    setAssignProfile("");
-    setAssignQty(10);
-    setShowAssignModal(true);
-    setOpenMenu(null);
-  }
+  const filteredAssignments = filterAssignmentsByPeriod();
 
   async function handleAddSeller() {
     if (!addForm.name || !addForm.phone) return;
@@ -100,9 +102,11 @@ export default function SellersPage() {
     setShowAssignModal(false);
   }
 
-  async function handleToggle(id: string) {
-    await toggleStatus(id);
-    setOpenMenu(null);
+  function openAssign(seller: Seller) {
+    setAssignTarget(seller);
+    setAssignProfile("");
+    setAssignQty(10);
+    setShowAssignModal(true);
   }
 
   if (loading) {
@@ -114,532 +118,539 @@ export default function SellersPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="-m-4 lg:-m-6 min-h-full bg-[#1F2937] p-4 lg:p-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex items-center justify-between mb-6">
         <div>
-          <h2 className="text-xl font-bold text-[#1A1D26]">Vendeurs</h2>
-          <p className="text-sm text-[#6B7280] mt-0.5">
-            Gérez votre équipe de revendeurs et leur stock de tickets
-          </p>
+          <h1 className="text-xl font-bold text-white">
+            Inventaire{" "}
+            <span className="text-orange-400">(Ventes Brutes)</span>{" "}
+            <span className="text-slate-400 text-base">({currency})</span>
+          </h1>
         </div>
         <button
           onClick={() => setShowAddModal(true)}
-          className="inline-flex items-center gap-2 h-10 px-5 rounded-xl bg-[#2B7FFF] text-sm font-medium text-white hover:bg-[#1A6BE6] transition-colors shadow-sm w-full sm:w-auto justify-center"
+          className="inline-flex items-center gap-2 rounded-lg bg-[#2B7FFF] px-4 py-2 text-sm font-medium text-white hover:bg-[#1A6BE6] transition-colors"
         >
           <UserPlus className="h-4 w-4" />
-          Ajouter un vendeur
+          Ajouter vendeur
         </button>
       </div>
 
-      {/* Low stock alert */}
-      {lowStock.length > 0 && (
-        <div className="flex items-center gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-5 py-3.5">
-          <AlertTriangle className="h-5 w-5 text-amber-500 shrink-0" />
-          <div className="flex-1">
-            <p className="text-sm font-medium text-amber-800">Stock bas</p>
-            <p className="text-xs text-amber-600 mt-0.5">
-              {lowStock.map((s) => s.name).join(", ")} — moins de 5 tickets restants
-            </p>
-          </div>
+      {/* Stats cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <div className="rounded-xl border border-[#374151] bg-[#111827] p-5">
+          <p className="text-sm text-orange-400 mb-1 flex items-center gap-2">
+            <TrendingUp className="h-4 w-4" />
+            Total des ventes <span className="text-emerald-400">(brut)</span>
+          </p>
+          <p className="text-2xl font-bold text-white">
+            {totalRevenue.toLocaleString("fr-FR")} {currency}
+          </p>
         </div>
-      )}
-
-      {/* Stats */}
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <div className="rounded-2xl border border-[#E8ECF1] bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
-          <div className="flex items-center gap-3">
-            <div className="rounded-xl bg-blue-50 p-2.5"><Users className="h-5 w-5 text-[#2B7FFF]" /></div>
-            <div>
-              <p className="text-2xl font-bold text-[#1A1D26]">{activeSellers}/{sellers.length}</p>
-              <p className="text-xs text-[#6B7280]">Vendeurs actifs</p>
-            </div>
-          </div>
+        <div className="rounded-xl border border-[#374151] bg-[#111827] p-5">
+          <p className="text-sm text-orange-400 mb-1 flex items-center gap-2">
+            <Ticket className="h-4 w-4" />
+            Tickets vendus
+          </p>
+          <p className="text-2xl font-bold text-white">{totalSold}</p>
         </div>
-        <div className="rounded-2xl border border-[#E8ECF1] bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
-          <div className="flex items-center gap-3">
-            <div className="rounded-xl bg-emerald-50 p-2.5"><Banknote className="h-5 w-5 text-emerald-500" /></div>
-            <div>
-              <p className="text-2xl font-bold text-[#1A1D26]">{totalRevenue.toLocaleString("fr-FR")} {currency}</p>
-              <p className="text-xs text-[#6B7280]">Revenus vendeurs (total)</p>
-            </div>
-          </div>
-        </div>
-        <div className="rounded-2xl border border-[#E8ECF1] bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
-          <div className="flex items-center gap-3">
-            <div className="rounded-xl bg-violet-50 p-2.5"><Ticket className="h-5 w-5 text-violet-500" /></div>
-            <div>
-              <p className="text-2xl font-bold text-[#1A1D26]">{totalSold}</p>
-              <p className="text-xs text-[#6B7280]">Tickets vendus (total)</p>
-            </div>
-          </div>
-        </div>
-        <div className="rounded-2xl border border-[#E8ECF1] bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
-          <div className="flex items-center gap-3">
-            <div className="rounded-xl bg-orange-50 p-2.5"><Package className="h-5 w-5 text-orange-500" /></div>
-            <div>
-              <p className="text-2xl font-bold text-[#1A1D26]">{sellers.reduce((s, v) => s + v.stock_remaining, 0)}</p>
-              <p className="text-xs text-[#6B7280]">Tickets en stock (vendeurs)</p>
-            </div>
-          </div>
+        <div className="rounded-xl border border-[#374151] bg-[#111827] p-5">
+          <p className="text-sm text-orange-400 mb-1 flex items-center gap-2">
+            <Trophy className="h-4 w-4" />
+            Meilleur vendeur
+          </p>
+          <p className="text-2xl font-bold text-white">
+            {bestSeller?.name || "—"}
+          </p>
         </div>
       </div>
 
-      {/* Tabs */}
-      <div className="flex items-center gap-1 bg-[#F5F7FA] rounded-xl p-1 w-fit">
-        <button
-          onClick={() => setViewTab("list")}
-          className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-            viewTab === "list" ? "bg-white text-[#1A1D26] shadow-sm" : "text-[#6B7280] hover:text-[#1A1D26]"
-          }`}
-        >
-          <Users className="h-4 w-4" />
-          Vendeurs
-        </button>
-        <button
-          onClick={() => setViewTab("assignments")}
-          className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-            viewTab === "assignments" ? "bg-white text-[#1A1D26] shadow-sm" : "text-[#6B7280] hover:text-[#1A1D26]"
-          }`}
-        >
-          <Send className="h-4 w-4" />
-          Attributions
-        </button>
-      </div>
-
-      {/* Vendors list tab */}
-      {viewTab === "list" && (
-        <div className="space-y-4">
-          <div className="flex flex-col sm:flex-row gap-3">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#9CA3AF]" />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Rechercher par nom, téléphone, localisation..."
-                className="w-full h-10 pl-10 pr-4 rounded-xl border border-[#E8ECF1] bg-white text-sm text-[#1A1D26] placeholder:text-[#9CA3AF] focus:outline-none focus:border-[#2B7FFF] focus:ring-1 focus:ring-[#2B7FFF]/20 transition-colors"
-              />
-            </div>
+      {/* Filters */}
+      <div className="rounded-xl border border-[#374151] bg-[#111827] p-4 mb-4">
+        <div className="flex flex-wrap items-end gap-4">
+          <div>
+            <label className="block text-xs text-slate-400 mb-1">Vendeur</label>
             <div className="relative">
               <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value as typeof statusFilter)}
-                className="h-10 pl-4 pr-10 rounded-xl border border-[#E8ECF1] bg-white text-sm text-[#1A1D26] appearance-none focus:outline-none focus:border-[#2B7FFF] transition-colors"
+                value={vendeurFilter}
+                onChange={(e) => setVendeurFilter(e.target.value)}
+                className="h-9 pl-3 pr-8 rounded-lg bg-emerald-600 text-white text-sm appearance-none focus:outline-none min-w-[160px]"
               >
-                <option value="all">Tous les statuts</option>
-                <option value="active">Actif</option>
-                <option value="inactive">Inactif</option>
-                <option value="suspended">Suspendu</option>
+                <option value="all">Tous les vendeurs</option>
+                {sellers.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.name}
+                  </option>
+                ))}
               </select>
-              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#9CA3AF] pointer-events-none" />
+              <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-white/70 pointer-events-none" />
             </div>
           </div>
-
-          <div className="rounded-2xl border border-[#E8ECF1] bg-white shadow-[0_1px_3px_rgba(0,0,0,0.04)] overflow-hidden">
-            {/* Desktop table */}
-            <div className="hidden lg:block overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-[#E8ECF1] bg-[#FAFBFC]">
-                    <th className="text-left px-4 py-3 text-xs font-semibold text-[#6B7280] uppercase tracking-wider">Vendeur</th>
-                    <th className="text-left px-4 py-3 text-xs font-semibold text-[#6B7280] uppercase tracking-wider">Localisation</th>
-                    <th className="text-left px-4 py-3 text-xs font-semibold text-[#6B7280] uppercase tracking-wider">Statut</th>
-                    <th className="text-left px-4 py-3 text-xs font-semibold text-[#6B7280] uppercase tracking-wider">Stock</th>
-                    <th className="text-left px-4 py-3 text-xs font-semibold text-[#6B7280] uppercase tracking-wider">Vendus</th>
-                    <th className="text-left px-4 py-3 text-xs font-semibold text-[#6B7280] uppercase tracking-wider">Revenus</th>
-                    <th className="text-left px-4 py-3 text-xs font-semibold text-[#6B7280] uppercase tracking-wider">Commission</th>
-                    <th className="text-right px-4 py-3 text-xs font-semibold text-[#6B7280] uppercase tracking-wider">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-[#F1F3F7]">
-                  {filtered.map((seller) => {
-                    const sc = statusConfig[seller.status];
-                    const initials = getInitials(seller.name);
-                    return (
-                      <tr key={seller.id} className="hover:bg-[#FAFBFC] transition-colors">
-                        <td className="px-4 py-3">
-                          <div className="flex items-center gap-3">
-                            <div className="h-9 w-9 rounded-full bg-[#2B7FFF]/10 flex items-center justify-center shrink-0">
-                              <span className="text-xs font-semibold text-[#2B7FFF]">{initials}</span>
-                            </div>
-                            <div>
-                              <p className="text-sm font-medium text-[#1A1D26]">{seller.name}</p>
-                              <p className="text-xs text-[#9CA3AF]">{seller.phone}</p>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="px-4 py-3">
-                          <div className="flex items-center gap-1.5 text-xs text-[#6B7280]">
-                            <MapPin className="h-3 w-3" />
-                            {seller.location}
-                          </div>
-                        </td>
-                        <td className="px-4 py-3">
-                          <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11px] font-medium ${sc.bg} ${sc.text}`}>
-                            <span className={`h-1.5 w-1.5 rounded-full ${sc.dot}`} />
-                            {sc.label}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3">
-                          <div className="flex items-center gap-1.5">
-                            <span className={`text-sm font-semibold ${seller.stock_remaining <= 5 ? "text-amber-600" : "text-[#1A1D26]"}`}>
-                              {seller.stock_remaining}
-                            </span>
-                            {seller.stock_remaining <= 5 && seller.status === "active" && (
-                              <AlertTriangle className="h-3.5 w-3.5 text-amber-500" />
-                            )}
-                          </div>
-                        </td>
-                        <td className="px-4 py-3">
-                          <div className="text-xs">
-                            <span className="font-medium text-[#1A1D26]">{seller.total_sold}</span>
-                            <span className="text-[#9CA3AF]"> / {seller.total_assigned}</span>
-                          </div>
-                          <div className="w-20 h-1.5 rounded-full bg-[#F1F3F7] mt-1 overflow-hidden">
-                            <div
-                              className="h-full rounded-full bg-emerald-500"
-                              style={{ width: `${seller.total_assigned > 0 ? (seller.total_sold / seller.total_assigned) * 100 : 0}%` }}
-                            />
-                          </div>
-                        </td>
-                        <td className="px-4 py-3 text-sm font-medium text-[#1A1D26]">
-                          {seller.total_revenue.toLocaleString("fr-FR")} {currency}
-                        </td>
-                        <td className="px-4 py-3">
-                          <span className="text-xs font-semibold text-[#2B7FFF]">{seller.commission_rate}%</span>
-                        </td>
-                        <td className="px-4 py-3 text-right">
-                          <div className="relative inline-block">
-                            <button
-                              onClick={() => setOpenMenu(openMenu === seller.id ? null : seller.id)}
-                              className="p-1.5 rounded-lg hover:bg-[#F5F7FA] text-[#9CA3AF] hover:text-[#6B7280] transition-colors"
-                            >
-                              <MoreHorizontal className="h-4 w-4" />
-                            </button>
-                            {openMenu === seller.id && (
-                              <div className="absolute right-0 top-8 w-52 bg-white rounded-xl border border-[#E8ECF1] shadow-xl z-20 overflow-hidden">
-                                <button
-                                  onClick={() => { setSelectedSeller(seller); setOpenMenu(null); }}
-                                  className="flex items-center gap-2.5 w-full px-3.5 py-2.5 text-sm text-[#374151] hover:bg-[#F5F7FA] transition-colors"
-                                >
-                                  <Eye className="h-4 w-4 text-[#9CA3AF]" />
-                                  Détails
-                                </button>
-                                <button
-                                  onClick={() => openAssign(seller)}
-                                  className="flex items-center gap-2.5 w-full px-3.5 py-2.5 text-sm text-[#374151] hover:bg-[#F5F7FA] transition-colors"
-                                >
-                                  <Send className="h-4 w-4 text-[#9CA3AF]" />
-                                  Attribuer du stock
-                                </button>
-                                <button
-                                  onClick={() => handleToggle(seller.id)}
-                                  className={`flex items-center gap-2.5 w-full px-3.5 py-2.5 text-sm transition-colors ${
-                                    seller.status === "active" ? "text-amber-600 hover:bg-amber-50" : "text-emerald-600 hover:bg-emerald-50"
-                                  }`}
-                                >
-                                  <Power className="h-4 w-4" />
-                                  {seller.status === "active" ? "Désactiver" : "Activer"}
-                                </button>
-                              </div>
-                            )}
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-
-            {/* Mobile cards */}
-            <div className="lg:hidden divide-y divide-[#F1F3F7]">
-              {filtered.map((seller) => {
-                const sc = statusConfig[seller.status];
-                const initials = getInitials(seller.name);
-                return (
-                  <div key={seller.id} className="p-4 space-y-3">
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="h-10 w-10 rounded-full bg-[#2B7FFF]/10 flex items-center justify-center">
-                          <span className="text-xs font-semibold text-[#2B7FFF]">{initials}</span>
-                        </div>
-                        <div>
-                          <p className="text-sm font-semibold text-[#1A1D26]">{seller.name}</p>
-                          <p className="text-xs text-[#9CA3AF]">{seller.phone}</p>
-                        </div>
-                      </div>
-                      <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium ${sc.bg} ${sc.text}`}>
-                        <span className={`h-1.5 w-1.5 rounded-full ${sc.dot}`} />
-                        {sc.label}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-1.5 text-xs text-[#6B7280]">
-                      <MapPin className="h-3 w-3" />
-                      {seller.location}
-                    </div>
-                    <div className="grid grid-cols-3 gap-3 pt-3 border-t border-[#F1F3F7]">
-                      <div>
-                        <p className="text-[11px] text-[#9CA3AF]">Stock</p>
-                        <p className={`text-sm font-semibold ${seller.stock_remaining <= 5 ? "text-amber-600" : "text-[#1A1D26]"}`}>
-                          {seller.stock_remaining}
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-[11px] text-[#9CA3AF]">Vendus</p>
-                        <p className="text-sm font-semibold text-[#1A1D26]">{seller.total_sold}</p>
-                      </div>
-                      <div>
-                        <p className="text-[11px] text-[#9CA3AF]">Revenus</p>
-                        <p className="text-sm font-semibold text-[#1A1D26]">{seller.total_revenue.toLocaleString("fr-FR")}</p>
-                      </div>
-                    </div>
-                    <div className="flex gap-2 pt-2">
-                      <button onClick={() => openAssign(seller)} className="inline-flex items-center gap-1.5 text-xs font-medium text-[#2B7FFF] hover:text-[#1A6BE6]">
-                        <Send className="h-3 w-3" />
-                        Attribuer
-                      </button>
-                      <button onClick={() => setSelectedSeller(seller)} className="inline-flex items-center gap-1.5 text-xs font-medium text-[#6B7280] hover:text-[#1A1D26]">
-                        <Eye className="h-3 w-3" />
-                        Détails
-                      </button>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-
-            {filtered.length === 0 && (
-              <div className="p-12 text-center">
-                <Users className="h-8 w-8 text-[#D1D5DB] mx-auto mb-3" />
-                <p className="text-sm text-[#6B7280]">Aucun vendeur trouvé</p>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Assignments tab */}
-      {viewTab === "assignments" && (
-        <div className="rounded-2xl border border-[#E8ECF1] bg-white shadow-[0_1px_3px_rgba(0,0,0,0.04)] overflow-hidden">
-          <div className="px-5 py-4 border-b border-[#E8ECF1]">
-            <h3 className="text-sm font-semibold text-[#1A1D26]">Historique des attributions</h3>
-            <p className="text-xs text-[#6B7280] mt-0.5">Suivi des stocks attribués et retournés</p>
-          </div>
-          {assignments.length === 0 ? (
-            <div className="p-12 text-center">
-              <Send className="h-8 w-8 text-[#D1D5DB] mx-auto mb-3" />
-              <p className="text-sm text-[#6B7280]">Aucune attribution pour le moment</p>
-            </div>
-          ) : (
-            <div className="divide-y divide-[#F1F3F7]">
-              {assignments.map((a) => (
-                <div key={a.id} className="flex items-center gap-4 px-5 py-3.5 hover:bg-[#FAFBFC] transition-colors">
-                  <div className={`rounded-xl p-2 ${a.type === "assign" ? "bg-emerald-50" : "bg-amber-50"}`}>
-                    {a.type === "assign" ? (
-                      <Send className="h-4 w-4 text-emerald-500" />
-                    ) : (
-                      <Package className="h-4 w-4 text-amber-500" />
-                    )}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm text-[#1A1D26]">
-                      <span className="font-medium">{a.seller?.name || "—"}</span>
-                      {a.type === "assign" ? " — " : " — retour de "}
-                      <span className="font-semibold">{a.quantity}</span> tickets
-                    </p>
-                    <div className="flex items-center gap-2 mt-0.5">
-                      {a.profile && (
-                        <span
-                          className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium"
-                          style={{ backgroundColor: (a.profile.color || "#999") + "15", color: a.profile.color }}
-                        >
-                          <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: a.profile.color }} />
-                          {a.profile.name}
-                        </span>
-                      )}
-                      <span className="text-xs text-[#9CA3AF]">
-                        {new Date(a.created_at).toLocaleDateString("fr-FR")}
-                      </span>
-                    </div>
-                  </div>
-                  <span className={`text-sm font-semibold ${a.type === "assign" ? "text-emerald-600" : "text-amber-600"}`}>
-                    {a.type === "assign" ? "+" : "−"}{a.quantity}
-                  </span>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Seller detail modal */}
-      {selectedSeller && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setSelectedSeller(null)} />
-          <div className="relative w-full max-w-lg bg-white rounded-2xl shadow-2xl overflow-hidden">
-            <div className="flex items-center justify-between px-6 py-4 border-b border-[#E8ECF1]">
-              <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-full bg-[#2B7FFF]/10 flex items-center justify-center">
-                  <span className="text-sm font-semibold text-[#2B7FFF]">{getInitials(selectedSeller.name)}</span>
-                </div>
-                <div>
-                  <h3 className="text-lg font-semibold text-[#1A1D26]">{selectedSeller.name}</h3>
-                  <p className="text-xs text-[#9CA3AF]">Vendeur depuis {new Date(selectedSeller.created_at).toLocaleDateString("fr-FR")}</p>
-                </div>
-              </div>
-              <button onClick={() => setSelectedSeller(null)} className="p-1.5 rounded-lg hover:bg-[#F5F7FA] text-[#9CA3AF]">
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-            <div className="px-6 py-5 space-y-4">
-              {[
-                { label: "Téléphone", value: selectedSeller.phone },
-                { label: "Localisation", value: selectedSeller.location },
-                { label: "Commission", value: `${selectedSeller.commission_rate}%` },
-                { label: "Dernière activité", value: selectedSeller.last_active ? new Date(selectedSeller.last_active).toLocaleDateString("fr-FR") : "—" },
-              ].map((row) => (
-                <div key={row.label} className="flex items-center justify-between">
-                  <span className="text-sm text-[#6B7280]">{row.label}</span>
-                  <span className="text-sm font-medium text-[#1A1D26]">{row.value}</span>
-                </div>
-              ))}
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-[#6B7280]">Statut</span>
-                {(() => {
-                  const sc = statusConfig[selectedSeller.status];
-                  return (
-                    <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11px] font-medium ${sc.bg} ${sc.text}`}>
-                      <span className={`h-1.5 w-1.5 rounded-full ${sc.dot}`} />
-                      {sc.label}
-                    </span>
-                  );
-                })()}
-              </div>
-
-              <div className="pt-3 border-t border-[#F1F3F7]">
-                <h4 className="text-sm font-semibold text-[#1A1D26] mb-3">Performance</h4>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="rounded-xl bg-[#F5F7FA] p-3 text-center">
-                    <p className="text-lg font-bold text-[#1A1D26]">{selectedSeller.total_sold}</p>
-                    <p className="text-[11px] text-[#6B7280]">Tickets vendus</p>
-                  </div>
-                  <div className="rounded-xl bg-[#F5F7FA] p-3 text-center">
-                    <p className="text-lg font-bold text-[#1A1D26]">{selectedSeller.total_revenue.toLocaleString("fr-FR")}</p>
-                    <p className="text-[11px] text-[#6B7280]">Revenus ({currency})</p>
-                  </div>
-                  <div className="rounded-xl bg-[#F5F7FA] p-3 text-center">
-                    <p className="text-lg font-bold text-[#1A1D26]">{selectedSeller.stock_remaining}</p>
-                    <p className="text-[11px] text-[#6B7280]">Stock restant</p>
-                  </div>
-                  <div className="rounded-xl bg-[#F5F7FA] p-3 text-center">
-                    <p className="text-lg font-bold text-[#1A1D26]">
-                      {selectedSeller.total_assigned > 0
-                        ? Math.round((selectedSeller.total_sold / selectedSeller.total_assigned) * 100)
-                        : 0}%
-                    </p>
-                    <p className="text-[11px] text-[#6B7280]">Taux de vente</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div className="px-6 py-4 border-t border-[#E8ECF1] flex justify-end gap-3">
-              <button
-                onClick={() => { openAssign(selectedSeller); setSelectedSeller(null); }}
-                className="inline-flex items-center gap-2 h-10 px-5 rounded-xl bg-[#2B7FFF] text-sm font-medium text-white hover:bg-[#1A6BE6] transition-colors"
+          <div>
+            <label className="block text-xs text-slate-400 mb-1">
+              P&eacute;riode
+            </label>
+            <div className="relative">
+              <select
+                value={periodeFilter}
+                onChange={(e) => setPeriodeFilter(e.target.value)}
+                className="h-9 pl-3 pr-8 rounded-lg bg-[#374151] text-white text-sm appearance-none focus:outline-none min-w-[130px]"
               >
-                <Send className="h-4 w-4" />
-                Attribuer du stock
-              </button>
+                <option value="today">Aujourd&apos;hui</option>
+                <option value="week">Cette semaine</option>
+                <option value="month">Ce mois</option>
+                <option value="all">Toute la p&eacute;riode</option>
+              </select>
+              <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-white/70 pointer-events-none" />
+            </div>
+          </div>
+          <div>
+            <label className="block text-xs text-slate-400 mb-1">
+              Date d&eacute;but
+            </label>
+            <input
+              type="date"
+              value={dateDebut}
+              onChange={(e) => setDateDebut(e.target.value)}
+              className="h-9 px-3 rounded-lg bg-[#374151] text-white text-sm focus:outline-none"
+            />
+          </div>
+          <div>
+            <label className="block text-xs text-slate-400 mb-1">
+              Date fin
+            </label>
+            <input
+              type="date"
+              value={dateFin}
+              onChange={(e) => setDateFin(e.target.value)}
+              className="h-9 px-3 rounded-lg bg-[#374151] text-white text-sm focus:outline-none"
+            />
+          </div>
+          <div>
+            <label className="block text-xs text-slate-400 mb-1">
+              Type de vente
+            </label>
+            <div className="relative">
+              <select
+                value={typeVente}
+                onChange={(e) => setTypeVente(e.target.value)}
+                className="h-9 pl-3 pr-8 rounded-lg bg-amber-500 text-white text-sm appearance-none focus:outline-none min-w-[120px]"
+              >
+                <option value="brute">Vente brute</option>
+                <option value="nette">Vente nette</option>
+              </select>
+              <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-white/70 pointer-events-none" />
             </div>
           </div>
         </div>
-      )}
+      </div>
+
+      {/* Export buttons + sales table */}
+      <div className="rounded-xl border border-[#374151] bg-[#111827] overflow-hidden mb-8">
+        <div className="flex items-center justify-end gap-2 px-5 py-3 border-b border-[#374151]">
+          <button className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-500 px-4 py-1.5 text-xs font-medium text-white hover:bg-emerald-600 transition-colors">
+            <Printer className="h-3.5 w-3.5" />
+            Imprimer
+          </button>
+          <button className="inline-flex items-center gap-1.5 rounded-lg bg-red-500 px-4 py-1.5 text-xs font-medium text-white hover:bg-red-600 transition-colors">
+            <FileText className="h-3.5 w-3.5" />
+            PDF
+          </button>
+          <button className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-4 py-1.5 text-xs font-medium text-white hover:bg-emerald-700 transition-colors">
+            <FileSpreadsheet className="h-3.5 w-3.5" />
+            Excel
+          </button>
+        </div>
+
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b border-[#374151]">
+              <th className="text-left px-5 py-3 text-xs font-semibold text-orange-400 uppercase">
+                Date
+              </th>
+              <th className="text-left px-5 py-3 text-xs font-semibold text-orange-400 uppercase">
+                Vendeur
+              </th>
+              <th className="text-left px-5 py-3 text-xs font-semibold text-orange-400 uppercase">
+                Cat&eacute;gorie
+              </th>
+              <th className="text-left px-5 py-3 text-xs font-semibold text-orange-400 uppercase">
+                Utilisateur
+              </th>
+              <th className="text-left px-5 py-3 text-xs font-semibold text-orange-400 uppercase">
+                Prix
+              </th>
+              <th className="text-center px-5 py-3 text-xs font-semibold text-orange-400 uppercase">
+                Actions
+              </th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-[#2D3748]">
+            {filteredAssignments.length === 0 ? (
+              <tr>
+                <td
+                  colSpan={6}
+                  className="px-5 py-8 text-center text-slate-400"
+                >
+                  Aucune vente enregistr&eacute;e pour cette p&eacute;riode.
+                </td>
+              </tr>
+            ) : (
+              filteredAssignments.map((a) => (
+                <tr
+                  key={a.id}
+                  className="hover:bg-[#1a2332] transition-colors"
+                >
+                  <td className="px-5 py-3 text-sm text-slate-300">
+                    {new Date(a.created_at).toLocaleString("fr-FR", {
+                      day: "2-digit",
+                      month: "2-digit",
+                      year: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </td>
+                  <td className="px-5 py-3 text-sm font-medium text-white">
+                    {a.seller?.name || "—"}
+                  </td>
+                  <td className="px-5 py-3 text-sm text-slate-300">
+                    {a.profile?.name || "—"}
+                  </td>
+                  <td className="px-5 py-3 text-sm text-slate-300">—</td>
+                  <td className="px-5 py-3 text-sm text-slate-300">
+                    {((a.quantity || 0) * 2000).toLocaleString("fr-FR")}{" "}
+                    {currency}
+                  </td>
+                  <td className="px-5 py-3 text-center">
+                    <button className="p-1.5 rounded-lg bg-red-500/20 text-red-400 hover:bg-red-500/30 transition-colors">
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Remboursements section */}
+      <div className="rounded-xl border border-amber-500/30 bg-[#111827] p-5 mb-6">
+        <h2 className="text-lg font-bold text-amber-400 mb-4 flex items-center gap-2">
+          <CreditCard className="h-5 w-5" />
+          Suivi des Remboursements de Cr&eacute;dit Revendeurs
+        </h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="flex items-center gap-3 rounded-xl border border-[#374151] bg-[#1F2937] p-4">
+            <Banknote className="h-8 w-8 text-slate-400" />
+            <div>
+              <p className="text-white font-medium">
+                Via Agr&eacute;gateur 0 {currency}
+              </p>
+              <p className="text-xs text-slate-400">0 transaction(s)</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3 rounded-xl border border-[#374151] bg-[#1F2937] p-4">
+            <Users className="h-8 w-8 text-slate-400" />
+            <div>
+              <p className="text-white font-medium">
+                Manuel (Admin){" "}
+                {totalRevenue.toLocaleString("fr-FR")} {currency}
+              </p>
+              <p className="text-xs text-slate-400">
+                {assignments.length} r&egrave;glement(s)
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3 rounded-xl border border-[#374151] bg-[#1F2937] p-4">
+            <Database className="h-8 w-8 text-slate-400" />
+            <div>
+              <p className="text-white font-medium">
+                Total Rembours&eacute;{" "}
+                {totalRevenue.toLocaleString("fr-FR")} {currency}
+              </p>
+              <p className="text-xs text-slate-400">
+                {assignments.length} op&eacute;ration(s)
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Remboursements filters */}
+      <div className="rounded-xl border border-[#374151] bg-[#111827] p-4 mb-4">
+        <div className="flex flex-wrap items-end gap-4">
+          <div>
+            <label className="block text-xs text-slate-400 mb-1">
+              Revendeur
+            </label>
+            <div className="relative">
+              <select
+                value={rembVendeur}
+                onChange={(e) => setRembVendeur(e.target.value)}
+                className="h-9 pl-3 pr-8 rounded-lg bg-emerald-600 text-white text-sm appearance-none focus:outline-none min-w-[160px]"
+              >
+                <option value="all">Tous les revendeurs</option>
+                {sellers.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.name}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-white/70 pointer-events-none" />
+            </div>
+          </div>
+          <div>
+            <label className="block text-xs text-slate-400 mb-1">
+              P&eacute;riode
+            </label>
+            <div className="relative">
+              <select
+                value={rembPeriode}
+                onChange={(e) => setRembPeriode(e.target.value)}
+                className="h-9 pl-3 pr-8 rounded-lg bg-[#374151] text-white text-sm appearance-none focus:outline-none min-w-[130px]"
+              >
+                <option value="all">Toute la p&eacute;riode</option>
+                <option value="today">Aujourd&apos;hui</option>
+                <option value="week">Cette semaine</option>
+                <option value="month">Ce mois</option>
+              </select>
+              <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-white/70 pointer-events-none" />
+            </div>
+          </div>
+          <div>
+            <label className="block text-xs text-slate-400 mb-1">
+              M&eacute;thode
+            </label>
+            <div className="relative">
+              <select
+                value={rembMethode}
+                onChange={(e) => setRembMethode(e.target.value)}
+                className="h-9 pl-3 pr-8 rounded-lg bg-[#374151] text-white text-sm appearance-none focus:outline-none min-w-[150px]"
+              >
+                <option value="all">Toutes les m&eacute;thodes</option>
+                <option value="manual">Manuel</option>
+                <option value="aggregator">Agr&eacute;gateur</option>
+              </select>
+              <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-white/70 pointer-events-none" />
+            </div>
+          </div>
+          <div>
+            <label className="block text-xs text-slate-400 mb-1">
+              Date d&eacute;but
+            </label>
+            <input
+              type="date"
+              className="h-9 px-3 rounded-lg bg-[#374151] text-white text-sm focus:outline-none"
+            />
+          </div>
+          <div>
+            <label className="block text-xs text-slate-400 mb-1">
+              Date fin
+            </label>
+            <input
+              type="date"
+              className="h-9 px-3 rounded-lg bg-[#374151] text-white text-sm focus:outline-none"
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Remboursements export + table */}
+      <div className="rounded-xl border border-[#374151] bg-[#111827] overflow-hidden mb-6">
+        <div className="flex items-center justify-start gap-2 px-5 py-3 border-b border-[#374151]">
+          <button className="inline-flex items-center gap-1.5 rounded-lg bg-red-500 px-4 py-1.5 text-xs font-medium text-white hover:bg-red-600 transition-colors">
+            <FileText className="h-3.5 w-3.5" />
+            PDF
+          </button>
+          <button className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-4 py-1.5 text-xs font-medium text-white hover:bg-emerald-700 transition-colors">
+            <FileSpreadsheet className="h-3.5 w-3.5" />
+            Excel
+          </button>
+        </div>
+
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b border-[#374151]">
+              <th className="text-left px-5 py-3 text-xs font-semibold text-orange-400 uppercase">
+                Date
+              </th>
+              <th className="text-left px-5 py-3 text-xs font-semibold text-orange-400 uppercase">
+                Revendeur
+              </th>
+              <th className="text-left px-5 py-3 text-xs font-semibold text-orange-400 uppercase">
+                Montant
+              </th>
+              <th className="text-left px-5 py-3 text-xs font-semibold text-orange-400 uppercase">
+                M&eacute;thode
+              </th>
+              <th className="text-left px-5 py-3 text-xs font-semibold text-orange-400 uppercase">
+                Agr&eacute;gateur / D&eacute;tail
+              </th>
+              <th className="text-left px-5 py-3 text-xs font-semibold text-orange-400 uppercase">
+                ID Transaction
+              </th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-[#2D3748]">
+            {assignments.length === 0 ? (
+              <tr>
+                <td
+                  colSpan={6}
+                  className="px-5 py-8 text-center text-slate-400"
+                >
+                  Aucun remboursement enregistr&eacute;.
+                </td>
+              </tr>
+            ) : (
+              assignments.map((a) => (
+                <tr
+                  key={a.id}
+                  className="hover:bg-[#1a2332] transition-colors"
+                >
+                  <td className="px-5 py-3 text-sm text-slate-300">
+                    {new Date(a.created_at).toLocaleString("fr-FR", {
+                      day: "2-digit",
+                      month: "2-digit",
+                      year: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                      second: "2-digit",
+                    })}
+                  </td>
+                  <td className="px-5 py-3 text-sm font-bold text-white">
+                    {a.seller?.name || "—"}
+                  </td>
+                  <td className="px-5 py-3 text-sm font-medium text-emerald-400">
+                    {((a.quantity || 0) * 2000).toLocaleString("fr-FR")}{" "}
+                    {currency}
+                  </td>
+                  <td className="px-5 py-3 text-sm text-slate-300 flex items-center gap-1.5">
+                    <Users className="h-3.5 w-3.5" />
+                    Manuel
+                  </td>
+                  <td className="px-5 py-3 text-sm text-slate-400">—</td>
+                  <td className="px-5 py-3 text-sm text-slate-400">—</td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Floating button - manage sellers */}
+      <button
+        onClick={() => setShowAddModal(true)}
+        className="fixed bottom-24 right-6 lg:bottom-8 lg:right-8 z-30 flex items-center justify-center h-14 w-14 rounded-full bg-orange-500 text-white shadow-lg hover:bg-orange-600 transition-colors"
+        title="G&eacute;rer les vendeurs"
+      >
+        <Users className="h-6 w-6" />
+      </button>
 
       {/* Add seller modal */}
       {showAddModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowAddModal(false)} />
-          <div className="relative w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden">
-            <div className="flex items-center justify-between px-6 py-4 border-b border-[#E8ECF1]">
-              <h3 className="text-lg font-semibold text-[#1A1D26]">Ajouter un vendeur</h3>
-              <button onClick={() => setShowAddModal(false)} className="p-1.5 rounded-lg hover:bg-[#F5F7FA] text-[#9CA3AF]">
+          <div
+            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+            onClick={() => setShowAddModal(false)}
+          />
+          <div className="relative w-full max-w-md bg-[#1F2937] border border-[#374151] rounded-2xl shadow-2xl overflow-hidden">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-[#374151]">
+              <h3 className="text-lg font-semibold text-white">
+                Ajouter un vendeur
+              </h3>
+              <button
+                onClick={() => setShowAddModal(false)}
+                className="p-1.5 rounded-lg hover:bg-[#374151] text-slate-400"
+              >
                 <X className="h-5 w-5" />
               </button>
             </div>
             <div className="px-6 py-5 space-y-4">
               <div>
-                <label className="block text-sm font-medium text-[#374151] mb-1.5">Nom complet</label>
+                <label className="block text-sm font-medium text-slate-300 mb-1.5">
+                  Nom complet
+                </label>
                 <input
                   type="text"
                   value={addForm.name}
-                  onChange={(e) => setAddForm({ ...addForm, name: e.target.value })}
+                  onChange={(e) =>
+                    setAddForm({ ...addForm, name: e.target.value })
+                  }
                   placeholder="Ex: Patrick Mboma"
-                  className="w-full h-10 px-4 rounded-xl border border-[#E8ECF1] bg-white text-sm text-[#1A1D26] placeholder:text-[#9CA3AF] focus:outline-none focus:border-[#2B7FFF] focus:ring-1 focus:ring-[#2B7FFF]/20"
+                  className="w-full h-10 px-4 rounded-xl bg-[#111827] border border-[#374151] text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-[#2B7FFF]"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-[#374151] mb-1.5">Téléphone</label>
+                <label className="block text-sm font-medium text-slate-300 mb-1.5">
+                  T&eacute;l&eacute;phone
+                </label>
                 <div className="flex gap-2">
-                  <span className="inline-flex items-center h-10 px-3 rounded-xl border border-[#E8ECF1] bg-[#F5F7FA] text-sm text-[#6B7280]">{phonePrefix}</span>
+                  <span className="inline-flex items-center h-10 px-3 rounded-xl border border-[#374151] bg-[#374151] text-sm text-slate-300">
+                    {phonePrefix}
+                  </span>
                   <input
                     type="tel"
                     value={addForm.phone}
-                    onChange={(e) => setAddForm({ ...addForm, phone: e.target.value })}
+                    onChange={(e) =>
+                      setAddForm({ ...addForm, phone: e.target.value })
+                    }
                     placeholder="812 345 678"
-                    className="flex-1 h-10 px-4 rounded-xl border border-[#E8ECF1] bg-white text-sm text-[#1A1D26] placeholder:text-[#9CA3AF] focus:outline-none focus:border-[#2B7FFF] focus:ring-1 focus:ring-[#2B7FFF]/20"
+                    className="flex-1 h-10 px-4 rounded-xl bg-[#111827] border border-[#374151] text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-[#2B7FFF]"
                   />
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-[#374151] mb-1.5">Localisation</label>
+                <label className="block text-sm font-medium text-slate-300 mb-1.5">
+                  Localisation
+                </label>
                 <input
                   type="text"
                   value={addForm.location}
-                  onChange={(e) => setAddForm({ ...addForm, location: e.target.value })}
+                  onChange={(e) =>
+                    setAddForm({ ...addForm, location: e.target.value })
+                  }
                   placeholder="Ex: Gombe, Kinshasa"
-                  className="w-full h-10 px-4 rounded-xl border border-[#E8ECF1] bg-white text-sm text-[#1A1D26] placeholder:text-[#9CA3AF] focus:outline-none focus:border-[#2B7FFF] focus:ring-1 focus:ring-[#2B7FFF]/20"
+                  className="w-full h-10 px-4 rounded-xl bg-[#111827] border border-[#374151] text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-[#2B7FFF]"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-[#374151] mb-1.5">Taux de commission</label>
-                <div className="flex items-center gap-3">
+                <label className="block text-sm font-medium text-slate-300 mb-1.5">
+                  Taux de commission
+                </label>
+                <div className="flex items-center gap-2">
                   {[10, 15, 20].map((c) => (
                     <button
                       key={c}
-                      onClick={() => setAddForm({ ...addForm, commission: c })}
-                      className={`h-10 px-5 rounded-xl text-sm font-medium transition-all ${
+                      onClick={() =>
+                        setAddForm({ ...addForm, commission: c })
+                      }
+                      className={`h-9 px-4 rounded-lg text-sm font-medium transition-all ${
                         addForm.commission === c
                           ? "bg-[#2B7FFF] text-white"
-                          : "border border-[#E8ECF1] text-[#374151] hover:border-[#2B7FFF]/30"
+                          : "border border-[#374151] text-slate-300 hover:border-[#2B7FFF]/50"
                       }`}
                     >
                       {c}%
                     </button>
                   ))}
-                  <input
-                    type="number"
-                    min={1}
-                    max={50}
-                    value={addForm.commission}
-                    onChange={(e) => setAddForm({ ...addForm, commission: Number(e.target.value) })}
-                    className="h-10 w-20 px-3 rounded-xl border border-[#E8ECF1] text-sm text-center text-[#1A1D26] focus:outline-none focus:border-[#2B7FFF] focus:ring-1 focus:ring-[#2B7FFF]/20"
-                  />
                 </div>
               </div>
             </div>
-            <div className="px-6 py-4 border-t border-[#E8ECF1] flex justify-end gap-3">
-              <button onClick={() => setShowAddModal(false)} className="h-10 px-5 rounded-xl border border-[#E8ECF1] text-sm font-medium text-[#374151] hover:bg-[#F5F7FA] transition-colors">
+            <div className="px-6 py-4 border-t border-[#374151] flex justify-end gap-3">
+              <button
+                onClick={() => setShowAddModal(false)}
+                className="h-10 px-5 rounded-xl border border-[#374151] text-sm font-medium text-slate-300 hover:bg-[#374151] transition-colors"
+              >
                 Annuler
               </button>
               <button
                 onClick={handleAddSeller}
                 disabled={!addForm.name || !addForm.phone || submitting}
-                className="inline-flex items-center gap-2 h-10 px-5 rounded-xl bg-[#2B7FFF] text-sm font-medium text-white hover:bg-[#1A6BE6] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="inline-flex items-center gap-2 h-10 px-5 rounded-xl bg-[#2B7FFF] text-sm font-medium text-white hover:bg-[#1A6BE6] transition-colors disabled:opacity-50"
               >
                 {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
-                Créer le vendeur
+                Cr&eacute;er le vendeur
               </button>
             </div>
           </div>
@@ -649,26 +660,38 @@ export default function SellersPage() {
       {/* Assign stock modal */}
       {showAssignModal && assignTarget && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowAssignModal(false)} />
-          <div className="relative w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden">
-            <div className="flex items-center justify-between px-6 py-4 border-b border-[#E8ECF1]">
+          <div
+            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+            onClick={() => setShowAssignModal(false)}
+          />
+          <div className="relative w-full max-w-md bg-[#1F2937] border border-[#374151] rounded-2xl shadow-2xl overflow-hidden">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-[#374151]">
               <div>
-                <h3 className="text-lg font-semibold text-[#1A1D26]">Attribuer du stock</h3>
-                <p className="text-xs text-[#9CA3AF] mt-0.5">Vers : {assignTarget.name}</p>
+                <h3 className="text-lg font-semibold text-white">
+                  Attribuer du stock
+                </h3>
+                <p className="text-xs text-slate-400 mt-0.5">
+                  Vers : {assignTarget.name}
+                </p>
               </div>
-              <button onClick={() => setShowAssignModal(false)} className="p-1.5 rounded-lg hover:bg-[#F5F7FA] text-[#9CA3AF]">
+              <button
+                onClick={() => setShowAssignModal(false)}
+                className="p-1.5 rounded-lg hover:bg-[#374151] text-slate-400"
+              >
                 <X className="h-5 w-5" />
               </button>
             </div>
             <div className="px-6 py-5 space-y-4">
               {profiles.length === 0 ? (
-                <div className="text-center py-6">
-                  <p className="text-sm text-[#6B7280]">Aucun profil tarifaire disponible.</p>
-                </div>
+                <p className="text-center py-6 text-sm text-slate-400">
+                  Aucun profil tarifaire disponible.
+                </p>
               ) : (
                 <>
                   <div>
-                    <label className="block text-sm font-medium text-[#374151] mb-2">Profil tarifaire</label>
+                    <label className="block text-sm font-medium text-slate-300 mb-2">
+                      Profil tarifaire
+                    </label>
                     <div className="space-y-2">
                       {profiles.map((p) => (
                         <button
@@ -676,62 +699,58 @@ export default function SellersPage() {
                           onClick={() => setAssignProfile(p.id)}
                           className={`flex items-center gap-3 w-full px-3 py-2.5 rounded-xl border text-left transition-all ${
                             assignProfile === p.id
-                              ? "border-[#2B7FFF] bg-[#2B7FFF]/5 ring-1 ring-[#2B7FFF]/20"
-                              : "border-[#E8ECF1] hover:border-[#2B7FFF]/30"
+                              ? "border-[#2B7FFF] bg-[#2B7FFF]/10"
+                              : "border-[#374151] hover:border-[#2B7FFF]/40"
                           }`}
                         >
-                          <span className="h-3 w-3 rounded-full" style={{ backgroundColor: p.color }} />
-                          <span className="flex-1 text-sm font-medium text-[#1A1D26]">{p.name}</span>
+                          <span
+                            className="h-3 w-3 rounded-full"
+                            style={{ backgroundColor: p.color }}
+                          />
+                          <span className="flex-1 text-sm font-medium text-white">
+                            {p.name}
+                          </span>
+                          <span className="text-xs text-slate-400">
+                            {p.price.toLocaleString("fr-FR")} {currency}
+                          </span>
                         </button>
                       ))}
                     </div>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-[#374151] mb-1.5">Quantité</label>
+                    <label className="block text-sm font-medium text-slate-300 mb-1.5">
+                      Quantit&eacute;
+                    </label>
                     <div className="flex flex-wrap gap-2">
                       {[5, 10, 25, 50].map((q) => (
                         <button
                           key={q}
                           onClick={() => setAssignQty(q)}
-                          className={`h-10 px-5 rounded-xl text-sm font-medium transition-all ${
+                          className={`h-9 px-4 rounded-lg text-sm font-medium transition-all ${
                             assignQty === q
                               ? "bg-[#2B7FFF] text-white"
-                              : "border border-[#E8ECF1] text-[#374151] hover:border-[#2B7FFF]/30"
+                              : "border border-[#374151] text-slate-300 hover:border-[#2B7FFF]/50"
                           }`}
                         >
                           {q}
                         </button>
                       ))}
-                      <input
-                        type="number"
-                        min={1}
-                        max={100}
-                        value={assignQty}
-                        onChange={(e) => setAssignQty(Math.max(1, Number(e.target.value)))}
-                        className="h-10 w-20 px-3 rounded-xl border border-[#E8ECF1] text-sm text-center text-[#1A1D26] focus:outline-none focus:border-[#2B7FFF]"
-                      />
                     </div>
                   </div>
-                  {assignProfile && (
-                    <div className="rounded-xl bg-[#F5F7FA] p-4">
-                      <p className="text-sm text-[#1A1D26]">
-                        <span className="font-semibold">{assignQty}</span> tickets{" "}
-                        <span className="font-semibold">{profiles.find((p) => p.id === assignProfile)?.name}</span>
-                        {" → "}<span className="font-semibold">{assignTarget.name}</span>
-                      </p>
-                    </div>
-                  )}
                 </>
               )}
             </div>
-            <div className="px-6 py-4 border-t border-[#E8ECF1] flex justify-end gap-3">
-              <button onClick={() => setShowAssignModal(false)} className="h-10 px-5 rounded-xl border border-[#E8ECF1] text-sm font-medium text-[#374151] hover:bg-[#F5F7FA] transition-colors">
+            <div className="px-6 py-4 border-t border-[#374151] flex justify-end gap-3">
+              <button
+                onClick={() => setShowAssignModal(false)}
+                className="h-10 px-5 rounded-xl border border-[#374151] text-sm font-medium text-slate-300 hover:bg-[#374151] transition-colors"
+              >
                 Annuler
               </button>
               <button
                 onClick={handleAssignStock}
                 disabled={!assignProfile || submitting}
-                className="inline-flex items-center gap-2 h-10 px-5 rounded-xl bg-[#2B7FFF] text-sm font-medium text-white hover:bg-[#1A6BE6] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                className="inline-flex items-center gap-2 h-10 px-5 rounded-xl bg-[#2B7FFF] text-sm font-medium text-white hover:bg-[#1A6BE6] transition-colors disabled:opacity-40"
               >
                 {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
                 <Send className="h-4 w-4" />
