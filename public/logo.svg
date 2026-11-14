@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000" width="1000" height="1000">
+  <defs>
+    <!-- Dégradé fidèle de l'icône Wi-Fi (bleu cyan vif en bas vers bleu marine profond en haut à gauche) -->
+    <radialGradient id="wifiGradient" cx="525" cy="520" r="340" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#008EFF" />
+      <stop offset="38%" stop-color="#0070EA" />
+      <stop offset="72%" stop-color="#0044BD" />
+      <stop offset="100%" stop-color="#001A4D" />
+    </radialGradient>
+  </defs>
+
+  <!-- Icône Wi-Fi : 4 arcs concentriques à 90° avec encoche inférieure -->
+  <g id="wifi-icon" fill="url(#wifiGradient)">
+    <!-- Arc 4 (extérieur) -->
+    <path d="M 259.58 345.58 A 340 340 0 0 1 740.42 345.58 L 703.65 382.35 A 288 288 0 0 0 296.35 382.35 Z" />
+    <!-- Arc 3 -->
+    <path d="M 316.15 402.15 A 260 260 0 0 1 683.85 402.15 L 647.08 438.92 A 208 208 0 0 0 352.92 438.92 Z" />
+    <!-- Arc 2 -->
+    <path d="M 372.72 458.72 A 180 180 0 0 1 627.28 458.72 L 590.51 495.49 A 128 128 0 0 0 409.49 495.49 Z" />
+    <!-- Arc 1 (base avec encoche semi-circulaire) -->
+    <path d="M 429.29 515.29 A 100 100 0 0 1 570.71 515.29 L 533.94 552.06 A 48 48 0 0 0 466.06 552.06 Z" />
+  </g>
+
+  <!-- Texte FLUXION (vectorisé en tracés exacts, bleu marine #041E42) -->
+  <g id="word-fluxion" fill="#041E42">
+    <!-- F -->
+    <path d="M 48 566 H 118 V 592 H 79 V 613 H 111 V 638 H 79 V 682 H 48 Z" />
+    <!-- L -->
+    <path d="M 128 566 H 159 V 656 H 196 V 682 H 128 Z" />
+    <!-- U -->
+    <path d="M 204 566 H 234 V 642 A 12 14 0 0 0 258 642 V 566 H 288 V 642 A 42 40 0 0 1 204 642 Z" />
+    <!-- X -->
+    <path d="M 296 566 H 331 L 342 598 L 353 566 H 388 L 360 623 L 388 682 H 353 L 342 648 L 331 682 H 296 L 324 623 Z" />
+    <!-- I -->
+    <path d="M 398 566 H 429 V 682 H 398 Z" />
+    <!-- O -->
+    <path fill-rule="evenodd" d="M 497 565 A 57 59 0 1 0 497 683 A 57 59 0 1 0 497 565 Z M 497 593 A 24 31 0 1 1 497 655 A 24 31 0 1 1 497 593 Z" />
+    <!-- N -->
+    <path d="M 566 566 H 595 L 627 634 V 566 H 656 V 682 H 627 L 595 614 V 682 H 566 Z" />
+  </g>
+
+  <!-- Texte WIFI (vectorisé en tracés exacts, bleu vif #0088FF) -->
+  <g id="word-wifi" fill="#0088FF">
+    <!-- W -->
+    <path d="M 670 566 H 700 L 714 632 L 726 566 H 746 L 758 632 L 772 566 H 802 L 776 682 H 748 L 736 622 L 724 682 H 696 Z" />
+    <!-- I -->
+    <path d="M 813 566 H 844 V 682 H 813 Z" />
+    <!-- F -->
+    <path d="M 856 566 H 914 V 592 H 885 V 613 H 909 V 638 H 885 V 682 H 856 Z" />
+    <!-- I -->
+    <path d="M 921 566 H 952 V 682 H 921 Z" />
+  </g>
+
+  <!-- Slogan : CONNECTE VOTRE MONDE et filets latéraux -->
+  <g id="tagline">
+    <line x1="52" y1="727" x2="136" y2="727" stroke="#041E42" stroke-width="3.5" />
+    <text x="500" y="736" text-anchor="middle" font-family="&#39;Montserrat&#39;, &#39;Gotham&#39;, &#39;Proxima Nova&#39;, &#39;Futura&#39;, &#39;Helvetica Neue&#39;, Arial, sans-serif" font-weight="700" font-size="23" fill="#041E42">CONNECTE VOTRE MONDE</text>
+    <line x1="864" y1="727" x2="948" y2="727" stroke="#041E42" stroke-width="3.5" />
+  </g>
+</svg>

@@ -56,6 +56,6 @@ function createSupabaseMiddleware(request: NextRequest, response: NextResponse) 
 
 export const config = {
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|logo.jpg|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|logo.svg|logo.jpg|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 };

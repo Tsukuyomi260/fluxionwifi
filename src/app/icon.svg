@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="200 290 600 320" width="512" height="512">
+  <defs>
+    <radialGradient id="wifiGradient" cx="525" cy="520" r="340" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#008EFF" />
+      <stop offset="38%" stop-color="#0070EA" />
+      <stop offset="72%" stop-color="#0044BD" />
+      <stop offset="100%" stop-color="#001A4D" />
+    </radialGradient>
+  </defs>
+  <g fill="url(#wifiGradient)">
+    <path d="M 259.58 345.58 A 340 340 0 0 1 740.42 345.58 L 703.65 382.35 A 288 288 0 0 0 296.35 382.35 Z" />
+    <path d="M 316.15 402.15 A 260 260 0 0 1 683.85 402.15 L 647.08 438.92 A 208 208 0 0 0 352.92 438.92 Z" />
+    <path d="M 372.72 458.72 A 180 180 0 0 1 627.28 458.72 L 590.51 495.49 A 128 128 0 0 0 409.49 495.49 Z" />
+    <path d="M 429.29 515.29 A 100 100 0 0 1 570.71 515.29 L 533.94 552.06 A 48 48 0 0 0 466.06 552.06 Z" />
+  </g>
+</svg>

@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Bell, Menu, Search, LogOut, User, Settings, X } from "lucide-react";
@@ -71,7 +70,8 @@ export function Header({ onMenuToggle }: HeaderProps) {
           <Menu className="h-5 w-5 text-[#6B7280]" />
         </button>
         <div className="flex items-center gap-2 lg:hidden">
-          <Image src="/logo.jpg" alt="FLUXIONWIFI" width={28} height={28} className="rounded-lg" />
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo.svg" alt="FLUXIONWIFI" width={28} height={28} className="rounded-lg" />
           <span className="font-bold text-[#0B1E4D]">FLUXIONWIFI</span>
         </div>
         <div className="hidden lg:block">

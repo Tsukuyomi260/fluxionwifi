@@ -1,4 +1,3 @@
-import Image from "next/image";
 import { Wifi, Globe, Ticket, Shield, Terminal, Smartphone } from "lucide-react";
 
 const features = [
@@ -39,8 +38,9 @@ export default function AuthLayout({
         <div className="relative z-10 flex flex-col justify-center gap-10 p-10 xl:p-12 w-full h-full">
           {/* Logo */}
           <div className="flex items-center gap-3">
-            <Image
-              src="/logo.jpg"
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/logo.svg"
               alt="FLUXIONWIFI"
               width={48}
               height={48}
@@ -87,7 +87,8 @@ export default function AuthLayout({
         {/* Mobile header */}
         <div className="lg:hidden px-5 pt-6 pb-2">
           <div className="flex items-center gap-2.5">
-            <Image src="/logo.jpg" alt="FLUXIONWIFI" width={36} height={36} className="rounded-xl" />
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/logo.svg" alt="FLUXIONWIFI" width={36} height={36} className="rounded-xl" />
             <span className="text-lg font-bold text-[#0B1E4D]">FLUXIONWIFI</span>
           </div>
         </div>

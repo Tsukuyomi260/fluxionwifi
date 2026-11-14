@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
@@ -108,7 +107,8 @@ export function Sidebar({ mobile = false }: SidebarProps) {
       }
     >
       <div className="flex h-16 items-center gap-2.5 px-5 border-b border-border">
-        <Image src="/logo.jpg" alt="FLUXIONWIFI" width={36} height={36} className="rounded-lg" />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/logo.svg" alt="FLUXIONWIFI" width={36} height={36} className="rounded-lg" />
         <span className="text-base font-bold text-[#0B1E4D]">FLUXIONWIFI</span>
       </div>
 

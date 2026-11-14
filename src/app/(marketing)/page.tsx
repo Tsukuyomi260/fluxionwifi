@@ -104,7 +104,8 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 items-center justify-between">
             <div className="flex items-center gap-2">
-              <Image src="/logo.jpg" alt="FLUXIONWIFI" width={32} height={32} className="rounded-lg sm:rounded-xl sm:w-9 sm:h-9" />
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/logo.svg" alt="FLUXIONWIFI" width={32} height={32} className="rounded-lg sm:rounded-xl sm:w-9 sm:h-9" />
               <span className="text-base sm:text-lg font-bold text-[#0B1E4D]">FLUXIONWIFI</span>
             </div>
             <div className="hidden md:flex items-center gap-8">
@@ -310,7 +311,8 @@ export default function LandingPage() {
         <ScrollReveal direction="none" duration={0.8}>
           <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-2">
-              <Image src="/logo.jpg" alt="FLUXIONWIFI" width={28} height={28} className="rounded-lg" />
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/logo.svg" alt="FLUXIONWIFI" width={28} height={28} className="rounded-lg" />
               <span className="text-sm font-semibold text-[#0B1E4D]">FLUXIONWIFI</span>
             </div>
             <p className="text-xs text-[#9CA3AF]">
