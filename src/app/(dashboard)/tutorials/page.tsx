@@ -1,476 +1,493 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import {
-  BookOpen,
-  Search,
   Play,
-  Clock,
-  ChevronRight,
-  Star,
-  Filter,
+  Search,
+  BookOpen,
+  Wrench,
+  Bookmark,
+  LayoutDashboard,
+  Receipt,
+  Headphones,
   CheckCircle,
-  Lock,
-  Wifi,
-  Router,
-  CreditCard,
+  Download,
+  Clock,
+  User,
+  ChevronRight,
+  X,
+  Volume2,
+  Film,
+  Sparkles,
   Shield,
-  Palette,
-  Settings,
-  Users,
-  Globe,
-  Smartphone,
-  ChevronDown,
+  Radio,
   ExternalLink,
-  Award,
-  Zap,
-  Eye,
 } from "lucide-react";
-
-type TutorialLevel = "beginner" | "intermediate" | "advanced";
-type TutorialCategory = "getting-started" | "router" | "portal" | "billing" | "vpn" | "advanced";
 
 interface Tutorial {
   id: string;
   title: string;
-  description: string;
-  category: TutorialCategory;
-  level: TutorialLevel;
   duration: string;
-  videoUrl?: string;
-  completed: boolean;
-  steps: number;
+  category: "fluxion" | "technique";
+  audience?: string;
+  description: string;
+  thumbnail?: string;
   views: number;
-  featured?: boolean;
 }
 
-const categories: { key: TutorialCategory | "all"; label: string; icon: typeof BookOpen }[] = [
-  { key: "all", label: "Tous", icon: BookOpen },
-  { key: "getting-started", label: "Premiers pas", icon: Zap },
-  { key: "router", label: "Routeurs", icon: Router },
-  { key: "portal", label: "Portail captif", icon: Palette },
-  { key: "billing", label: "Facturation", icon: CreditCard },
-  { key: "vpn", label: "VPN", icon: Shield },
-  { key: "advanced", label: "Avancé", icon: Settings },
-];
-
-const levelConfig: Record<TutorialLevel, { label: string; color: string; bg: string }> = {
-  beginner: { label: "Débutant", color: "text-emerald-600", bg: "bg-emerald-50" },
-  intermediate: { label: "Intermédiaire", color: "text-amber-600", bg: "bg-amber-50" },
-  advanced: { label: "Avancé", color: "text-red-500", bg: "bg-red-50" },
-};
-
-const tutorials: Tutorial[] = [
+const tutorialsData: Tutorial[] = [
   {
     id: "T01",
-    title: "Configurer votre premier routeur MikroTik",
-    description: "Apprenez à connecter et configurer un routeur MikroTik avec FLUXIONWIFI en moins de 10 minutes.",
-    category: "getting-started",
-    level: "beginner",
-    duration: "8 min",
-    completed: true,
-    steps: 6,
-    views: 3420,
-    featured: true,
+    title: "FLUXIONWIFI en 48 secondes : Présentation générale",
+    duration: "0:48",
+    category: "fluxion",
+    audience: "Tous",
+    description: "Découvrez en moins d'une minute comment automatiser la vente de tickets WiFi par Mobile Money.",
+    views: 4520,
   },
   {
     id: "T02",
-    title: "Créer et vendre des tickets WiFi",
-    description: "Générez des tickets WiFi, configurez les tarifs et commencez à vendre via Mobile Money.",
-    category: "getting-started",
-    level: "beginner",
-    duration: "5 min",
-    completed: true,
-    steps: 4,
-    views: 2890,
-    featured: true,
+    title: "Brancher et initialiser votre premier routeur MikroTik",
+    duration: "4:15",
+    category: "fluxion",
+    audience: "Débutant",
+    description: "Câblage, reset usine et premier branchement avec le script automatique FLUXIONWIFI.",
+    views: 3810,
   },
   {
     id: "T03",
-    title: "Personnaliser votre portail captif avec le Studio",
-    description: "Utilisez l'éditeur visuel pour créer un portail captif à l'image de votre marque.",
-    category: "portal",
-    level: "beginner",
-    duration: "12 min",
-    completed: false,
-    steps: 8,
-    views: 1850,
-    featured: true,
+    title: "Installer le script automatique FLUXIONWIFI (.rsc)",
+    duration: "3:30",
+    category: "fluxion",
+    audience: "Technicien",
+    description: "Importation du script de synchronisation dans WinBox et vérification de la connexion.",
+    views: 2940,
   },
   {
     id: "T04",
-    title: "Gérer plusieurs sites avec l'Interopérabilité",
-    description: "Ajoutez plusieurs routeurs, configurez les zones géographiques et synchronisez vos configurations.",
-    category: "router",
-    level: "intermediate",
-    duration: "15 min",
-    completed: false,
-    steps: 10,
-    views: 1240,
+    title: "Créer des profils de tickets (Durée, Débit, Prix)",
+    duration: "2:50",
+    category: "fluxion",
+    audience: "Promoteur",
+    description: "Définissez vos tarifs en FCFA/devise locale et vos forfaits horaires, journaliers ou hebdomadaires.",
+    views: 3100,
   },
   {
     id: "T05",
-    title: "Configurer un tunnel VPN WireGuard",
-    description: "Mettez en place un accès distant sécurisé à votre réseau via WireGuard.",
-    category: "vpn",
-    level: "intermediate",
-    duration: "10 min",
-    completed: false,
-    steps: 7,
-    views: 980,
+    title: "Activer les paiements Mobile Money (FedaPay, CinetPay, FeexPay)",
+    duration: "5:20",
+    category: "fluxion",
+    audience: "Promoteur",
+    description: "Renseignez vos clés API et commencez à encaisser 24h/24 directement sur votre compte.",
+    views: 2680,
   },
   {
     id: "T06",
-    title: "Comprendre la facturation et les abonnements",
-    description: "Tour complet du système de facturation : formules, recharges, renouvellements et historique.",
-    category: "billing",
-    level: "beginner",
-    duration: "6 min",
-    completed: false,
-    steps: 5,
-    views: 2100,
+    title: "Personnaliser le portail captif : Logo, Couleurs et Textes",
+    duration: "4:00",
+    category: "fluxion",
+    audience: "Promoteur",
+    description: "Modifiez l'apparence de votre page de connexion pour valoriser l'image de votre WiFi zone.",
+    views: 1950,
   },
   {
     id: "T07",
-    title: "Activer le roaming inter-sites",
-    description: "Permettez à vos clients d'utiliser un seul ticket sur tous vos hotspots.",
-    category: "router",
-    level: "intermediate",
-    duration: "8 min",
-    completed: false,
-    steps: 5,
-    views: 870,
+    title: "Générer et imprimer des séries de tickets physiques",
+    duration: "3:10",
+    category: "fluxion",
+    audience: "Revendeur",
+    description: "Export PDF prêt à découper avec QR code et identifiants uniques.",
+    views: 2240,
   },
   {
     id: "T08",
-    title: "Ajouter des publicités à votre portail captif",
-    description: "Monétisez votre WiFi en affichant des bannières et vidéos pré-roll avant la connexion.",
-    category: "portal",
-    level: "beginner",
-    duration: "7 min",
-    completed: false,
-    steps: 4,
-    views: 1560,
+    title: "Ajouter et gérer des comptes revendeurs avec commissions",
+    duration: "4:45",
+    category: "fluxion",
+    audience: "Promoteur",
+    description: "Déléguez la vente physique tout en gardant le contrôle absolu sur votre trésorerie.",
+    views: 1730,
   },
   {
     id: "T09",
-    title: "Configuration avancée RADIUS",
-    description: "Profils de bande passante, limitation par groupe, fair-use policy et accounting.",
-    category: "advanced",
-    level: "advanced",
-    duration: "20 min",
-    completed: false,
-    steps: 12,
-    views: 650,
+    title: "Connecter son routeur au VPN FLUXIONWIFI (SSTP & WireGuard)",
+    duration: "6:10",
+    category: "technique",
+    audience: "Technicien",
+    description: "Accédez à distance à WinBox même derrière un routeur 4G sans adresse IP publique.",
+    views: 3410,
   },
   {
     id: "T10",
-    title: "Gestion des vendeurs terrain",
-    description: "Créez des comptes vendeurs, attribuez des quotas et suivez leurs ventes en temps réel.",
-    category: "getting-started",
-    level: "beginner",
-    duration: "6 min",
-    completed: false,
-    steps: 5,
-    views: 1380,
-  },
-  {
-    id: "T11",
-    title: "Migrer de RouterOS 6 à RouterOS 7",
-    description: "Guide pas-à-pas pour mettre à jour vos routeurs MikroTik sans perte de configuration.",
-    category: "advanced",
-    level: "advanced",
-    duration: "18 min",
-    completed: false,
-    steps: 9,
-    views: 420,
-  },
-  {
-    id: "T12",
-    title: "Utiliser l'application mobile FLUXIONWIFI",
-    description: "Gérez vos hotspots, vendez des tickets et suivez vos revenus depuis votre smartphone.",
-    category: "getting-started",
-    level: "beginner",
-    duration: "4 min",
-    completed: false,
-    steps: 3,
-    views: 2350,
+    title: "Configuration avancée des antennes d'extension (TP-Link, Ubiquiti)",
+    duration: "8:40",
+    category: "technique",
+    audience: "Technicien",
+    description: "Paramétrer des points d'accès en mode pont (Bridge) pour étendre la couverture de votre zone.",
+    views: 2890,
   },
 ];
 
 export default function TutorialsPage() {
-  const [search, setSearch] = useState("");
-  const [activeCategory, setActiveCategory] = useState<TutorialCategory | "all">("all");
-  const [filterLevel, setFilterLevel] = useState<TutorialLevel | "all">("all");
-  const [selectedTutorial, setSelectedTutorial] = useState<Tutorial | null>(null);
+  const [activeTab, setActiveTab] = useState<"fluxion" | "technique" | "mes">("fluxion");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [activeVideo, setActiveVideo] = useState<Tutorial | null>(null);
 
-  const featured = tutorials.filter((t) => t.featured);
-
-  const filtered = tutorials.filter((t) => {
-    const matchSearch = t.title.toLowerCase().includes(search.toLowerCase()) || t.description.toLowerCase().includes(search.toLowerCase());
-    const matchCategory = activeCategory === "all" || t.category === activeCategory;
-    const matchLevel = filterLevel === "all" || t.level === filterLevel;
-    return matchSearch && matchCategory && matchLevel;
+  const filteredTutorials = tutorialsData.filter((t) => {
+    const matchesTab = activeTab === "mes" ? true : t.category === activeTab;
+    const matchesSearch =
+      t.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      t.description.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesTab && matchesSearch;
   });
 
-  const completedCount = tutorials.filter((t) => t.completed).length;
-  const progress = Math.round((completedCount / tutorials.length) * 100);
-
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-[#0B1E4D]">Tutoriels</h1>
-          <p className="text-sm text-gray-500 mt-1">
-            Apprenez à maîtriser FLUXIONWIFI étape par étape
-          </p>
-        </div>
-        {/* Progress */}
-        <div className="flex items-center gap-3 rounded-2xl border border-[#E8ECF1] bg-white px-4 py-3 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
-          <Award className="h-5 w-5 text-amber-500" />
+    <div className="-m-4 lg:-m-6 min-h-full bg-[#0F172A] text-white flex flex-col lg:flex-row">
+      {/* Sidebar APPRENDRE / MON ESPACE */}
+      <aside className="w-full lg:w-64 bg-[#111827] border-r border-[#1F2937] shrink-0 p-4 lg:p-5 flex flex-col justify-between">
+        <div className="space-y-6">
+          {/* Logo Header */}
+          <div className="flex items-center gap-2.5 pb-4 border-b border-[#1F2937]">
+            <div className="h-9 w-9 rounded-xl bg-gradient-to-tr from-[#2B7FFF] to-blue-400 flex items-center justify-center shadow-lg shadow-[#2B7FFF]/20">
+              <Film className="h-5 w-5 text-white" />
+            </div>
+            <div>
+              <h1 className="text-sm font-extrabold tracking-wide text-white">
+                FLUXIONWIFI
+              </h1>
+              <p className="text-[10px] font-bold uppercase tracking-wider text-blue-400">
+                Tutoriels
+              </p>
+            </div>
+          </div>
+
+          {/* Section APPRENDRE */}
           <div>
-            <div className="flex items-center gap-2">
-              <p className="text-sm font-semibold text-[#0B1E4D]">{completedCount}/{tutorials.length} terminés</p>
-              <span className="text-xs text-gray-400">{progress}%</span>
-            </div>
-            <div className="w-32 h-1.5 bg-gray-100 rounded-full overflow-hidden mt-1">
-              <div className="h-full bg-amber-400 rounded-full transition-all" style={{ width: `${progress}%` }} />
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Featured tutorials */}
-      <div>
-        <h2 className="text-sm font-semibold text-gray-500 uppercase mb-3">Recommandés pour vous</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {featured.map((t) => {
-            const lv = levelConfig[t.level];
-            return (
+            <p className="text-[11px] font-bold uppercase tracking-wider text-gray-400 px-3 mb-2">
+              Apprendre
+            </p>
+            <div className="space-y-1">
               <button
-                key={t.id}
-                onClick={() => setSelectedTutorial(t)}
-                className="rounded-2xl border border-[#E8ECF1] bg-white shadow-[0_1px_3px_rgba(0,0,0,0.04)] overflow-hidden text-left hover:shadow-md hover:border-[#2B7FFF]/30 transition-all group"
+                onClick={() => setActiveTab("fluxion")}
+                className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold transition-all ${
+                  activeTab === "fluxion"
+                    ? "bg-[#2B7FFF] text-white shadow-md shadow-[#2B7FFF]/25"
+                    : "text-gray-300 hover:bg-[#1F2937] hover:text-white"
+                }`}
               >
-                {/* Video thumbnail */}
-                <div className="relative h-36 bg-gradient-to-br from-[#0B1E4D] to-[#1A3A7A] flex items-center justify-center">
-                  <div className="absolute inset-0 opacity-10">
-                    <div className="absolute top-4 left-4 w-16 h-16 rounded-full bg-[#2B7FFF]/30 blur-2xl" />
-                    <div className="absolute bottom-4 right-4 w-20 h-20 rounded-full bg-[#2B7FFF]/20 blur-2xl" />
-                  </div>
-                  <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center group-hover:bg-white/30 group-hover:scale-110 transition-all">
-                    <Play className="h-5 w-5 text-white ml-0.5" />
-                  </div>
-                  <div className="absolute top-3 left-3">
-                    {t.completed && (
-                      <span className="inline-flex items-center gap-1 rounded-lg bg-emerald-500 px-2 py-0.5 text-[10px] font-bold text-white">
-                        <CheckCircle className="h-3 w-3" /> Terminé
-                      </span>
-                    )}
-                  </div>
-                  <div className="absolute bottom-3 right-3">
-                    <span className="inline-flex items-center gap-1 rounded-lg bg-black/40 backdrop-blur-sm px-2 py-0.5 text-[10px] font-medium text-white">
-                      <Clock className="h-3 w-3" /> {t.duration}
-                    </span>
-                  </div>
+                <div className="flex items-center gap-2.5">
+                  <BookOpen className="h-4 w-4" />
+                  <span>Tutoriels FLUXIONWIFI</span>
                 </div>
-                <div className="p-4">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className={`inline-flex items-center rounded-md ${lv.bg} px-1.5 py-0.5 text-[10px] font-medium ${lv.color}`}>
-                      {lv.label}
-                    </span>
-                    <span className="text-[10px] text-gray-400">{t.steps} étapes</span>
-                  </div>
-                  <h3 className="text-sm font-semibold text-[#0B1E4D] line-clamp-2">{t.title}</h3>
-                  <p className="text-xs text-gray-400 mt-1 line-clamp-2">{t.description}</p>
-                </div>
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Search + filters */}
-      <div className="flex flex-col gap-4">
-        <div className="flex flex-col sm:flex-row gap-3">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Rechercher un tutoriel..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="w-full rounded-xl border border-[#E8ECF1] bg-white pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#2B7FFF]/20 focus:border-[#2B7FFF] shadow-[0_1px_3px_rgba(0,0,0,0.04)]"
-            />
-          </div>
-          <div className="relative">
-            <select
-              value={filterLevel}
-              onChange={(e) => setFilterLevel(e.target.value as TutorialLevel | "all")}
-              className="appearance-none rounded-xl border border-[#E8ECF1] bg-white pl-3 pr-9 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#2B7FFF]/20 shadow-[0_1px_3px_rgba(0,0,0,0.04)]"
-            >
-              <option value="all">Tous les niveaux</option>
-              <option value="beginner">Débutant</option>
-              <option value="intermediate">Intermédiaire</option>
-              <option value="advanced">Avancé</option>
-            </select>
-            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
-          </div>
-        </div>
-
-        {/* Category pills */}
-        <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
-          {categories.map((c) => (
-            <button
-              key={c.key}
-              onClick={() => setActiveCategory(c.key)}
-              className={`inline-flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-sm font-medium whitespace-nowrap transition-colors ${
-                activeCategory === c.key
-                  ? "bg-[#2B7FFF] text-white"
-                  : "bg-white border border-[#E8ECF1] text-gray-600 hover:bg-[#F5F7FA]"
-              }`}
-            >
-              <c.icon className="h-4 w-4" />
-              {c.label}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Tutorial list */}
-      <div className="space-y-3">
-        {filtered.map((t) => {
-          const lv = levelConfig[t.level];
-          const catInfo = categories.find((c) => c.key === t.category);
-          return (
-            <button
-              key={t.id}
-              onClick={() => setSelectedTutorial(t)}
-              className="w-full rounded-2xl border border-[#E8ECF1] bg-white shadow-[0_1px_3px_rgba(0,0,0,0.04)] p-4 text-left hover:shadow-md hover:border-[#2B7FFF]/30 transition-all flex items-center gap-4"
-            >
-              {/* Play icon */}
-              <div className={`shrink-0 w-12 h-12 rounded-xl ${t.completed ? "bg-emerald-50" : "bg-blue-50"} flex items-center justify-center`}>
-                {t.completed ? (
-                  <CheckCircle className="h-6 w-6 text-emerald-500" />
-                ) : (
-                  <Play className="h-5 w-5 text-[#2B7FFF] ml-0.5" />
-                )}
-              </div>
-
-              {/* Content */}
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-1 flex-wrap">
-                  <h3 className="text-sm font-semibold text-[#0B1E4D]">{t.title}</h3>
-                </div>
-                <p className="text-xs text-gray-400 line-clamp-1">{t.description}</p>
-                <div className="flex items-center gap-3 mt-2 text-[11px] text-gray-400">
-                  <span className={`inline-flex items-center rounded-md ${lv.bg} px-1.5 py-0.5 font-medium ${lv.color}`}>
-                    {lv.label}
-                  </span>
-                  <span className="inline-flex items-center gap-1">
-                    <Clock className="h-3 w-3" /> {t.duration}
-                  </span>
-                  <span>{t.steps} étapes</span>
-                  <span className="inline-flex items-center gap-1">
-                    <Eye className="h-3 w-3" /> {t.views.toLocaleString("fr-FR")}
-                  </span>
-                </div>
-              </div>
-
-              <ChevronRight className="h-5 w-5 text-gray-300 shrink-0" />
-            </button>
-          );
-        })}
-
-        {filtered.length === 0 && (
-          <div className="py-12 text-center">
-            <BookOpen className="h-10 w-10 text-gray-300 mx-auto mb-3" />
-            <p className="text-sm text-gray-500">Aucun tutoriel trouvé</p>
-          </div>
-        )}
-      </div>
-
-      {/* Tutorial detail modal */}
-      {selectedTutorial && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="bg-white rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-xl">
-            {/* Video header */}
-            <div className="relative h-48 bg-gradient-to-br from-[#0B1E4D] to-[#1A3A7A] flex items-center justify-center rounded-t-2xl">
-              <div className="absolute inset-0 opacity-10 rounded-t-2xl overflow-hidden">
-                <div className="absolute top-6 left-6 w-24 h-24 rounded-full bg-[#2B7FFF]/30 blur-3xl" />
-                <div className="absolute bottom-6 right-6 w-32 h-32 rounded-full bg-[#2B7FFF]/20 blur-3xl" />
-              </div>
-              <button className="w-16 h-16 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center hover:bg-white/30 hover:scale-110 transition-all">
-                <Play className="h-7 w-7 text-white ml-1" />
-              </button>
-              <div className="absolute bottom-3 right-3">
-                <span className="inline-flex items-center gap-1 rounded-lg bg-black/40 backdrop-blur-sm px-2.5 py-1 text-xs font-medium text-white">
-                  <Clock className="h-3.5 w-3.5" /> {selectedTutorial.duration}
+                <span className="px-1.5 py-0.5 rounded-md bg-emerald-500/20 text-emerald-400 text-[10px] font-bold">
+                  43
                 </span>
+              </button>
+
+              <button
+                onClick={() => setActiveTab("technique")}
+                className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold transition-all ${
+                  activeTab === "technique"
+                    ? "bg-[#2B7FFF] text-white shadow-md shadow-[#2B7FFF]/25"
+                    : "text-gray-300 hover:bg-[#1F2937] hover:text-white"
+                }`}
+              >
+                <div className="flex items-center gap-2.5">
+                  <Wrench className="h-4 w-4" />
+                  <span>Techniques</span>
+                </div>
+                <span className="px-1.5 py-0.5 rounded-md bg-amber-500/20 text-amber-400 text-[10px] font-bold">
+                  2
+                </span>
+              </button>
+
+              <button
+                onClick={() => setActiveTab("mes")}
+                className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold transition-all ${
+                  activeTab === "mes"
+                    ? "bg-[#2B7FFF] text-white shadow-md shadow-[#2B7FFF]/25"
+                    : "text-gray-300 hover:bg-[#1F2937] hover:text-white"
+                }`}
+              >
+                <div className="flex items-center gap-2.5">
+                  <Bookmark className="h-4 w-4" />
+                  <span>Mes tutoriels</span>
+                </div>
+              </button>
+            </div>
+          </div>
+
+          {/* Section MON ESPACE */}
+          <div>
+            <p className="text-[11px] font-bold uppercase tracking-wider text-gray-400 px-3 mb-2">
+              Mon Espace
+            </p>
+            <div className="space-y-1">
+              <Link
+                href="/dashboard"
+                className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-medium text-gray-300 hover:bg-[#1F2937] hover:text-white transition-colors"
+              >
+                <LayoutDashboard className="h-4 w-4 text-gray-400" />
+                <span>Tableau de bord</span>
+              </Link>
+              <Link
+                href="/finance/billing"
+                className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-medium text-gray-300 hover:bg-[#1F2937] hover:text-white transition-colors"
+              >
+                <Receipt className="h-4 w-4 text-gray-400" />
+                <span>Facturation</span>
+              </Link>
+              <Link
+                href="/support"
+                className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-medium text-gray-300 hover:bg-[#1F2937] hover:text-white transition-colors"
+              >
+                <Headphones className="h-4 w-4 text-gray-400" />
+                <span>Assistance</span>
+              </Link>
+            </div>
+          </div>
+        </div>
+
+        {/* Clé USB Pack Offline Promo */}
+        <div className="mt-6 p-3.5 rounded-xl bg-gradient-to-br from-blue-950/60 to-indigo-950/60 border border-blue-800/30">
+          <div className="flex items-center gap-2 text-blue-300 text-xs font-bold mb-1">
+            <Download className="h-3.5 w-3.5" />
+            <span>Mode Hors-Ligne</span>
+          </div>
+          <p className="text-[11px] text-gray-300 mb-2">
+            Téléchargez l&apos;intégralité des 43 vidéos pour formation locale sur clé USB (358 Mo).
+          </p>
+          <button className="w-full py-1.5 rounded-lg bg-blue-600/30 hover:bg-blue-600/50 text-blue-200 text-[11px] font-semibold border border-blue-500/30 transition-all">
+            Télécharger le pack (ZIP)
+          </button>
+        </div>
+      </aside>
+
+      {/* Main Content */}
+      <main className="flex-1 overflow-y-auto p-4 lg:p-8 space-y-6">
+        {/* Top Header Bar */}
+        <div className="flex items-center justify-between pb-2 border-b border-[#1F2937]/60">
+          <div className="flex items-center gap-2">
+            <span className="text-gray-400 text-sm">≡</span>
+            <span className="text-sm font-bold text-gray-200">Tutoriels</span>
+          </div>
+          <Link
+            href="/settings"
+            className="flex items-center gap-2 text-xs text-gray-300 hover:text-white bg-[#1F2937] px-3 py-1.5 rounded-xl border border-[#374151] transition-colors"
+          >
+            <User className="h-3.5 w-3.5 text-emerald-400" />
+            <span>Mon compte</span>
+          </Link>
+        </div>
+
+        {/* Hero Blue Banner (from 19-tutoriels.jpg) */}
+        <section className="rounded-2xl bg-gradient-to-r from-blue-700 via-blue-800 to-indigo-900 p-6 lg:p-8 shadow-xl text-white relative overflow-hidden">
+          <div className="absolute right-0 top-0 bottom-0 w-96 bg-radial from-white/10 to-transparent pointer-events-none" />
+
+          <div className="relative z-10 max-w-3xl space-y-4">
+            <div className="inline-flex items-center gap-2 rounded-full bg-white/15 backdrop-blur-md px-3 py-1 text-xs font-semibold text-blue-100">
+              <Volume2 className="h-3.5 w-3.5 text-amber-300" />
+              <span>TUTORIELS ANIMÉS, AVEC LA VOIX</span>
+            </div>
+
+            <h2 className="text-2xl lg:text-3xl font-black tracking-tight">
+              Apprenez en quelques minutes
+            </h2>
+
+            <p className="text-sm text-blue-100/90 leading-relaxed">
+              Les guides de FLUXIONWIFI sont gratuits. Pour aller plus loin, les tutoriels techniques couvrent
+              MikroTik, routeurs et antennes.
+            </p>
+
+            {/* 4 Stats Chips */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2">
+              <div className="bg-black/20 rounded-xl p-3 backdrop-blur-sm border border-white/10">
+                <p className="text-xl font-black text-white">43</p>
+                <p className="text-[11px] text-blue-200">tutoriels gratuits</p>
+              </div>
+              <div className="bg-black/20 rounded-xl p-3 backdrop-blur-sm border border-white/10">
+                <p className="text-xl font-black text-amber-300">2</p>
+                <p className="text-[11px] text-blue-200">tutoriels techniques</p>
+              </div>
+              <div className="bg-black/20 rounded-xl p-3 backdrop-blur-sm border border-white/10">
+                <p className="text-xl font-black text-emerald-300">134 min</p>
+                <p className="text-[11px] text-blue-200">de vidéo gratuite</p>
+              </div>
+              <div className="bg-black/20 rounded-xl p-3 backdrop-blur-sm border border-white/10">
+                <div className="flex items-center gap-1">
+                  <Download className="h-4 w-4 text-amber-400" />
+                  <p className="text-xl font-black text-white">358 Mo</p>
+                </div>
+                <p className="text-[11px] text-blue-200">tout, sans Internet (clé USB)</p>
+              </div>
+            </div>
+
+            {/* Search Input */}
+            <div className="pt-2">
+              <div className="relative max-w-md">
+                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Rechercher un tutoriel..."
+                  className="w-full rounded-xl bg-white text-gray-900 pl-10 pr-4 py-2.5 text-xs font-medium placeholder:text-gray-400 shadow-md focus:outline-none focus:ring-2 focus:ring-amber-400"
+                />
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Featured Video Spotlight Card */}
+        <section className="rounded-2xl bg-[#111827] border border-[#1F2937] p-5 lg:p-6 shadow-md">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+            {/* Left Thumbnail with Play Button */}
+            <div
+              onClick={() => setActiveVideo(tutorialsData[0])}
+              className="relative aspect-video rounded-xl bg-gradient-to-br from-indigo-950 via-slate-900 to-black border border-indigo-900/40 flex flex-col items-center justify-center cursor-pointer group overflow-hidden shadow-inner"
+            >
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(59,130,246,0.25),transparent_70%)]" />
+              <div className="text-center space-y-2 z-10">
+                <p className="text-xs font-bold tracking-widest text-amber-300 uppercase">
+                  VOICI LA SOLUTION
+                </p>
+                <div className="mx-auto h-14 w-14 rounded-full bg-gradient-to-tr from-amber-500 to-yellow-300 flex items-center justify-center shadow-lg shadow-amber-500/30 group-hover:scale-110 transition-transform">
+                  <Play className="h-6 w-6 text-black fill-black ml-0.5" />
+                </div>
+              </div>
+              <span className="absolute bottom-3 right-3 px-2 py-0.5 rounded-md bg-black/70 text-[10px] font-bold text-gray-200">
+                0:48
+              </span>
+            </div>
+
+            {/* Right Info */}
+            <div className="space-y-4">
+              <span className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-blue-400">
+                <Sparkles className="h-3.5 w-3.5" />
+                PRÉSENTATION
+              </span>
+              <h3 className="text-xl font-bold text-white">
+                FLUXIONWIFI en 48 secondes
+              </h3>
+              <ul className="space-y-2 text-xs text-gray-300">
+                <li className="flex items-center gap-2">
+                  <CheckCircle className="h-4 w-4 text-emerald-400 shrink-0" />
+                  <span>Vente en ligne par Mobile Money, 24h/24</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle className="h-4 w-4 text-emerald-400 shrink-0" />
+                  <span>Revendeurs suivis au franc près</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle className="h-4 w-4 text-emerald-400 shrink-0" />
+                  <span>FLUXION VPN + MikHmon en ligne</span>
+                </li>
+              </ul>
+              <button
+                onClick={() => setActiveVideo(tutorialsData[0])}
+                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#2B7FFF] hover:bg-blue-600 text-white text-xs font-bold transition-all shadow-md shadow-[#2B7FFF]/20"
+              >
+                <Play className="h-3.5 w-3.5 fill-white" />
+                <span>Regarder la vidéo (48s)</span>
+              </button>
+            </div>
+          </div>
+        </section>
+
+        {/* All Tutorials Grid */}
+        <section className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-bold uppercase tracking-wider text-gray-400">
+              {activeTab === "technique"
+                ? "Cours & Guides Techniques"
+                : activeTab === "mes"
+                ? "Vos Tutoriels Sauvegardés"
+                : "Tous les tutoriels FLUXIONWIFI"}
+            </h3>
+            <span className="text-xs text-gray-500 font-medium">
+              {filteredTutorials.length} vidéo{filteredTutorials.length > 1 ? "s" : ""}
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+            {filteredTutorials.map((tut) => (
+              <div
+                key={tut.id}
+                onClick={() => setActiveVideo(tut)}
+                className="rounded-xl bg-[#111827] border border-[#1F2937] hover:border-[#2B7FFF]/40 p-4 transition-all cursor-pointer group flex flex-col justify-between space-y-3"
+              >
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-[#1F2937] text-blue-300">
+                      {tut.audience || "Guide"}
+                    </span>
+                    <span className="flex items-center gap-1 text-[11px] font-medium text-gray-400">
+                      <Clock className="h-3 w-3" />
+                      {tut.duration}
+                    </span>
+                  </div>
+                  <h4 className="text-xs font-bold text-white group-hover:text-[#2B7FFF] transition-colors line-clamp-2">
+                    {tut.title}
+                  </h4>
+                  <p className="text-[11px] text-gray-400 line-clamp-2">
+                    {tut.description}
+                  </p>
+                </div>
+
+                <div className="pt-2 border-t border-[#1F2937] flex items-center justify-between text-[11px] text-gray-400">
+                  <span>{tut.views.toLocaleString()} vues</span>
+                  <span className="inline-flex items-center gap-1 font-semibold text-[#2B7FFF]">
+                    Lire <ChevronRight className="h-3 w-3" />
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      </main>
+
+      {/* Video Modal Player */}
+      {activeVideo && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="w-full max-w-2xl bg-[#111827] border border-[#1F2937] rounded-2xl overflow-hidden shadow-2xl">
+            <div className="flex items-center justify-between p-4 border-b border-[#1F2937]">
+              <div className="flex items-center gap-2">
+                <Play className="h-4 w-4 text-[#2B7FFF]" />
+                <h3 className="text-xs font-bold text-white truncate max-w-md">
+                  {activeVideo.title}
+                </h3>
               </div>
               <button
-                onClick={() => setSelectedTutorial(null)}
-                className="absolute top-3 right-3 rounded-lg bg-black/30 backdrop-blur-sm p-1.5 hover:bg-black/50"
+                onClick={() => setActiveVideo(null)}
+                className="p-1 rounded-lg text-gray-400 hover:text-white hover:bg-[#1F2937]"
               >
-                <span className="sr-only">Fermer</span>
-                <svg className="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                <X className="h-4 w-4" />
               </button>
             </div>
 
-            <div className="p-5 space-y-5">
-              {/* Title */}
+            {/* Video Simulation Canvas */}
+            <div className="aspect-video bg-black flex flex-col items-center justify-center p-6 text-center space-y-3 relative">
+              <div className="h-16 w-16 rounded-full bg-[#2B7FFF]/20 border border-[#2B7FFF]/40 flex items-center justify-center text-[#2B7FFF]">
+                <Film className="h-8 w-8" />
+              </div>
               <div>
-                <div className="flex items-center gap-2 mb-2">
-                  <span className={`inline-flex items-center rounded-lg ${levelConfig[selectedTutorial.level].bg} px-2 py-0.5 text-xs font-medium ${levelConfig[selectedTutorial.level].color}`}>
-                    {levelConfig[selectedTutorial.level].label}
-                  </span>
-                  <span className="text-xs text-gray-400">{selectedTutorial.steps} étapes · {selectedTutorial.views.toLocaleString("fr-FR")} vues</span>
-                </div>
-                <h2 className="text-lg font-bold text-[#0B1E4D]">{selectedTutorial.title}</h2>
-                <p className="text-sm text-gray-500 mt-1">{selectedTutorial.description}</p>
+                <p className="text-sm font-bold text-white">Lecture : {activeVideo.title}</p>
+                <p className="text-xs text-gray-400 mt-1">Durée : {activeVideo.duration} · Voix explicative en français</p>
               </div>
+              <div className="w-full max-w-xs bg-gray-800 rounded-full h-1.5 overflow-hidden">
+                <div className="bg-[#2B7FFF] h-full w-1/3 animate-pulse" />
+              </div>
+            </div>
 
-              {/* Steps */}
-              <div>
-                <h3 className="text-sm font-semibold text-[#0B1E4D] mb-3">Étapes du tutoriel</h3>
-                <div className="space-y-2">
-                  {Array.from({ length: selectedTutorial.steps }, (_, i) => {
-                    const stepTitles: Record<string, string[]> = {
-                      T01: ["Prérequis matériel", "Connexion au routeur", "Accès à Winbox/WebFig", "Configuration de l'API", "Ajout dans FLUXIONWIFI", "Test de connexion"],
-                      T02: ["Accéder aux tickets", "Configurer les tarifs", "Générer un lot de tickets", "Tester la connexion client"],
-                      T03: ["Ouvrir le Studio", "Choisir un modèle", "Personnaliser les couleurs", "Ajouter votre logo", "Modifier les textes", "Configurer la connexion", "Ajouter une publicité", "Publier le portail"],
-                    };
-                    const titles = stepTitles[selectedTutorial.id];
-                    const title = titles ? titles[i] : `Étape ${i + 1}`;
-                    const done = selectedTutorial.completed || (i < 2 && !selectedTutorial.completed);
-                    return (
-                      <div key={i} className={`flex items-center gap-3 rounded-xl p-3 ${done ? "bg-emerald-50/50" : "bg-[#F5F7FA]"}`}>
-                        <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${
-                          done ? "bg-emerald-500 text-white" : "bg-white border border-[#E8ECF1] text-gray-400"
-                        }`}>
-                          {done ? <CheckCircle className="h-4 w-4" /> : i + 1}
-                        </div>
-                        <span className={`text-sm ${done ? "text-emerald-700 font-medium" : "text-gray-600"}`}>{title}</span>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Actions */}
-              <div className="flex gap-3">
-                <button
-                  onClick={() => setSelectedTutorial(null)}
-                  className="flex-1 rounded-xl border border-[#E8ECF1] py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
-                >
-                  Fermer
-                </button>
-                <button className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-[#2B7FFF] py-2.5 text-sm font-medium text-white hover:bg-[#2563EB] transition-colors">
-                  <Play className="h-4 w-4" />
-                  {selectedTutorial.completed ? "Revoir" : "Commencer"}
-                </button>
-              </div>
+            <div className="p-4 bg-[#0F172A] flex items-center justify-between text-xs text-gray-300">
+              <p>{activeVideo.description}</p>
+              <button
+                onClick={() => setActiveVideo(null)}
+                className="px-3 py-1.5 rounded-lg bg-[#1F2937] hover:bg-[#374151] text-white text-xs font-medium"
+              >
+                Fermer
+              </button>
             </div>
           </div>
         </div>

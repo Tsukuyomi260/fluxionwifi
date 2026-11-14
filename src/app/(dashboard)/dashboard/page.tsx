@@ -34,8 +34,8 @@ import {
 const navTabs = [
   { name: "Facturation", href: "/finance/billing", icon: Receipt },
   { name: "Portail Captif", href: "/portal", icon: Globe },
-  { name: "Télécharger", href: "#", icon: Download },
-  { name: "Gestion Données", href: "#", icon: Database },
+  { name: "Télécharger", href: "/downloads", icon: Download },
+  { name: "Gestion Données", href: "/data", icon: Database },
   { name: "Comptes Associés", href: "/sellers", icon: UsersRound },
   { name: "Journal", href: "/finance/balance", icon: BookText },
 ];
