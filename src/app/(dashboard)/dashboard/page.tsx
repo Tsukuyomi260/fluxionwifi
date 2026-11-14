@@ -230,6 +230,27 @@ export default function DashboardPage() {
 
   return (
     <div className="-m-4 lg:-m-6 min-h-full bg-gradient-to-b from-[#0F1E36] via-[#13223D] to-[#0B1526] p-4 lg:p-6 text-white">
+      {/* Styles autonomes pour l'animation ticker fluide */}
+      <style
+        dangerouslySetInnerHTML={{
+          __html: `
+            @keyframes fluxionTickerScroll {
+              0% { transform: translate3d(0, 0, 0); }
+              100% { transform: translate3d(-50%, 0, 0); }
+            }
+            .fluxion-ticker-track {
+              display: flex !important;
+              width: max-content !important;
+              white-space: nowrap !important;
+              will-change: transform;
+              animation: fluxionTickerScroll 20s linear infinite !important;
+            }
+            .fluxion-ticker-track:hover {
+              animation-play-state: paused !important;
+            }
+          `,
+        }}
+      />
       {/* 1. Bande Navigation Tabs : satinée, lisible et harmonisée */}
       <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none mb-4 bg-white/[0.08] backdrop-blur-md border border-white/10 rounded-2xl p-1.5 shadow-sm">
         {navTabs.map((tab) => (
@@ -263,8 +284,10 @@ export default function DashboardPage() {
           </div>
 
           {/* Centre DÉFILANT (Marquee ticker en boucle continue) */}
-          <div className="relative flex-1 overflow-hidden mx-2 mask-radial">
-            <div className="animate-marquee flex items-center gap-8 py-0.5">
+          <div className="relative flex-1 min-w-0 overflow-hidden mx-2 sm:mx-4">
+            <div className="pointer-events-none absolute inset-y-0 left-0 w-6 bg-gradient-to-r from-[#06241D] to-transparent z-10" />
+            <div className="pointer-events-none absolute inset-y-0 right-0 w-6 bg-gradient-to-l from-[#06241D] to-transparent z-10" />
+            <div className="fluxion-ticker-track flex items-center gap-8 py-0.5">
               {/* Premier set */}
               {affiliationTicker.map((item, idx) => (
                 <div key={`aff-1-${idx}`} className="flex items-center gap-2 shrink-0 text-xs">
@@ -407,8 +430,10 @@ export default function DashboardPage() {
           </div>
 
           {/* Centre DÉFILANT (Marquee ticker en boucle continue) */}
-          <div className="relative flex-1 overflow-hidden mx-2 mask-radial">
-            <div className="animate-marquee flex items-center gap-8 py-0.5">
+          <div className="relative flex-1 min-w-0 overflow-hidden mx-2 sm:mx-4">
+            <div className="pointer-events-none absolute inset-y-0 left-0 w-6 bg-gradient-to-r from-[#241508] to-transparent z-10" />
+            <div className="pointer-events-none absolute inset-y-0 right-0 w-6 bg-gradient-to-l from-[#241508] to-transparent z-10" />
+            <div className="fluxion-ticker-track flex items-center gap-8 py-0.5">
               {/* Premier set */}
               {sellersTicker.map((item, idx) => (
                 <div key={`sel-1-${idx}`} className="flex items-center gap-2 shrink-0 text-xs">
