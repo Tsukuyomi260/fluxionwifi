@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { useCurrency } from "@/hooks/use-currency";
 import { useTickets } from "@/hooks/use-tickets";
@@ -26,11 +27,24 @@ import {
   Database,
   UsersRound,
   BookText,
-  Gift,
   ChevronDown,
   TrendingUp,
   Sparkles,
+  ArrowRight,
+  Handshake,
+  Store,
+  Coins,
+  Percent,
+  Wifi,
+  ArrowLeftRight,
+  MessageSquare,
+  CreditCard,
+  Calendar,
+  Key,
+  Flame,
+  CheckCircle2,
 } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 const navTabs = [
   { name: "Facturation", href: "/finance/billing", icon: Receipt },
@@ -61,6 +75,9 @@ export default function DashboardPage() {
   const { activeSessions, loading: sl } = useSessions();
   const { sellers, loading: sel } = useSellers();
   const { balance, loading: bl } = useTransactions();
+
+  const [affiliationExpanded, setAffiliationExpanded] = useState(false);
+  const [sellersExpanded, setSellersExpanded] = useState(false);
 
   const anyLoading = tl || rl || sl || sel || bl;
 
@@ -189,6 +206,28 @@ export default function DashboardPage() {
     },
   ];
 
+  /* Items défilants pour l'Affiliation */
+  const affiliationTicker = [
+    { icon: Users, label: "2 filleul(s)", color: "text-emerald-400" },
+    { icon: Coins, label: `Gains: 0 ${currency}`, color: "text-emerald-300" },
+    { icon: Percent, label: "10% commission", color: "text-emerald-400" },
+    { icon: Wifi, label: "Portails", color: "text-slate-300" },
+    { icon: ArrowLeftRight, label: "Transferts solde", color: "text-slate-300" },
+    { icon: MessageSquare, label: "SMS OTP", color: "text-slate-300" },
+    { icon: CreditCard, label: "Recharges crédits", color: "text-slate-300" },
+    { icon: Calendar, label: "Abonnements", color: "text-slate-300" },
+  ];
+
+  /* Items défilants pour les Ventes Partenaires */
+  const sellersTicker = [
+    { icon: Store, label: "Boutiques, cabines, kiosques", color: "text-amber-300" },
+    { icon: Ticket, label: `Stock confié : ${totalSellersStock} tickets`, color: "text-amber-400" },
+    { icon: Users, label: `${activeSellers} revendeur${activeSellers > 1 ? "s" : ""} actif${activeSellers > 1 ? "s" : ""}`, color: "text-orange-300" },
+    { icon: Flame, label: "Encaissement direct Mobile Money", color: "text-amber-300" },
+    { icon: Percent, label: "Marges personnalisées", color: "text-orange-400" },
+    { icon: Printer, label: "Impression rapide", color: "text-slate-300" },
+  ];
+
   return (
     <div className="-m-4 lg:-m-6 min-h-full bg-gradient-to-b from-[#0F1E36] via-[#13223D] to-[#0B1526] p-4 lg:p-6 text-white">
       {/* 1. Bande Navigation Tabs : satinée, lisible et harmonisée */}
@@ -205,45 +244,292 @@ export default function DashboardPage() {
         ))}
       </div>
 
-      {/* 2. Bande Affiliation : Dégradé émeraude riche et raffiné */}
-      <Link
-        href="/affiliation"
-        className="flex items-center gap-3 mb-3 rounded-2xl bg-gradient-to-r from-[#047857] via-[#059669] to-[#10B981] border border-emerald-400/30 px-5 py-3 text-white shadow-md hover:shadow-lg hover:brightness-105 transition-all overflow-x-auto scrollbar-none"
-      >
-        <div className="h-8 w-8 rounded-lg bg-white/20 flex items-center justify-center shrink-0">
-          <Gift className="h-4 w-4" />
-        </div>
-        <span className="text-sm font-bold shrink-0">Affiliation</span>
-        <span className="shrink-0 rounded-full bg-white/20 border border-white/30 px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wider">
-          Gagnez
-        </span>
-        <span className="text-xs text-emerald-100 shrink-0 font-medium">Gains : 0 {currency}</span>
-        <span className="text-xs text-emerald-200/90 shrink-0">✂ 10% commission</span>
-        <div className="ml-auto shrink-0 pl-2">
-          <ChevronDown className="h-4 w-4 text-white/70" />
-        </div>
-      </Link>
+      {/* 2. Bande Déroulante / Animée : AFFILIATION */}
+      <div className="mb-3 rounded-2xl bg-[#06241D] border border-emerald-500/30 text-white shadow-lg overflow-hidden transition-all duration-300">
+        {/* En-tête cliquable avec Marquee animé */}
+        <div
+          onClick={() => setAffiliationExpanded(!affiliationExpanded)}
+          className="flex items-center gap-3 px-4 sm:px-5 py-3 cursor-pointer select-none hover:bg-white/[0.03] transition-colors"
+        >
+          {/* Côté Gauche FIXE */}
+          <div className="flex items-center gap-2.5 shrink-0">
+            <div className="h-8 w-8 rounded-xl bg-emerald-500/20 border border-emerald-400/30 flex items-center justify-center text-emerald-400 shadow-xs">
+              <Handshake className="h-4 w-4" />
+            </div>
+            <span className="text-sm font-bold text-white tracking-tight">Affiliation</span>
+            <span className="rounded-md bg-[#EF4444] px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wider text-white shadow-xs">
+              GAGNEZ
+            </span>
+          </div>
 
-      {/* 3. Bande Ventes partenaires : Dégradé ambre/or chaleureux et satiné */}
-      <Link
-        href="/sellers"
-        className="flex items-center gap-3 mb-6 rounded-2xl bg-gradient-to-r from-[#C2410C] via-[#EA580C] to-[#F59E0B] border border-amber-400/30 px-5 py-3 text-white shadow-md hover:shadow-lg hover:brightness-105 transition-all overflow-x-auto scrollbar-none"
-      >
-        <div className="h-8 w-8 rounded-lg bg-white/20 flex items-center justify-center shrink-0">
-          <TrendingUp className="h-4 w-4" />
-        </div>
-        <span className="text-sm font-bold shrink-0">Ventes partenaires</span>
-        <span className="shrink-0 rounded-full bg-white/20 border border-white/30 px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wider">
-          Vendez plus
-        </span>
-        <span className="text-xs text-amber-100 shrink-0 font-medium">Boutiques, cabines, kiosques</span>
-        <span className="text-xs text-amber-200/90 shrink-0">Stock confié à chaque revendeur</span>
-        <div className="ml-auto shrink-0 pl-2">
-          <ChevronDown className="h-4 w-4 text-white/70" />
-        </div>
-      </Link>
+          {/* Centre DÉFILANT (Marquee ticker en boucle continue) */}
+          <div className="relative flex-1 overflow-hidden mx-2 mask-radial">
+            <div className="animate-marquee flex items-center gap-8 py-0.5">
+              {/* Premier set */}
+              {affiliationTicker.map((item, idx) => (
+                <div key={`aff-1-${idx}`} className="flex items-center gap-2 shrink-0 text-xs">
+                  <item.icon className={cn("h-3.5 w-3.5", item.color)} />
+                  <span className={item.color}>{item.label}</span>
+                  <span className="text-emerald-500/40 text-[10px] ml-2">●</span>
+                </div>
+              ))}
+              {/* Deuxième set pour la boucle continue sans coupure */}
+              {affiliationTicker.map((item, idx) => (
+                <div key={`aff-2-${idx}`} className="flex items-center gap-2 shrink-0 text-xs">
+                  <item.icon className={cn("h-3.5 w-3.5", item.color)} />
+                  <span className={item.color}>{item.label}</span>
+                  <span className="text-emerald-500/40 text-[10px] ml-2">●</span>
+                </div>
+              ))}
+            </div>
+          </div>
 
-      {/* Grille des Cartes : Cartes blanches lumineuses qui contrastent fortement avec le fond nuit */}
+          {/* Côté Droit FIXE : Bouton Chevron animé */}
+          <div className="shrink-0 pl-1">
+            <div className="h-7 w-7 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center transition-all">
+              <ChevronDown
+                className={cn(
+                  "h-4 w-4 text-emerald-400 transition-transform duration-300",
+                  affiliationExpanded && "rotate-180"
+                )}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Corps déroulé (Accordéon comme sur la capture) */}
+        {affiliationExpanded && (
+          <div className="px-4 sm:px-6 pb-6 pt-2 border-t border-emerald-500/20 bg-black/20 animate-in fade-in slide-in-from-top-2 duration-200">
+            {/* 3 Cartes de métriques */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
+              <div className="rounded-xl bg-white/[0.04] border border-emerald-500/20 p-4 text-center">
+                <p className="text-2xl font-black text-emerald-400">2</p>
+                <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mt-0.5">
+                  FILLEUL(S)
+                </p>
+              </div>
+              <div className="rounded-xl bg-white/[0.04] border border-emerald-500/20 p-4 text-center">
+                <p className="text-2xl font-black text-emerald-400">0 {currency}</p>
+                <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mt-0.5">
+                  GAINS TOTAUX
+                </p>
+              </div>
+              <div className="rounded-xl bg-white/[0.04] border border-emerald-500/20 p-4 text-center">
+                <p className="text-2xl font-black text-emerald-400">10%</p>
+                <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mt-0.5">
+                  COMMISSION
+                </p>
+              </div>
+            </div>
+
+            {/* Badges horizontaux */}
+            <div className="flex flex-wrap items-center justify-center gap-2 mb-4">
+              {[
+                { label: "Recharges crédits", icon: CreditCard },
+                { label: "Abonnements", icon: Calendar },
+                { label: "Achats portails", icon: Wifi },
+                { label: "Transferts solde", icon: ArrowLeftRight },
+                { label: "Frais d'intégration", icon: Key },
+                { label: "Recharges SMS OTP", icon: MessageSquare },
+              ].map((pill) => (
+                <span
+                  key={pill.label}
+                  className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 px-3 py-1 text-xs text-emerald-300"
+                >
+                  <pill.icon className="h-3 w-3 text-emerald-400" />
+                  {pill.label}
+                </span>
+              ))}
+            </div>
+
+            {/* Explication */}
+            <p className="text-center text-xs text-slate-300 max-w-2xl mx-auto mb-4 leading-relaxed">
+              Partagez votre lien unique. Pour chaque inscription via votre lien, vous gagnez une commission sur{" "}
+              <strong className="text-emerald-400">toutes les activités</strong> de vos filleuls.
+            </p>
+
+            {/* Bouton CTA vert émeraude éclatant */}
+            <div className="max-w-md mx-auto mb-6">
+              <Link
+                href="/affiliation"
+                className="flex items-center justify-center gap-2 w-full h-11 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-400 text-white font-bold text-sm shadow-md hover:brightness-110 active:scale-95 transition-all"
+              >
+                <span>🔗 Ouvrir mon espace affiliation</span>
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+            </div>
+
+            {/* Section Découvrir aussi */}
+            <div className="pt-4 border-t border-white/10 text-center">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">
+                DÉCOUVRIR AUSSI
+              </p>
+              <div className="flex flex-wrap items-center justify-center gap-1.5">
+                {[
+                  { name: "Ventes partenaires", href: "/sellers" },
+                  { name: "VPN accès distant", href: "/vpn" },
+                  { name: "Santé du réseau", href: "/console/sessions" },
+                  { name: "Interopérabilité", href: "/interop" },
+                  { name: "Licence entreprise", href: "/finance/billing" },
+                  { name: "Ticket d'assistance", href: "/support" },
+                  { name: "Studio Visibilité", href: "/studio" },
+                ].map((item) => (
+                  <Link
+                    key={item.name}
+                    href={item.href}
+                    className="px-3 py-1 rounded-full bg-white/[0.05] hover:bg-white/15 text-[11px] text-slate-300 hover:text-white transition-colors"
+                  >
+                    {item.name}
+                  </Link>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* 3. Bande Déroulante / Animée : VENTES PARTENAIRES */}
+      <div className="mb-6 rounded-2xl bg-[#241508] border border-amber-500/30 text-white shadow-lg overflow-hidden transition-all duration-300">
+        {/* En-tête cliquable avec Marquee animé */}
+        <div
+          onClick={() => setSellersExpanded(!sellersExpanded)}
+          className="flex items-center gap-3 px-4 sm:px-5 py-3 cursor-pointer select-none hover:bg-white/[0.03] transition-colors"
+        >
+          {/* Côté Gauche FIXE */}
+          <div className="flex items-center gap-2.5 shrink-0">
+            <div className="h-8 w-8 rounded-xl bg-amber-500/20 border border-amber-400/30 flex items-center justify-center text-amber-400 shadow-xs">
+              <TrendingUp className="h-4 w-4" />
+            </div>
+            <span className="text-sm font-bold text-white tracking-tight">Ventes partenaires</span>
+            <span className="rounded-md bg-[#EA580C] px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wider text-white shadow-xs">
+              VENDEZ PLUS
+            </span>
+          </div>
+
+          {/* Centre DÉFILANT (Marquee ticker en boucle continue) */}
+          <div className="relative flex-1 overflow-hidden mx-2 mask-radial">
+            <div className="animate-marquee flex items-center gap-8 py-0.5">
+              {/* Premier set */}
+              {sellersTicker.map((item, idx) => (
+                <div key={`sel-1-${idx}`} className="flex items-center gap-2 shrink-0 text-xs">
+                  <item.icon className={cn("h-3.5 w-3.5", item.color)} />
+                  <span className={item.color}>{item.label}</span>
+                  <span className="text-amber-500/40 text-[10px] ml-2">●</span>
+                </div>
+              ))}
+              {/* Deuxième set pour la boucle continue */}
+              {sellersTicker.map((item, idx) => (
+                <div key={`sel-2-${idx}`} className="flex items-center gap-2 shrink-0 text-xs">
+                  <item.icon className={cn("h-3.5 w-3.5", item.color)} />
+                  <span className={item.color}>{item.label}</span>
+                  <span className="text-amber-500/40 text-[10px] ml-2">●</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Côté Droit FIXE : Bouton Chevron animé */}
+          <div className="shrink-0 pl-1">
+            <div className="h-7 w-7 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center transition-all">
+              <ChevronDown
+                className={cn(
+                  "h-4 w-4 text-amber-400 transition-transform duration-300",
+                  sellersExpanded && "rotate-180"
+                )}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Corps déroulé (Accordéon Vendeurs) */}
+        {sellersExpanded && (
+          <div className="px-4 sm:px-6 pb-6 pt-2 border-t border-amber-500/20 bg-black/20 animate-in fade-in slide-in-from-top-2 duration-200">
+            {/* 3 Cartes de métriques */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
+              <div className="rounded-xl bg-white/[0.04] border border-amber-500/20 p-4 text-center">
+                <p className="text-2xl font-black text-amber-400">{activeSellers}</p>
+                <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mt-0.5">
+                  VENDEUR(S) ACTIF(S)
+                </p>
+              </div>
+              <div className="rounded-xl bg-white/[0.04] border border-amber-500/20 p-4 text-center">
+                <p className="text-2xl font-black text-amber-400">{totalSellersStock}</p>
+                <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mt-0.5">
+                  TICKETS CONFIÉS
+                </p>
+              </div>
+              <div className="rounded-xl bg-white/[0.04] border border-amber-500/20 p-4 text-center">
+                <p className="text-2xl font-black text-amber-400">100%</p>
+                <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mt-0.5">
+                  GESTION AUTONOME
+                </p>
+              </div>
+            </div>
+
+            {/* Badges horizontaux */}
+            <div className="flex flex-wrap items-center justify-center gap-2 mb-4">
+              {[
+                { label: "Boutiques relais", icon: Store },
+                { label: "Attribution de stock", icon: Ticket },
+                { label: "Commissions sur marge", icon: Percent },
+                { label: "Encaissement Mobile Money", icon: Wallet },
+                { label: "Rapports journaliers", icon: Receipt },
+                { label: "Impression rapide", icon: Printer },
+              ].map((pill) => (
+                <span
+                  key={pill.label}
+                  className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/10 border border-amber-500/20 px-3 py-1 text-xs text-amber-300"
+                >
+                  <pill.icon className="h-3 w-3 text-amber-400" />
+                  {pill.label}
+                </span>
+              ))}
+            </div>
+
+            {/* Explication */}
+            <p className="text-center text-xs text-slate-300 max-w-2xl mx-auto mb-4 leading-relaxed">
+              Multipliez vos ventes en confiant des stocks de tickets WiFi à des boutiques, kiosques et gérants de cabines. Chaque vendeur encaisse directement et reverse vos gains.
+            </p>
+
+            {/* Bouton CTA orange éclatant */}
+            <div className="max-w-md mx-auto mb-6">
+              <Link
+                href="/sellers"
+                className="flex items-center justify-center gap-2 w-full h-11 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-white font-bold text-sm shadow-md hover:brightness-110 active:scale-95 transition-all"
+              >
+                <span>🏪 Gérer mes vendeurs & partenaires</span>
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+            </div>
+
+            {/* Section Découvrir aussi */}
+            <div className="pt-4 border-t border-white/10 text-center">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">
+                RACCOURCIS RAPIDES
+              </p>
+              <div className="flex flex-wrap items-center justify-center gap-1.5">
+                {[
+                  { name: "Impression rapide", href: "/console/print" },
+                  { name: "Stock & Utilisateurs", href: "/console/stock" },
+                  { name: "Console Hotspot", href: "/console" },
+                  { name: "Mon Solde", href: "/finance/balance" },
+                  { name: "Sessions & Conso", href: "/console/sessions" },
+                ].map((item) => (
+                  <Link
+                    key={item.name}
+                    href={item.href}
+                    className="px-3 py-1 rounded-full bg-white/[0.05] hover:bg-white/15 text-[11px] text-slate-300 hover:text-white transition-colors"
+                  >
+                    {item.name}
+                  </Link>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Grille des Cartes Blanches Contrastées */}
       <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {cards.map((card) => (
           <Link
