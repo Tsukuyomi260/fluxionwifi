@@ -16,6 +16,8 @@ import {
 } from "lucide-react";
 import { AnimatedSteps } from "@/components/marketing/animated-steps";
 import { ScrollReveal } from "@/components/marketing/scroll-reveal";
+import { Navbar } from "@/components/layout/navbar";
+import { ScrollProgressBar } from "@/components/layout/scroll-progress-bar";
 
 const features = [
   {
@@ -99,31 +101,9 @@ const pricing = [
 export default function LandingPage() {
   return (
     <div className="min-h-screen bg-white scroll-smooth">
-      {/* Navigation */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-md border-b border-[#E8ECF1]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex h-16 items-center justify-between">
-            <div className="flex items-center gap-2">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/logo.svg" alt="FLUXIONWIFI" width={32} height={32} className="rounded-lg sm:rounded-xl sm:w-9 sm:h-9" />
-              <span className="text-base sm:text-lg font-bold text-[#0B1E4D]">FLUXIONWIFI</span>
-            </div>
-            <div className="hidden md:flex items-center gap-8">
-              <a href="#features" className="text-sm text-[#6B7280] hover:text-[#1A1D26] transition-colors">Fonctionnalités</a>
-              <a href="#how-it-works" className="text-sm text-[#6B7280] hover:text-[#1A1D26] transition-colors">Comment ça marche</a>
-              <a href="#pricing" className="text-sm text-[#6B7280] hover:text-[#1A1D26] transition-colors">Tarifs</a>
-            </div>
-            <div className="flex items-center gap-2 sm:gap-3">
-              <Link href="/login" className="hidden sm:inline text-sm font-medium text-[#374151] hover:text-[#1A1D26] transition-colors">
-                Se connecter
-              </Link>
-              <Link href="/register" className="inline-flex h-9 items-center rounded-xl bg-[#2B7FFF] px-4 text-sm font-medium text-white hover:bg-[#1A6BE6] transition-colors shadow-sm">
-                Commencer
-              </Link>
-            </div>
-          </div>
-        </div>
-      </nav>
+      {/* Scroll Progress Bar & Floating Morphing Navbar */}
+      <ScrollProgressBar />
+      <Navbar />
 
       {/* Hero */}
       <section className="pt-28 pb-20 px-4 sm:px-6 lg:px-8">
