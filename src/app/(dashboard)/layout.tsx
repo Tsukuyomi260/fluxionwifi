@@ -13,7 +13,7 @@ export default function DashboardLayout({
     <div className="flex h-screen flex-col overflow-hidden bg-[#F5F7FA]">
       <ScrollProgressBar />
       <Header onMenuToggle={() => {}} />
-      <main className="flex-1 overflow-y-auto p-4 lg:p-6 pb-20 lg:pb-6">
+      <main className="flex-1 overflow-y-auto px-4 lg:px-6 pt-20 pb-20 lg:pb-8 scroll-smooth">
         {children}
       </main>
       <MobileNav />
