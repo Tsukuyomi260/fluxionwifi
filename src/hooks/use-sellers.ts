@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useUser } from "./use-user";
 import type { Seller, SellerStatus, StockAssignment } from "@/lib/supabase/types";
@@ -10,48 +10,78 @@ export function useSellers() {
   const [sellers, setSellers] = useState<Seller[]>([]);
   const [assignments, setAssignments] = useState<StockAssignment[]>([]);
   const [loading, setLoading] = useState(true);
+  const isFetchingRef = useRef(false);
 
   const fetch = useCallback(async () => {
-    if (!user) { setLoading(false); return; }
+    if (!user) {
+      setLoading(false);
+      return;
+    }
+
+    if (isFetchingRef.current) return;
+    isFetchingRef.current = true;
     setLoading(true);
-    const supabase = createClient();
 
-    const [sellersRes, assignRes] = await Promise.all([
-      supabase
-        .from("sellers")
-        .select("*")
-        .order("created_at", { ascending: false }),
-      supabase
-        .from("stock_assignments")
-        .select("*, seller:sellers(id, name), profile:ticket_profiles(id, name, color)")
-        .order("created_at", { ascending: false })
-        .limit(20),
-    ]);
+    try {
+      const supabase = createClient();
+      const [sellersRes, assignRes] = await Promise.all([
+        supabase
+          .from("sellers")
+          .select("*")
+          .order("created_at", { ascending: false }),
+        supabase
+          .from("stock_assignments")
+          .select("*, seller:sellers(id, name), profile:ticket_profiles(id, name, color)")
+          .order("created_at", { ascending: false })
+          .limit(20),
+      ]);
 
-    setSellers((sellersRes.data as Seller[]) || []);
-    setAssignments((assignRes.data as StockAssignment[]) || []);
-    setLoading(false);
+      setSellers((sellersRes.data as Seller[]) || []);
+      setAssignments((assignRes.data as StockAssignment[]) || []);
+    } catch (err) {
+      console.warn("[Sellers] Service notice:", err);
+      setSellers([]);
+      setAssignments([]);
+    } finally {
+      setLoading(false);
+      isFetchingRef.current = false;
+    }
   }, [user]);
 
-  useEffect(() => { fetch(); }, [fetch]);
+  useEffect(() => {
+    fetch();
+  }, [fetch]);
 
-  const addSeller = async (values: { name: string; phone: string; location: string; commission_rate: number }) => {
+  const addSeller = async (values: {
+    name: string;
+    phone: string;
+    location: string;
+    commission_rate: number;
+  }) => {
     if (!user) return { error: "Not authenticated" };
-    const supabase = createClient();
-    const { data, error } = await supabase
-      .from("sellers")
-      .insert({ ...values, owner_id: user.id })
-      .select()
-      .single();
-    if (!error && data) setSellers((prev) => [data as Seller, ...prev]);
-    return { data, error: error?.message || null };
+    try {
+      const supabase = createClient();
+      const { data, error } = await supabase
+        .from("sellers")
+        .insert({ ...values, owner_id: user.id })
+        .select()
+        .single();
+      if (!error && data) setSellers((prev) => [data as Seller, ...prev]);
+      return { data, error: error?.message || null };
+    } catch (err: any) {
+      return { data: null, error: err?.message || "Erreur d'ajout de vendeur" };
+    }
   };
 
   const updateSeller = async (id: string, values: Partial<Seller>) => {
-    const supabase = createClient();
-    const { error } = await supabase.from("sellers").update(values).eq("id", id);
-    if (!error) setSellers((prev) => prev.map((s) => s.id === id ? { ...s, ...values } : s));
-    return { error: error?.message || null };
+    try {
+      const supabase = createClient();
+      const { error } = await supabase.from("sellers").update(values).eq("id", id);
+      if (!error) setSellers((prev) => prev.map((s) => (s.id === id ? { ...s, ...values } : s)));
+      return { error: error?.message || null };
+    } catch (err: any) {
+      return { error: err?.message || "Erreur de mise à jour" };
+    }
   };
 
   const toggleStatus = async (id: string) => {
@@ -63,28 +93,44 @@ export function useSellers() {
 
   const assignStock = async (sellerId: string, profileId: string, quantity: number) => {
     if (!user) return { error: "Not authenticated" };
-    const supabase = createClient();
-    const { error } = await supabase
-      .from("stock_assignments")
-      .insert({
-        owner_id: user.id,
-        seller_id: sellerId,
-        profile_id: profileId,
-        quantity,
-        type: "assign",
-      });
-    if (!error) {
-      await supabase
-        .from("sellers")
-        .update({
-          stock_remaining: (sellers.find((s) => s.id === sellerId)?.stock_remaining || 0) + quantity,
-          total_assigned: (sellers.find((s) => s.id === sellerId)?.total_assigned || 0) + quantity,
-        })
-        .eq("id", sellerId);
-      fetch();
+    try {
+      const supabase = createClient();
+      const { error } = await supabase
+        .from("stock_assignments")
+        .insert({
+          owner_id: user.id,
+          seller_id: sellerId,
+          profile_id: profileId,
+          quantity,
+          type: "assign",
+        });
+
+      if (!error) {
+        await supabase
+          .from("sellers")
+          .update({
+            stock_remaining:
+              (sellers.find((s) => s.id === sellerId)?.stock_remaining || 0) + quantity,
+            total_assigned:
+              (sellers.find((s) => s.id === sellerId)?.total_assigned || 0) + quantity,
+          })
+          .eq("id", sellerId);
+        fetch();
+      }
+      return { error: error?.message || null };
+    } catch (err: any) {
+      return { error: err?.message || "Erreur d'assignation de stock" };
     }
-    return { error: error?.message || null };
   };
 
-  return { sellers, assignments, loading, addSeller, updateSeller, toggleStatus, assignStock, refetch: fetch };
+  return {
+    sellers,
+    assignments,
+    loading,
+    addSeller,
+    updateSeller,
+    toggleStatus,
+    assignStock,
+    refetch: fetch,
+  };
 }

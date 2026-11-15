@@ -51,7 +51,7 @@ const services = [
 
 export default function BalancePage() {
   const { currency, format } = useCurrency();
-  const { transactions, loading, balance, pendingBalance, totalRevenue, totalWithdrawn } = useTransactions();
+  const { transactions, loading, error, balance, pendingBalance, totalRevenue, totalWithdrawn } = useTransactions();
   const [withdrawAmount, setWithdrawAmount] = useState("1000");
   const [withdrawReason, setWithdrawReason] = useState("");
 
@@ -77,6 +77,26 @@ export default function BalancePage() {
           💰 Tableau de bord financier
         </h1>
         <div className="h-px bg-gradient-to-r from-transparent via-[#2B7FFF] to-transparent mt-4" />
+
+        {/* Alerte si Supabase est en pause / 503 */}
+        {error && (
+          <div className="mt-4 p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs flex flex-col sm:flex-row items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <span className="text-base">⚠️</span>
+              <span>
+                <strong>Base de données momentanément inaccessible :</strong> Votre projet Supabase est peut-être en pause. Rendez-vous sur votre console Supabase pour le réactiver (Resume).
+              </span>
+            </div>
+            <a
+              href="https://supabase.com/dashboard"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="px-3 py-1 rounded-lg bg-amber-500 text-black font-semibold text-xs shrink-0 hover:bg-amber-400 transition-colors"
+            >
+              Console Supabase ↗
+            </a>
+          </div>
+        )}
 
         {/* Currency badge */}
         <div className="flex justify-center mt-4">

@@ -2,31 +2,73 @@
 
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import type { User } from "@supabase/supabase-js";
+import type { User, AuthChangeEvent, Session } from "@supabase/supabase-js";
+
+let cachedUser: User | null = null;
+let isInitialFetched = false;
+const listeners = new Set<(u: User | null) => void>();
+
+function notifyListeners(user: User | null) {
+  cachedUser = user;
+  listeners.forEach((listener) => listener(user));
+}
+
+let authSubscriptionInitialized = false;
+
+function initAuth() {
+  if (typeof window === "undefined" || authSubscriptionInitialized) return;
+  authSubscriptionInitialized = true;
+
+  const supabase = createClient();
+
+  supabase.auth
+    .getUser()
+    .then((res: { data: { user: User | null }; error: any }) => {
+      isInitialFetched = true;
+      if (!res.error && res.data?.user) {
+        notifyListeners(res.data.user);
+      } else {
+        notifyListeners(null);
+      }
+    })
+    .catch(() => {
+      isInitialFetched = true;
+      notifyListeners(null);
+    });
+
+  supabase.auth.onAuthStateChange((_event: AuthChangeEvent, session: Session | null) => {
+    isInitialFetched = true;
+    notifyListeners(session?.user ?? null);
+  });
+}
 
 export function useUser() {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState<User | null>(cachedUser);
+  const [loading, setLoading] = useState(!isInitialFetched);
 
   useEffect(() => {
-    const supabase = createClient();
+    initAuth();
 
-    supabase.auth.getUser().then(({ data }) => {
-      setUser(data.user);
+    function handleChange(newUser: User | null) {
+      setUser(newUser);
       setLoading(false);
-    });
+    }
 
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
-    });
+    listeners.add(handleChange);
 
-    return () => subscription.unsubscribe();
+    if (isInitialFetched) {
+      setUser(cachedUser);
+      setLoading(false);
+    }
+
+    return () => {
+      listeners.delete(handleChange);
+    };
   }, []);
 
   const displayName =
     user?.user_metadata?.full_name ||
+    user?.user_metadata?.nom ||
     user?.email?.split("@")[0] ||
     "Utilisateur";
 

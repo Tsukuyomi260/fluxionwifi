@@ -66,7 +66,7 @@ export function Navbar() {
   useEffect(() => {
     const supabase = createClient();
 
-    supabase.auth.getUser().then(({ data }) => {
+    supabase.auth.getUser().then(({ data }: { data: { user: import("@supabase/supabase-js").User | null } }) => {
       setAuthUser(data.user ?? null);
       if (data.user) {
         const meta = data.user.user_metadata;
@@ -81,7 +81,7 @@ export function Navbar() {
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_, session) => {
+    } = supabase.auth.onAuthStateChange((_: string, session: import("@supabase/supabase-js").Session | null) => {
       setAuthUser(session?.user ?? null);
       if (session?.user) {
         const meta = session.user.user_metadata;
