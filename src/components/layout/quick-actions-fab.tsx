@@ -3,68 +3,60 @@
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import {
-  Zap,
   X,
-  Smartphone,
   MessageCircle,
-  HeadphonesIcon,
-  BookOpen,
-  Ticket,
-  Router,
-  Palette,
+  Smartphone,
+  Search,
+  UserPlus,
+  Wallet,
+  Clock,
+  Printer,
+  Bot,
 } from "lucide-react";
 
 interface QuickAction {
   label: string;
-  icon: typeof Zap;
-  color: string;
+  icon: typeof MessageCircle;
   bg: string;
   href?: string;
-  onClick?: () => void;
 }
 
 const actions: QuickAction[] = [
   {
+    label: "Messagerie revendeurs",
+    icon: MessageCircle,
+    bg: "bg-emerald-500",
+    href: "/sellers",
+  },
+  {
     label: "Application mobile",
     icon: Smartphone,
-    color: "text-[#2B7FFF]",
+    bg: "bg-orange-500",
+    href: "/downloads",
+  },
+  {
+    label: "Vérifier un ticket",
+    icon: Search,
     bg: "bg-[#2B7FFF]",
-    href: "/app",
+    href: "/console/stock",
   },
   {
-    label: "Ticket d'assistance",
-    icon: HeadphonesIcon,
-    color: "text-violet-600",
+    label: "Enregistrement clients",
+    icon: UserPlus,
+    bg: "bg-teal-500",
+    href: "/console/sessions",
+  },
+  {
+    label: "Historique des ventes",
+    icon: Clock,
+    bg: "bg-slate-600",
+    href: "/finance/billing",
+  },
+  {
+    label: "Imprimer",
+    icon: Printer,
     bg: "bg-violet-600",
-    href: "/support",
-  },
-  {
-    label: "Discussions & Support",
-    icon: MessageCircle,
-    color: "text-emerald-600",
-    bg: "bg-emerald-600",
-    href: "/support",
-  },
-  {
-    label: "Agent FLUXIONWIFI",
-    icon: Router,
-    color: "text-amber-600",
-    bg: "bg-amber-500",
-    href: "/interop",
-  },
-  {
-    label: "Studio portail",
-    icon: Palette,
-    color: "text-pink-600",
-    bg: "bg-pink-500",
-    href: "/studio",
-  },
-  {
-    label: "Tutoriels",
-    icon: BookOpen,
-    color: "text-cyan-600",
-    bg: "bg-cyan-500",
-    href: "/tutorials",
+    href: "/console/print",
   },
 ];
 
@@ -87,76 +79,65 @@ export function QuickActionsFab() {
 
   const handleAction = (action: QuickAction) => {
     setOpen(false);
-    if (action.href) {
-      router.push(action.href);
-    }
-    action.onClick?.();
+    if (action.href) router.push(action.href);
   };
 
   return (
-    <div ref={fabRef} className="fixed bottom-20 right-5 lg:bottom-8 lg:right-8 z-40">
-      {/* Action items */}
-      <div className="absolute bottom-16 right-0 flex flex-col-reverse items-end gap-3 mb-2">
+    <>
+      {/* FAB vertical stack */}
+      <div ref={fabRef} className="fixed bottom-20 right-4 lg:bottom-8 lg:right-6 z-40 flex flex-col items-end gap-2">
+        {/* Action items */}
         {actions.map((action, i) => (
           <button
             key={action.label}
             onClick={() => handleAction(action)}
-            className="flex items-center gap-2.5 origin-bottom-right"
+            className="flex items-center gap-2 origin-bottom-right"
             style={{
               opacity: open ? 1 : 0,
-              transform: open ? "scale(1) translateY(0)" : `scale(0.3) translateY(${(actions.length - i) * 8}px)`,
-              transition: `all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) ${open ? i * 0.06 : (actions.length - 1 - i) * 0.03}s`,
+              transform: open ? "scale(1) translateY(0)" : `scale(0.3) translateY(${(actions.length - i) * 6}px)`,
+              transition: `all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) ${open ? i * 0.05 : (actions.length - 1 - i) * 0.02}s`,
               pointerEvents: open ? "auto" : "none",
             }}
           >
-            {/* Label pill */}
-            <span className="rounded-lg bg-[#0B1E4D] px-3 py-1.5 text-xs font-medium text-white whitespace-nowrap shadow-lg">
+            <span className="rounded-lg bg-[#1A1D26] px-2.5 py-1 text-[11px] font-medium text-white whitespace-nowrap shadow-lg">
               {action.label}
             </span>
-            {/* Icon circle */}
-            <div className={`w-11 h-11 rounded-full ${action.bg} shadow-lg flex items-center justify-center hover:scale-110 transition-transform`}>
-              <action.icon className="h-5 w-5 text-white" />
+            <div className={`w-10 h-10 rounded-full ${action.bg} shadow-lg flex items-center justify-center hover:scale-110 transition-transform`}>
+              <action.icon className="h-4.5 w-4.5 text-white" />
             </div>
           </button>
         ))}
+
+        {/* Main toggle */}
+        <button
+          onClick={() => setOpen(!open)}
+          className="group relative w-12 h-12 rounded-full shadow-lg flex items-center justify-center transition-all duration-300 hover:shadow-xl"
+          style={{
+            background: open
+              ? "linear-gradient(135deg, #ef4444, #dc2626)"
+              : "linear-gradient(135deg, #2B7FFF, #0B1E4D)",
+          }}
+        >
+          {!open && (
+            <span className="absolute inset-0 rounded-full animate-ping bg-[#2B7FFF]/25" style={{ animationDuration: "2.5s" }} />
+          )}
+          <div
+            className="transition-transform duration-300"
+            style={{ transform: open ? "rotate(135deg)" : "rotate(0deg)" }}
+          >
+            {open ? <X className="h-5 w-5 text-white" /> : <Bot className="h-5 w-5 text-white" />}
+          </div>
+        </button>
       </div>
 
-      {/* Main FAB button */}
-      <button
-        onClick={() => setOpen(!open)}
-        className="group relative w-14 h-14 rounded-full shadow-lg flex items-center justify-center transition-all duration-300 hover:shadow-xl"
-        style={{
-          background: open
-            ? "linear-gradient(135deg, #ef4444, #dc2626)"
-            : "linear-gradient(135deg, #2B7FFF, #0B1E4D)",
-        }}
-      >
-        {/* Pulse ring */}
-        {!open && (
-          <span className="absolute inset-0 rounded-full animate-ping bg-[#2B7FFF]/30" style={{ animationDuration: "2s" }} />
-        )}
-
-        {/* Rotating icon */}
-        <div
-          className="transition-transform duration-300 ease-in-out"
-          style={{ transform: open ? "rotate(135deg)" : "rotate(0deg)" }}
-        >
-          {open ? (
-            <X className="h-6 w-6 text-white" />
-          ) : (
-            <Zap className="h-6 w-6 text-white" />
-          )}
-        </div>
-
-        {/* Label */}
-        {!open && (
-          <span
-            className="absolute right-[calc(100%+10px)] rounded-lg bg-[#0B1E4D] px-3 py-1.5 text-xs font-medium text-white whitespace-nowrap shadow-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"
-          >
-            Actions rapides
+      {/* "Une question ?" label */}
+      {!open && (
+        <div className="fixed bottom-[76px] right-[70px] lg:bottom-[28px] lg:right-[72px] z-40 pointer-events-none">
+          <span className="rounded-lg bg-[#1A1D26] px-2.5 py-1 text-[10px] font-medium text-white/80 whitespace-nowrap shadow">
+            Une question ?
           </span>
-        )}
-      </button>
-    </div>
+        </div>
+      )}
+    </>
   );
 }

@@ -3,6 +3,7 @@
 import { Header } from "@/components/layout/header";
 import { MobileNav } from "@/components/layout/mobile-nav";
 import { ScrollProgressBar } from "@/components/layout/scroll-progress-bar";
+import { QuickActionsFab } from "@/components/layout/quick-actions-fab";
 
 export default function DashboardLayout({
   children,
@@ -17,6 +18,7 @@ export default function DashboardLayout({
         {children}
       </main>
       <MobileNav />
+      <QuickActionsFab />
     </div>
   );
 }
