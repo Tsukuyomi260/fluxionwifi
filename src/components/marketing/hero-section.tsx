@@ -186,7 +186,7 @@ export function HeroSection() {
       <div className="mx-auto max-w-7xl">
         <div className="flex flex-col items-center gap-14 lg:flex-row lg:gap-16">
           {/* Text */}
-          <div className="flex-1 text-center lg:text-left">
+          <div className="flex-1 text-center">
             <motion.div
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
@@ -204,7 +204,7 @@ export function HeroSection() {
               className="text-4xl font-bold leading-[1.15] text-[#0B1E4D] sm:text-5xl xl:text-6xl"
             >
               Gérez vos zones WiFi.
-              <span className="mt-2 flex justify-center lg:justify-start">
+              <span className="mt-2 flex justify-center">
                 <RotatingText
                   texts={["Encaissez en Mobile Money", "Vendez vos tickets", "Supervisez à distance", "Connectez l'Afrique"]}
                   mainClassName="px-3 sm:px-4 bg-[#2B7FFF] text-white overflow-hidden py-1 sm:py-1.5 rounded-xl justify-center"
@@ -224,7 +224,7 @@ export function HeroSection() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.7, delay: 0.3, ease }}
-              className="mx-auto mt-6 max-w-xl text-lg leading-relaxed text-[#6B7280] lg:mx-0"
+              className="mx-auto mt-6 max-w-xl text-lg leading-relaxed text-[#6B7280]"
             >
               FLUXIONWIFI vous permet de monétiser vos hotspots MikroTik avec des tickets prépayés,
               des portails captifs personnalisés et le paiement Mobile Money intégré.
@@ -234,7 +234,7 @@ export function HeroSection() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.7, delay: 0.45, ease }}
-              className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row lg:justify-start"
+              className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row"
             >
               <Link
                 href="/register"
@@ -253,7 +253,7 @@ export function HeroSection() {
             </motion.div>
             <p className="mt-4 text-xs text-[#9CA3AF]">Gratuit · Aucune carte requise</p>
 
-            <div className="mt-10 grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <div className="mx-auto mt-10 grid max-w-md grid-cols-2 gap-3 sm:max-w-none sm:grid-cols-4">
               {chips.map((c, i) => (
                 <motion.div
                   key={c.label}
@@ -261,7 +261,7 @@ export function HeroSection() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5, delay: 0.7 + i * 0.1, ease }}
                   whileHover={{ y: -3 }}
-                  className="rounded-xl border border-[#E8ECF1] bg-white/80 px-3 py-2.5 text-left backdrop-blur"
+                  className="rounded-xl border border-[#E8ECF1] bg-white/80 px-3 py-2.5 text-center backdrop-blur"
                 >
                   <p className="text-sm font-semibold text-[#0B1E4D]">{c.label}</p>
                   <p className="text-[11px] text-[#6B7280]">{c.sub}</p>
