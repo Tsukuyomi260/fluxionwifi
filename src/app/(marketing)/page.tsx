@@ -1,103 +1,18 @@
-import Link from "next/link";
 import { getDefaultCountry } from "@/lib/currency";
-import {
-  Globe,
-  Ticket,
-  Wallet,
-  Shield,
-  Users,
-  Smartphone,
-  ArrowRight,
-  CheckCircle,
-  Star,
-} from "lucide-react";
 import { AnimatedSteps } from "@/components/marketing/animated-steps";
 import { ScrollReveal } from "@/components/marketing/scroll-reveal";
 import { HeroSection } from "@/components/marketing/hero-section";
 import { MarqueeStrip } from "@/components/marketing/marquee-strip";
 import { StatsCounter } from "@/components/marketing/stats-counter";
+import { FeaturesBento } from "@/components/marketing/features-bento";
+import { PricingSection } from "@/components/marketing/pricing-section";
+import { CtaCard } from "@/components/marketing/cta-card";
+import { SectionTitle } from "@/components/marketing/section-title";
 import { Footer7 } from "@/components/ui/footer-7";
 import { Navbar } from "@/components/layout/navbar";
 import { ScrollProgressBar } from "@/components/layout/scroll-progress-bar";
 
-const features = [
-  {
-    icon: Globe,
-    title: "Portail Captif",
-    description: "Pages de connexion WiFi personnalisées avec votre marque et vos couleurs.",
-  },
-  {
-    icon: Ticket,
-    title: "Tickets WiFi",
-    description: "Créez, générez et vendez des tickets avec codes uniques en quelques clics.",
-  },
-  {
-    icon: Wallet,
-    title: "Paiement Mobile Money",
-    description: "Acceptez les paiements via FedaPay, CinetPay et tous les opérateurs locaux.",
-  },
-  {
-    icon: Shield,
-    title: "VPN & Accès distant",
-    description: "Gérez vos routeurs à distance via WireGuard ou SSTP en toute sécurité.",
-  },
-  {
-    icon: Users,
-    title: "Gestion des vendeurs",
-    description: "Attribuez des stocks de tickets et suivez les performances de votre équipe.",
-  },
-  {
-    icon: Smartphone,
-    title: "100% Mobile",
-    description: "Interface optimisée pour smartphone. Gérez votre réseau depuis n'importe où.",
-  },
-];
-
 const cur = getDefaultCountry().currency.code;
-
-const pricing = [
-  {
-    name: "Starter",
-    price: "Gratuit",
-    period: "",
-    description: "Pour démarrer et tester la plateforme",
-    features: ["1 routeur", "100 tickets/mois", "1 portail captif", "Support email"],
-    cta: "Commencer gratuitement",
-    highlighted: false,
-  },
-  {
-    name: "Pro",
-    price: "15 000",
-    period: `${cur}/mois`,
-    description: "Pour les opérateurs WiFi actifs",
-    features: [
-      "5 routeurs",
-      "Tickets illimités",
-      "Portails personnalisés",
-      "VPN inclus",
-      "Gestion vendeurs",
-      "Support prioritaire",
-    ],
-    cta: "Essai gratuit 14 jours",
-    highlighted: true,
-  },
-  {
-    name: "Enterprise",
-    price: "Sur mesure",
-    period: "",
-    description: "Pour les grandes organisations",
-    features: [
-      "Routeurs illimités",
-      "API complète",
-      "Console RADIUS",
-      "Multi-sites",
-      "Account manager dédié",
-      "SLA garanti",
-    ],
-    cta: "Nous contacter",
-    highlighted: false,
-  },
-];
 
 export default function LandingPage() {
   return (
@@ -110,126 +25,59 @@ export default function LandingPage() {
       <MarqueeStrip />
 
       {/* Features */}
-      <section id="features" className="py-20 px-4 sm:px-6 lg:px-8 bg-[#F5F7FA]">
-        <div className="max-w-7xl mx-auto">
+      <section id="features" className="px-4 py-20 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-6xl">
           <ScrollReveal>
-            <div className="text-center mb-14">
-              <h2 className="text-3xl font-bold text-[#0B1E4D]">Tout ce dont vous avez besoin</h2>
-              <p className="mt-3 text-[#6B7280] max-w-xl mx-auto">
-                Une plateforme complète pour gérer, monétiser et superviser vos zones WiFi.
-              </p>
-            </div>
+            <SectionTitle
+              eyebrow="Fonctionnalités"
+              title="Tout ce dont vous avez"
+              accent="besoin"
+              subtitle="Une plateforme complète pour gérer, monétiser et superviser vos zones WiFi."
+            />
           </ScrollReveal>
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {features.map((feature, i) => (
-              <ScrollReveal key={feature.title} delay={0.1 + i * 0.1}>
-                <div className="rounded-2xl bg-white border border-[#E8ECF1] p-6 shadow-[0_1px_3px_rgba(0,0,0,0.04)] hover:shadow-md transition-shadow h-full">
-                  <div className="rounded-xl bg-[#EBF2FF] p-3 w-fit">
-                    <feature.icon className="h-6 w-6 text-[#2B7FFF]" />
-                  </div>
-                  <h3 className="mt-4 text-base font-semibold text-[#1A1D26]">{feature.title}</h3>
-                  <p className="mt-2 text-sm text-[#6B7280] leading-relaxed">{feature.description}</p>
-                </div>
-              </ScrollReveal>
-            ))}
-          </div>
+          <FeaturesBento />
         </div>
       </section>
 
       <StatsCounter />
 
       {/* How it works */}
-      <section id="how-it-works" className="py-20 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-5xl mx-auto">
+      <section id="how-it-works" className="px-4 py-20 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-5xl">
           <ScrollReveal>
-            <div className="text-center mb-14">
-              <h2 className="text-3xl font-bold text-[#0B1E4D]">Opérationnel en 4 étapes</h2>
-              <p className="mt-3 text-[#6B7280]">De l&apos;inscription à la première vente en moins de 10 minutes.</p>
-            </div>
+            <SectionTitle
+              eyebrow="Démarrage"
+              title="Opérationnel en"
+              accent="4 étapes"
+              subtitle="De l'inscription à la première vente en moins de 10 minutes."
+            />
           </ScrollReveal>
-          <AnimatedSteps />
-        </div>
-      </section>
-
-      {/* Pricing */}
-      <section id="pricing" className="py-20 px-4 sm:px-6 lg:px-8 bg-[#F5F7FA]">
-        <div className="max-w-6xl mx-auto">
-          <ScrollReveal>
-            <div className="text-center mb-14">
-              <h2 className="text-3xl font-bold text-[#0B1E4D]">Tarifs simples et transparents</h2>
-              <p className="mt-3 text-[#6B7280]">Commencez gratuitement, passez à Pro quand vous êtes prêt.</p>
-            </div>
-          </ScrollReveal>
-          <div className="grid gap-6 lg:grid-cols-3">
-            {pricing.map((plan, i) => (
-              <ScrollReveal key={plan.name} delay={0.15 * i}>
-                <div
-                  className={`rounded-2xl p-6 h-full ${
-                    plan.highlighted
-                      ? "bg-[#0B1E4D] text-white ring-2 ring-[#2B7FFF] shadow-xl scale-[1.02]"
-                      : "bg-white border border-[#E8ECF1] shadow-[0_1px_3px_rgba(0,0,0,0.04)]"
-                  }`}
-                >
-                  {plan.highlighted && (
-                    <div className="inline-flex items-center gap-1 rounded-full bg-[#2B7FFF] px-3 py-1 text-xs font-medium text-white mb-4">
-                      <Star className="h-3 w-3" /> Populaire
-                    </div>
-                  )}
-                  <h3 className={`text-lg font-semibold ${plan.highlighted ? "text-white" : "text-[#1A1D26]"}`}>
-                    {plan.name}
-                  </h3>
-                  <div className="mt-3 flex items-baseline gap-1">
-                    <span className={`text-3xl font-bold ${plan.highlighted ? "text-white" : "text-[#1A1D26]"}`}>
-                      {plan.price}
-                    </span>
-                    {plan.period && (
-                      <span className={`text-sm ${plan.highlighted ? "text-white/70" : "text-[#6B7280]"}`}>
-                        {plan.period}
-                      </span>
-                    )}
-                  </div>
-                  <p className={`mt-2 text-sm ${plan.highlighted ? "text-white/70" : "text-[#6B7280]"}`}>
-                    {plan.description}
-                  </p>
-                  <ul className="mt-6 space-y-3">
-                    {plan.features.map((f) => (
-                      <li key={f} className="flex items-center gap-2 text-sm">
-                        <CheckCircle className={`h-4 w-4 shrink-0 ${plan.highlighted ? "text-[#2B7FFF]" : "text-emerald-500"}`} />
-                        <span className={plan.highlighted ? "text-white/90" : "text-[#374151]"}>{f}</span>
-                      </li>
-                    ))}
-                  </ul>
-                  <Link
-                    href="/register"
-                    className={`mt-6 block text-center h-11 leading-[44px] rounded-xl text-sm font-medium transition-colors ${
-                      plan.highlighted
-                        ? "bg-[#2B7FFF] text-white hover:bg-[#1A6BE6]"
-                        : "border border-[#D1D5DB] text-[#374151] hover:bg-[#F5F7FA]"
-                    }`}
-                  >
-                    {plan.cta}
-                  </Link>
-                </div>
-              </ScrollReveal>
-            ))}
+          <div className="rounded-[14px] border border-[#E5E7EB] bg-[#F9FAFC] px-4 py-12 sm:px-8">
+            <AnimatedSteps />
           </div>
         </div>
       </section>
 
-      {/* CTA */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-3xl mx-auto text-center">
+      {/* Pricing */}
+      <section id="pricing" className="bg-[#F5F7FA] px-4 py-20 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-6xl">
           <ScrollReveal>
-            <h2 className="text-3xl font-bold text-[#0B1E4D]">Prêt à connecter votre monde ?</h2>
-            <p className="mt-4 text-[#6B7280] text-lg">
-              Rejoignez les opérateurs WiFi qui utilisent FLUXIONWIFI pour gérer et monétiser leurs hotspots.
-            </p>
+            <SectionTitle
+              eyebrow="Tarifs"
+              title="Simples et"
+              accent="transparents"
+              subtitle="Commencez gratuitement, passez à Pro quand vous êtes prêt."
+            />
           </ScrollReveal>
-          <ScrollReveal delay={0.2}>
-            <Link href="/register" className="mt-8 inline-flex h-12 items-center gap-2 rounded-xl bg-[#2B7FFF] px-8 text-base font-medium text-white hover:bg-[#1A6BE6] transition-colors shadow-md">
-              Créer mon compte gratuitement
-              <ArrowRight className="h-4 w-4" />
-            </Link>
+          <PricingSection currency={cur} />
+        </div>
+      </section>
+
+      {/* CTA */}
+      <section className="px-4 py-20 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-5xl">
+          <ScrollReveal>
+            <CtaCard />
           </ScrollReveal>
         </div>
       </section>
