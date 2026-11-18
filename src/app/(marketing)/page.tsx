@@ -16,6 +16,7 @@ import { ScrollReveal } from "@/components/marketing/scroll-reveal";
 import { HeroSection } from "@/components/marketing/hero-section";
 import { MarqueeStrip } from "@/components/marketing/marquee-strip";
 import { StatsCounter } from "@/components/marketing/stats-counter";
+import { Footer7 } from "@/components/ui/footer-7";
 import { Navbar } from "@/components/layout/navbar";
 import { ScrollProgressBar } from "@/components/layout/scroll-progress-bar";
 
@@ -233,26 +234,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="border-t border-[#E8ECF1] bg-[#F5F7FA] py-10 px-4 sm:px-6 lg:px-8">
-        <ScrollReveal direction="none" duration={0.8}>
-          <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-2">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/logo.svg" alt="FLUXIONWIFI" width={28} height={28} className="rounded-lg" />
-              <span className="text-sm font-semibold text-[#0B1E4D]">FLUXIONWIFI</span>
-            </div>
-            <p className="text-xs text-[#9CA3AF]">
-              © 2026 FLUXIONWIFI. Connecte votre monde.
-            </p>
-            <div className="flex gap-6">
-              <a href="#" className="text-xs text-[#6B7280] hover:text-[#1A1D26]">Conditions</a>
-              <a href="#" className="text-xs text-[#6B7280] hover:text-[#1A1D26]">Confidentialité</a>
-              <a href="#" className="text-xs text-[#6B7280] hover:text-[#1A1D26]">Contact</a>
-            </div>
-          </div>
-        </ScrollReveal>
-      </footer>
+      <Footer7 />
     </div>
   );
 }
