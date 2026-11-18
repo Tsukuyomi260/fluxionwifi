@@ -1,21 +1,21 @@
-import Image from "next/image";
 import Link from "next/link";
 import { getDefaultCountry } from "@/lib/currency";
 import {
-  Wifi,
   Globe,
   Ticket,
   Wallet,
   Shield,
   Users,
   Smartphone,
-  Zap,
   ArrowRight,
   CheckCircle,
   Star,
 } from "lucide-react";
 import { AnimatedSteps } from "@/components/marketing/animated-steps";
 import { ScrollReveal } from "@/components/marketing/scroll-reveal";
+import { HeroSection } from "@/components/marketing/hero-section";
+import { MarqueeStrip } from "@/components/marketing/marquee-strip";
+import { StatsCounter } from "@/components/marketing/stats-counter";
 import { Navbar } from "@/components/layout/navbar";
 import { ScrollProgressBar } from "@/components/layout/scroll-progress-bar";
 
@@ -105,63 +105,8 @@ export default function LandingPage() {
       <ScrollProgressBar />
       <Navbar />
 
-      {/* Hero */}
-      <section className="pt-28 pb-20 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto">
-          <ScrollReveal delay={0.1} distance={20}>
-            <div className="flex justify-center mb-10">
-              <div className="inline-flex items-center gap-2 rounded-full bg-[#EBF2FF] px-4 py-1.5 text-sm font-medium text-[#2B7FFF]">
-                <Zap className="h-4 w-4" />
-                Plateforme #1 de gestion WiFi en Afrique
-              </div>
-            </div>
-          </ScrollReveal>
-          <div className="flex flex-col lg:flex-row items-center gap-12 lg:gap-16">
-            {/* Text */}
-            <div className="flex-1 text-center lg:text-left">
-              <ScrollReveal delay={0.2} distance={25}>
-                <h1 className="text-4xl sm:text-5xl lg:text-[3.25rem] xl:text-6xl font-bold text-[#0B1E4D] leading-tight">
-                  Gérez vos zones WiFi.{" "}
-                  <span className="text-[#2B7FFF]">Encaissez en Mobile Money.</span>
-                </h1>
-              </ScrollReveal>
-              <ScrollReveal delay={0.35}>
-                <p className="mt-6 text-lg text-[#6B7280] max-w-xl mx-auto lg:mx-0 leading-relaxed">
-                  FLUXIONWIFI vous permet de monétiser vos hotspots WiFi avec des tickets prépayés,
-                  des portails captifs personnalisés et le paiement Mobile Money intégré.
-                </p>
-              </ScrollReveal>
-              <ScrollReveal delay={0.5}>
-                <div className="mt-8 flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-3">
-                  <Link href="/register" className="inline-flex h-11 sm:h-12 items-center justify-center gap-2 rounded-xl bg-[#2B7FFF] px-5 sm:px-6 text-sm sm:text-base font-medium text-white hover:bg-[#1A6BE6] transition-colors shadow-md w-full sm:w-auto">
-                    Créer mon compte
-                    <ArrowRight className="h-4 w-4" />
-                  </Link>
-                  <a href="#how-it-works" className="inline-flex h-11 sm:h-12 items-center justify-center gap-2 rounded-xl border border-[#D1D5DB] px-5 sm:px-6 text-sm sm:text-base font-medium text-[#374151] hover:bg-[#F5F7FA] transition-colors w-full sm:w-auto">
-                    Comment ça marche
-                  </a>
-                </div>
-                <p className="mt-4 text-xs text-[#9CA3AF] text-center lg:text-left">Gratuit · Aucune carte requise</p>
-              </ScrollReveal>
-            </div>
-
-            {/* Image */}
-            <ScrollReveal delay={0.3} direction="right" distance={40} className="flex-1 w-full max-w-lg lg:max-w-none">
-              <div className="relative">
-                <div className="absolute -inset-4 bg-gradient-to-br from-[#2B7FFF]/20 to-[#0B1E4D]/10 rounded-3xl blur-2xl" />
-                <Image
-                  src="/hero-main.jpg"
-                  alt="Entrepreneur utilisant un smartphone pour gérer son réseau WiFi"
-                  width={600}
-                  height={450}
-                  className="relative rounded-2xl shadow-2xl object-cover w-full"
-                  priority
-                />
-              </div>
-            </ScrollReveal>
-          </div>
-        </div>
-      </section>
+      <HeroSection />
+      <MarqueeStrip />
 
       {/* Features */}
       <section id="features" className="py-20 px-4 sm:px-6 lg:px-8 bg-[#F5F7FA]">
@@ -189,6 +134,8 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
+
+      <StatsCounter />
 
       {/* How it works */}
       <section id="how-it-works" className="py-20 px-4 sm:px-6 lg:px-8">
