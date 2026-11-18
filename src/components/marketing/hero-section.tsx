@@ -4,6 +4,9 @@ import Link from "next/link";
 import { motion } from "motion/react";
 import { ArrowRight, Zap, Ticket, Wallet, Wifi, Activity } from "lucide-react";
 import RotatingText from "@/components/ui/rotating-text";
+import { Instrument_Serif } from "next/font/google";
+
+const display = Instrument_Serif({ subsets: ["latin"], weight: "400", style: ["normal", "italic"] });
 
 const ease = [0.16, 1, 0.3, 1] as const;
 
@@ -44,7 +47,7 @@ function Gauge({ label, value, color }: { label: string; value: number; color: s
 function DashboardMockup() {
   const bars = [38, 62, 45, 80, 55, 92, 70];
   return (
-    <div className="relative mx-auto w-full max-w-lg">
+    <div className="relative mx-auto w-full max-w-md">
       <div className="absolute -inset-6 rounded-[2rem] bg-gradient-to-br from-[#2B7FFF]/25 via-[#7C9CFF]/10 to-[#0B1E4D]/10 blur-3xl" />
 
       {/* Main card */}
@@ -52,7 +55,7 @@ function DashboardMockup() {
         initial={{ opacity: 0, y: 40, scale: 0.96 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         transition={{ duration: 0.9, delay: 0.3, ease }}
-        className="relative rounded-2xl border border-[#E8ECF1] bg-white p-5 shadow-2xl"
+        className="relative rounded-2xl border border-[#E8ECF1] bg-white p-4 shadow-2xl"
       >
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -60,20 +63,20 @@ function DashboardMockup() {
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
               <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-500" />
             </span>
-            <span className="text-sm font-semibold text-[#1A1D26]">Routeur Cotonou-01</span>
+            <span className="text-sm font-semibold text-[#1A1D26]">Routeur Kinshasa</span>
           </div>
           <span className="rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-medium text-emerald-600">
             En ligne
           </span>
         </div>
 
-        <div className="mt-5 flex justify-around">
+        <div className="mt-3 flex justify-around">
           <Gauge label="CPU" value={14} color="#2B7FFF" />
           <Gauge label="RAM" value={38} color="#10B981" />
           <Gauge label="Sessions" value={72} color="#F59E0B" />
         </div>
 
-        <div className="mt-6 flex h-24 items-end gap-2">
+        <div className="mt-4 flex h-16 items-end gap-2">
           {bars.map((h, i) => (
             <motion.div
               key={i}
@@ -158,7 +161,8 @@ function DashboardMockup() {
 
 export function HeroSection() {
   return (
-    <section className="relative overflow-hidden px-4 pb-24 pt-28 sm:px-6 lg:px-8">
+    <section className="px-3 pb-6 pt-[4.75rem] sm:px-5 lg:px-8">
+      <div className="relative isolate mx-auto max-w-[88rem] overflow-hidden rounded-[14px] border border-[#E5E7EB] bg-white px-4 py-6 shadow-[0_2px_12px_rgba(11,30,77,0.06)] sm:px-8 sm:py-7 lg:px-12">
       {/* Animated background */}
       <div className="pointer-events-none absolute inset-0 -z-10">
         <div
@@ -184,47 +188,57 @@ export function HeroSection() {
       </div>
 
       <div className="mx-auto max-w-7xl">
-        <div className="flex flex-col items-center gap-14 lg:flex-row lg:gap-16">
-          {/* Text */}
-          <div className="flex-1 text-center">
-            <motion.div
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, ease }}
-              className="mb-6 inline-flex items-center gap-2 rounded-full bg-[#EBF2FF] px-4 py-1.5 text-sm font-medium text-[#2B7FFF]"
-            >
-              <Zap className="h-4 w-4" />
-              Plateforme de gestion WiFi pour l&apos;Afrique
-            </motion.div>
+        {/* Centered: badge + title */}
+        <div className="mx-auto w-full max-w-4xl text-center">
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, ease }}
+            className="mb-3 inline-flex items-center gap-2 rounded-full bg-[#EBF2FF] px-4 py-1.5 text-sm font-medium text-[#2B7FFF]"
+          >
+            <Zap className="h-4 w-4" />
+            Plateforme de gestion WiFi pour l&apos;Afrique
+          </motion.div>
 
-            <motion.h1
+          <motion.h1
+            initial={{ opacity: 0, y: 24 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.1, ease }}
+            className={`${display.className} text-5xl font-normal italic leading-[1.05] tracking-tight text-[#0B1E4D] sm:text-5xl xl:text-6xl`}
+          >
+            Gérez vos zones WiFi.
+          </motion.h1>
+        </div>
+
+        <div className="mt-6 flex flex-col items-center gap-10 lg:flex-row lg:gap-16">
+          {/* Left column */}
+          <div className="w-full flex-1 text-left">
+            <motion.div
               initial={{ opacity: 0, y: 24 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.1, ease }}
-              className="text-4xl font-bold leading-[1.15] text-[#0B1E4D] sm:text-5xl xl:text-6xl"
+              transition={{ duration: 0.8, delay: 0.2, ease }}
+              className="text-2xl font-bold leading-tight text-[#0B1E4D] sm:text-3xl xl:text-4xl"
             >
-              Gérez vos zones WiFi.
-              <span className="mt-2 flex justify-center">
-                <RotatingText
-                  texts={["Encaissez en Mobile Money", "Vendez vos tickets", "Supervisez à distance", "Connectez l'Afrique"]}
-                  mainClassName="px-3 sm:px-4 bg-[#2B7FFF] text-white overflow-hidden py-1 sm:py-1.5 rounded-xl justify-center"
-                  staggerFrom="last"
-                  initial={{ y: "100%" }}
-                  animate={{ y: 0 }}
-                  exit={{ y: "-120%" }}
-                  staggerDuration={0.02}
-                  splitLevelClassName="overflow-hidden pb-0.5"
-                  transition={{ type: "spring", damping: 30, stiffness: 400 }}
-                  rotationInterval={2600}
-                />
-              </span>
-            </motion.h1>
+              <RotatingText
+                texts={["Encaissez en MoMo", "Vendez des tickets", "Pilotez à distance", "Connectez l'Afrique"]}
+                nowrap
+                mainClassName="w-[11.5em] max-w-full justify-center bg-[#2B7FFF] text-white overflow-hidden py-1 sm:py-1.5 rounded-xl"
+                staggerFrom="last"
+                initial={{ y: "100%" }}
+                animate={{ y: 0 }}
+                exit={{ y: "-120%" }}
+                staggerDuration={0.02}
+                splitLevelClassName="overflow-hidden pb-0.5"
+                transition={{ type: "spring", damping: 30, stiffness: 400 }}
+                rotationInterval={2600}
+              />
+            </motion.div>
 
             <motion.p
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.7, delay: 0.3, ease }}
-              className="mx-auto mt-6 max-w-xl text-lg leading-relaxed text-[#6B7280]"
+              className="mt-4 max-w-xl text-base leading-relaxed sm:text-lg text-[#6B7280]"
             >
               FLUXIONWIFI vous permet de monétiser vos hotspots MikroTik avec des tickets prépayés,
               des portails captifs personnalisés et le paiement Mobile Money intégré.
@@ -234,7 +248,7 @@ export function HeroSection() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.7, delay: 0.45, ease }}
-              className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row"
+              className="mt-6 flex flex-col items-stretch gap-3 sm:flex-row sm:items-center"
             >
               <Link
                 href="/register"
@@ -252,29 +266,31 @@ export function HeroSection() {
               </a>
             </motion.div>
             <p className="mt-4 text-xs text-[#9CA3AF]">Gratuit · Aucune carte requise</p>
-
-            <div className="mx-auto mt-10 grid max-w-md grid-cols-2 gap-3 sm:max-w-none sm:grid-cols-4">
-              {chips.map((c, i) => (
-                <motion.div
-                  key={c.label}
-                  initial={{ opacity: 0, y: 16 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: 0.7 + i * 0.1, ease }}
-                  whileHover={{ y: -3 }}
-                  className="rounded-xl border border-[#E8ECF1] bg-white/80 px-3 py-2.5 text-center backdrop-blur"
-                >
-                  <p className="text-sm font-semibold text-[#0B1E4D]">{c.label}</p>
-                  <p className="text-[11px] text-[#6B7280]">{c.sub}</p>
-                </motion.div>
-              ))}
-            </div>
           </div>
 
-          {/* Mockup */}
-          <div className="w-full flex-1 px-2 sm:px-8 lg:px-0">
+          {/* Right column: mockup */}
+          <div className="w-full max-w-lg flex-1 px-2 sm:px-8 lg:px-0">
             <DashboardMockup />
           </div>
         </div>
+
+        {/* Centered chips */}
+        <div className="mx-auto mt-8 grid max-w-md grid-cols-2 gap-3 sm:max-w-2xl sm:grid-cols-4">
+          {chips.map((c, i) => (
+            <motion.div
+              key={c.label}
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.7 + i * 0.1, ease }}
+              whileHover={{ y: -3 }}
+              className="rounded-xl border border-[#E8ECF1] bg-white/80 px-3 py-2.5 text-center backdrop-blur"
+            >
+              <p className="text-sm font-semibold text-[#0B1E4D]">{c.label}</p>
+              <p className="text-[11px] text-[#6B7280]">{c.sub}</p>
+            </motion.div>
+          ))}
+        </div>
+      </div>
       </div>
     </section>
   );

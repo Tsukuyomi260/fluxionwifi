@@ -44,6 +44,7 @@ export interface RotatingTextProps {
   onNext?: (index: number) => void;
   mainClassName?: string;
   splitLevelClassName?: string;
+  nowrap?: boolean;
   elementLevelClassName?: string;
 }
 
@@ -66,6 +67,7 @@ const RotatingText = forwardRef<RotatingTextRef, RotatingTextProps>(
       onNext,
       mainClassName,
       splitLevelClassName,
+      nowrap = false,
       elementLevelClassName,
       ...rest
     },
@@ -183,7 +185,7 @@ const RotatingText = forwardRef<RotatingTextRef, RotatingTextProps>(
 
     return (
       <motion.span
-        className={cn("inline-flex flex-wrap whitespace-pre-wrap relative", mainClassName)}
+        className={cn("inline-flex relative", nowrap ? "flex-nowrap whitespace-nowrap" : "flex-wrap whitespace-pre-wrap", mainClassName)}
         layout
         transition={transition}
         {...rest}
@@ -193,7 +195,7 @@ const RotatingText = forwardRef<RotatingTextRef, RotatingTextProps>(
           <motion.span
             key={currentTextIndex}
             className={cn(
-              splitBy === "lines" ? "flex flex-col w-full" : "inline-flex flex-wrap whitespace-pre-wrap relative"
+              splitBy === "lines" ? "flex flex-col w-full" : cn("inline-flex relative", nowrap ? "flex-nowrap whitespace-nowrap" : "flex-wrap whitespace-pre-wrap")
             )}
             layout
             aria-hidden="true"
