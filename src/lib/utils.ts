@@ -7,7 +7,7 @@ export function cn(...inputs: ClassValue[]) {
 
 export function formatCurrency(
   amount: number,
-  currency: string = "XOF"
+  currency: string = "CDF"
 ): string {
   return new Intl.NumberFormat("fr-FR", {
     style: "currency",

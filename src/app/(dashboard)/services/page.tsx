@@ -44,7 +44,7 @@ const categories: {
     name: "Maintenance réseau",
     icon: Wrench,
     desc: "Diagnostic, réglages, intervention",
-    sub: "Dès 5 000 FCFA",
+    sub: "Sur devis",
   },
   {
     key: "installation",

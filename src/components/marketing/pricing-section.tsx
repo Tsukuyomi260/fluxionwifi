@@ -4,11 +4,16 @@ import { useState } from "react";
 import Link from "next/link";
 import { motion } from "motion/react";
 import { CheckCircle, Star } from "lucide-react";
+import { useCurrency } from "@/hooks/use-currency";
+import { PRO_ANNUAL_MONTHS, PRO_MONTHLY_CDF, convertFromCDF, formatAmount } from "@/lib/pricing";
 
 const ease = [0.16, 1, 0.3, 1] as const;
 
-export function PricingSection({ currency }: { currency: string }) {
+export function PricingSection() {
+  const { currency } = useCurrency();
   const [annual, setAnnual] = useState(false);
+  const monthly = convertFromCDF(PRO_MONTHLY_CDF, currency);
+  const proPrice = annual ? monthly * PRO_ANNUAL_MONTHS : monthly;
 
   const plans = [
     {
@@ -22,7 +27,7 @@ export function PricingSection({ currency }: { currency: string }) {
     },
     {
       name: "Pro",
-      price: annual ? "150 000" : "15 000",
+      price: formatAmount(proPrice),
       period: annual ? `${currency}/an` : `${currency}/mois`,
       description: annual ? "2 mois offerts avec la facturation annuelle" : "Pour les opérateurs WiFi actifs",
       features: ["5 routeurs", "Tickets illimités", "Portails personnalisés", "VPN inclus", "Gestion vendeurs", "Support prioritaire"],

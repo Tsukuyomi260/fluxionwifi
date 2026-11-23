@@ -70,7 +70,7 @@ const tutorialsData: Tutorial[] = [
     duration: "2:50",
     category: "fluxion",
     audience: "Promoteur",
-    description: "Définissez vos tarifs en FCFA/devise locale et vos forfaits horaires, journaliers ou hebdomadaires.",
+    description: "Définissez vos tarifs en devise locale et vos forfaits horaires, journaliers ou hebdomadaires.",
     views: 3100,
   },
   {

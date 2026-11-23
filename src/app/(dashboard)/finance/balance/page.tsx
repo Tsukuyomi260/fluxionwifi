@@ -31,6 +31,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useCurrency } from "@/hooks/use-currency";
+import { getCountries } from "@/lib/currency";
 import { useTransactions } from "@/hooks/use-transactions";
 import type { TransactionType, TransactionStatus } from "@/lib/supabase/types";
 
@@ -101,7 +102,7 @@ export default function BalancePage() {
         {/* Currency badge */}
         <div className="flex justify-center mt-4">
           <span className="inline-flex items-center gap-2 rounded-full border border-[#4B5563] bg-[#1F2937] px-4 py-1.5 text-sm text-slate-300">
-            💵 {currency === "CDF" ? "Franc Congolais" : currency === "XOF" ? "Franc CFA" : currency} ({currency})
+            💵 {getCountries().find((c) => c.currency.code === currency)?.currency.name ?? currency} ({currency})
           </span>
         </div>
 

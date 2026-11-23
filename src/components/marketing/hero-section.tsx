@@ -2,20 +2,15 @@
 
 import Link from "next/link";
 import { motion } from "motion/react";
+import { useCurrency } from "@/hooks/use-currency";
+import { convertFromCDF, formatAmount } from "@/lib/pricing";
 import { ArrowRight, Zap, Ticket, Wallet, Wifi, Activity } from "lucide-react";
 import RotatingText from "@/components/ui/rotating-text";
-import { Instrument_Serif } from "next/font/google";
+import { Poppins } from "next/font/google";
 
-const display = Instrument_Serif({ subsets: ["latin"], weight: "400", style: ["normal", "italic"] });
+const display = Poppins({ subsets: ["latin"], weight: ["700", "800"] });
 
 const ease = [0.16, 1, 0.3, 1] as const;
-
-const chips = [
-  { label: "Tickets", sub: "Prépayés" },
-  { label: "Mobile Money", sub: "Intégré" },
-  { label: "VPN", sub: "WireGuard" },
-  { label: "24/7", sub: "Supervision" },
-];
 
 function Gauge({ label, value, color }: { label: string; value: number; color: string }) {
   const r = 26;
@@ -45,6 +40,8 @@ function Gauge({ label, value, color }: { label: string; value: number; color: s
 }
 
 function DashboardMockup() {
+  const { currency } = useCurrency();
+  const received = `${formatAmount(convertFromCDF(2000, currency))} ${currency}`;
   const bars = [38, 62, 45, 80, 55, 92, 70];
   return (
     <div className="relative mx-auto w-full max-w-md">
@@ -113,7 +110,7 @@ function DashboardMockup() {
           </div>
           <div>
             <p className="text-[11px] text-[#6B7280]">Paiement reçu</p>
-            <p className="text-sm font-bold text-[#1A1D26]">+ 500 FCFA</p>
+            <p className="text-sm font-bold text-[#1A1D26]">+ {received}</p>
           </div>
         </motion.div>
       </motion.div>
@@ -162,29 +159,11 @@ function DashboardMockup() {
 export function HeroSection() {
   return (
     <section className="px-3 pb-6 pt-[4.75rem] sm:px-5 lg:px-8">
-      <div className="relative isolate mx-auto max-w-[88rem] overflow-hidden rounded-[14px] border border-[#E5E7EB] bg-white px-4 py-6 shadow-[0_2px_12px_rgba(11,30,77,0.06)] sm:px-8 sm:py-7 lg:px-12">
-      {/* Animated background */}
+      <div className="relative isolate mx-auto max-w-[88rem] overflow-hidden rounded-[14px] bg-[#0B1535] px-4 py-14 shadow-[0_2px_12px_rgba(11,30,77,0.15)] sm:px-8 sm:py-16 lg:px-12 lg:py-20">
+      {/* Background circles (mikcontrol style) */}
       <div className="pointer-events-none absolute inset-0 -z-10">
-        <div
-          className="absolute inset-0 opacity-[0.35]"
-          style={{
-            backgroundImage:
-              "radial-gradient(#C7D6F5 1px, transparent 1px)",
-            backgroundSize: "28px 28px",
-            maskImage: "radial-gradient(ellipse at center, black 30%, transparent 75%)",
-            WebkitMaskImage: "radial-gradient(ellipse at center, black 30%, transparent 75%)",
-          }}
-        />
-        <motion.div
-          className="absolute -left-24 top-10 h-72 w-72 rounded-full bg-[#2B7FFF]/20 blur-3xl"
-          animate={{ x: [0, 40, 0], y: [0, 30, 0] }}
-          transition={{ duration: 14, repeat: Infinity, ease: "easeInOut" }}
-        />
-        <motion.div
-          className="absolute -right-24 top-40 h-80 w-80 rounded-full bg-[#7C9CFF]/20 blur-3xl"
-          animate={{ x: [0, -40, 0], y: [0, -20, 0] }}
-          transition={{ duration: 16, repeat: Infinity, ease: "easeInOut" }}
-        />
+        <div className="absolute -left-40 -top-40 h-[26rem] w-[26rem] rounded-full bg-[#12286B]" />
+        <div className="absolute -right-32 top-8 h-80 w-80 rounded-full bg-[#1B2260]/80" />
       </div>
 
       <div className="mx-auto max-w-7xl">
@@ -194,7 +173,7 @@ export function HeroSection() {
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, ease }}
-            className="mb-3 inline-flex items-center gap-2 rounded-full bg-[#EBF2FF] px-4 py-1.5 text-sm font-medium text-[#2B7FFF]"
+            className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-1.5 text-sm font-medium text-[#8FB0FF]"
           >
             <Zap className="h-4 w-4" />
             Plateforme de gestion WiFi pour l&apos;Afrique
@@ -204,20 +183,20 @@ export function HeroSection() {
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.1, ease }}
-            className={`${display.className} text-5xl font-normal italic leading-[1.05] tracking-tight text-[#0B1E4D] sm:text-5xl xl:text-6xl`}
+            className={`${display.className} text-4xl font-extrabold leading-[1.1] tracking-tight text-white sm:text-5xl xl:text-6xl`}
           >
-            Gérez vos zones WiFi.
+            Gérez vos zones <span className="text-[#5B7FFF]">WiFi</span>.
           </motion.h1>
         </div>
 
-        <div className="mt-6 flex flex-col items-center gap-10 lg:flex-row lg:gap-16">
+        <div className="mt-14 flex flex-col items-center gap-14 lg:flex-row lg:gap-20">
           {/* Left column */}
           <div className="w-full flex-1 text-left">
             <motion.div
               initial={{ opacity: 0, y: 24 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.2, ease }}
-              className="text-2xl font-bold leading-tight text-[#0B1E4D] sm:text-3xl xl:text-4xl"
+              className="text-2xl font-bold leading-tight text-white sm:text-3xl xl:text-4xl"
             >
               <RotatingText
                 texts={["Encaissez en MoMo", "Vendez des tickets", "Pilotez à distance", "Connectez l'Afrique"]}
@@ -238,7 +217,7 @@ export function HeroSection() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.7, delay: 0.3, ease }}
-              className="mt-4 max-w-xl text-base leading-relaxed sm:text-lg text-[#6B7280]"
+              className="mt-6 max-w-xl text-base leading-relaxed text-white/65 sm:text-lg"
             >
               FLUXIONWIFI vous permet de monétiser vos hotspots MikroTik avec des tickets prépayés,
               des portails captifs personnalisés et le paiement Mobile Money intégré.
@@ -248,7 +227,7 @@ export function HeroSection() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.7, delay: 0.45, ease }}
-              className="mt-6 flex flex-col items-stretch gap-3 sm:flex-row sm:items-center"
+              className="mt-9 flex flex-col items-stretch gap-3 sm:flex-row sm:items-center"
             >
               <Link
                 href="/register"
@@ -259,13 +238,13 @@ export function HeroSection() {
               </Link>
               <a
                 href="#how-it-works"
-                className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl border border-[#D1D5DB] bg-white px-6 text-base font-medium text-[#374151] transition-colors hover:bg-[#F5F7FA] sm:w-auto"
+                className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl border border-white/20 bg-white/5 px-6 text-base font-medium text-white transition-colors hover:bg-white/10 sm:w-auto"
               >
                 <Activity className="h-4 w-4" />
                 Comment ça marche
               </a>
             </motion.div>
-            <p className="mt-4 text-xs text-[#9CA3AF]">Gratuit · Aucune carte requise</p>
+            <p className="mt-5 text-xs text-white/45">Gratuit · Aucune carte requise</p>
           </div>
 
           {/* Right column: mockup */}
@@ -274,22 +253,6 @@ export function HeroSection() {
           </div>
         </div>
 
-        {/* Centered chips */}
-        <div className="mx-auto mt-8 grid max-w-md grid-cols-2 gap-3 sm:max-w-2xl sm:grid-cols-4">
-          {chips.map((c, i) => (
-            <motion.div
-              key={c.label}
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.7 + i * 0.1, ease }}
-              whileHover={{ y: -3 }}
-              className="rounded-xl border border-[#E8ECF1] bg-white/80 px-3 py-2.5 text-center backdrop-blur"
-            >
-              <p className="text-sm font-semibold text-[#0B1E4D]">{c.label}</p>
-              <p className="text-[11px] text-[#6B7280]">{c.sub}</p>
-            </motion.div>
-          ))}
-        </div>
       </div>
       </div>
     </section>

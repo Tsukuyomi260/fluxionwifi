@@ -1,4 +1,3 @@
-import { getDefaultCountry } from "@/lib/currency";
 import { AnimatedSteps } from "@/components/marketing/animated-steps";
 import { ScrollReveal } from "@/components/marketing/scroll-reveal";
 import { HeroSection } from "@/components/marketing/hero-section";
@@ -11,8 +10,6 @@ import { SectionTitle } from "@/components/marketing/section-title";
 import { Footer7 } from "@/components/ui/footer-7";
 import { Navbar } from "@/components/layout/navbar";
 import { ScrollProgressBar } from "@/components/layout/scroll-progress-bar";
-
-const cur = getDefaultCountry().currency.code;
 
 export default function LandingPage() {
   return (
@@ -69,7 +66,7 @@ export default function LandingPage() {
               subtitle="Commencez gratuitement, passez à Pro quand vous êtes prêt."
             />
           </ScrollReveal>
-          <PricingSection currency={cur} />
+          <PricingSection />
         </div>
       </section>
 

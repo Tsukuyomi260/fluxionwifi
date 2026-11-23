@@ -59,7 +59,7 @@ const faqItems = [
   },
   {
     q: "Le VPN est-il inclus dans ma formule ?",
-    a: "Le VPN est inclus dans la formule Pro. Pour la formule Starter, vous pouvez l'ajouter en service complémentaire à 500 XOF/mois depuis Facturation → Souscrire.",
+    a: "Le VPN est inclus dans la formule Pro. Pour la formule Starter, vous pouvez l'ajouter en service complémentaire depuis Facturation → Souscrire.",
     icon: Shield,
   },
   {
