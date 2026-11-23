@@ -158,8 +158,8 @@ function DashboardMockup() {
 
 export function HeroSection() {
   return (
-    <section className="px-3 pb-6 pt-[4.75rem] sm:px-5 lg:px-8">
-      <div className="relative isolate mx-auto max-w-[88rem] overflow-hidden rounded-[14px] bg-[#0B1535] px-4 py-14 shadow-[0_2px_12px_rgba(11,30,77,0.15)] sm:px-8 sm:py-16 lg:px-12 lg:py-20">
+    <section className="px-3 pb-2 pt-[4.75rem] sm:px-5 lg:px-8">
+      <div className="relative isolate mx-auto max-w-[88rem] overflow-hidden rounded-[14px] bg-[#0B1535] px-4 pb-8 pt-14 shadow-[0_2px_12px_rgba(11,30,77,0.15)] sm:px-8 sm:pb-8 sm:pt-16 lg:px-12 lg:pb-10 lg:pt-20">
       {/* Background circles (mikcontrol style) */}
       <div className="pointer-events-none absolute inset-0 -z-10">
         <div className="absolute -left-40 -top-40 h-[26rem] w-[26rem] rounded-full bg-[#12286B]" />
