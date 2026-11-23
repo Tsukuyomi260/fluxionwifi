@@ -75,7 +75,7 @@ export const Footer7 = ({
   sections = defaultSections,
   description = "Plateforme de gestion et de monétisation de hotspots WiFi MikroTik pour l'Afrique. Connectez votre monde.",
   socialLinks = defaultSocialLinks,
-  copyright = `© ${new Date().getFullYear()} FLUXIONWIFI. Tous droits réservés.`,
+  copyright = `© 2026 FLUXIONWIFI. Tous droits réservés.`,
   legalLinks = defaultLegalLinks,
 }: Footer7Props) => {
   return (
