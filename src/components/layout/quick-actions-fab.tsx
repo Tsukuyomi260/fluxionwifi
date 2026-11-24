@@ -1,5 +1,6 @@
 "use client";
 
+import { TicketVerifyModal } from "@/components/account/ticket-verify-modal";
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import {
@@ -38,7 +39,6 @@ const actions: QuickAction[] = [
     label: "Vérifier un ticket",
     icon: Search,
     bg: "bg-[#2B7FFF]",
-    href: "/console/stock",
   },
   {
     label: "Enregistrement clients",
@@ -62,6 +62,7 @@ const actions: QuickAction[] = [
 
 export function QuickActionsFab() {
   const [open, setOpen] = useState(false);
+  const [verify, setVerify] = useState(false);
   const router = useRouter();
   const fabRef = useRef<HTMLDivElement>(null);
 
@@ -79,11 +80,13 @@ export function QuickActionsFab() {
 
   const handleAction = (action: QuickAction) => {
     setOpen(false);
-    if (action.href) router.push(action.href);
+    if (action.label === "Vérifier un ticket") setVerify(true);
+    else if (action.href) router.push(action.href);
   };
 
   return (
     <>
+      {verify && <TicketVerifyModal onClose={() => setVerify(false)} />}
       {/* FAB vertical stack */}
       <div ref={fabRef} className="fixed bottom-20 right-2 lg:bottom-8 lg:right-3 z-40 flex flex-col items-end gap-2">
         {/* Action items */}

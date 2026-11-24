@@ -1,5 +1,7 @@
 "use client";
 
+import { LinkedAccountsModal, ActivityLogModal } from "@/components/account/account-modals";
+import { useUser } from "@/hooks/use-user";
 import { useState } from "react";
 import Link from "next/link";
 import { useCurrency } from "@/hooks/use-currency";
@@ -51,8 +53,8 @@ const navTabs = [
   { name: "Portail Captif", href: "/portal", icon: Globe },
   { name: "Télécharger", href: "/downloads", icon: Download },
   { name: "Gestion Données", href: "/data", icon: Database },
-  { name: "Comptes Associés", href: "/sellers", icon: UsersRound },
-  { name: "Journal", href: "/finance/balance", icon: BookText },
+  { name: "Comptes Associés", href: "#", icon: UsersRound, modal: "accounts" as const },
+  { name: "Journal", href: "#", icon: BookText, modal: "journal" as const },
 ];
 
 interface DashCard {
@@ -69,6 +71,8 @@ interface DashCard {
 }
 
 export default function DashboardPage() {
+  const [navModal, setNavModal] = useState<null | "accounts" | "journal">(null);
+  const { displayName: accountName } = useUser();
   const { currency } = useCurrency();
   const { tickets, profiles, loading: tl } = useTickets();
   const { routers, online, loading: rl } = useRouters();
@@ -142,7 +146,7 @@ export default function DashboardPage() {
     },
     {
       name: "Mon Compte",
-      href: "/settings",
+      href: "/account",
       icon: UserCircle,
       iconBg: "bg-slate-100",
       iconColor: "text-slate-600",
@@ -254,14 +258,21 @@ export default function DashboardPage() {
       {/* 1. Bande Navigation Tabs : satinée, lisible et harmonisée */}
       <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none mb-4 bg-white/[0.08] backdrop-blur-md border border-white/10 rounded-2xl p-1.5 shadow-sm">
         {navTabs.map((tab) => (
-          <Link
-            key={tab.name}
-            href={tab.href}
-            className="flex items-center gap-2 whitespace-nowrap px-4 py-2.5 rounded-xl text-xs font-semibold text-slate-200 hover:text-white hover:bg-white/10 transition-all"
-          >
-            <tab.icon className="h-4 w-4 text-[#5BA0FF] shrink-0" />
-            {tab.name}
-          </Link>
+          tab.modal ? (
+            <button key={tab.name} type="button" onClick={() => setNavModal(tab.modal)} className="flex items-center gap-2 whitespace-nowrap px-4 py-2.5 rounded-xl text-xs font-semibold text-slate-200 hover:text-white hover:bg-white/10 transition-all">
+              <tab.icon className="h-4 w-4 text-[#5BA0FF] shrink-0" />
+              {tab.name}
+            </button>
+          ) : (
+           <Link
+              key={tab.name}
+              href={tab.href}
+              className="flex items-center gap-2 whitespace-nowrap px-4 py-2.5 rounded-xl text-xs font-semibold text-slate-200 hover:text-white hover:bg-white/10 transition-all"
+            >
+              <tab.icon className="h-4 w-4 text-[#5BA0FF] shrink-0" />
+              {tab.name}
+            </Link>
+            )
         ))}
       </div>
 
@@ -608,6 +619,8 @@ export default function DashboardPage() {
           </Link>
         ))}
       </div>
+      {navModal === "accounts" && <LinkedAccountsModal currentName={accountName} onClose={() => setNavModal(null)} />}
+      {navModal === "journal" && <ActivityLogModal onClose={() => setNavModal(null)} />}
     </div>
   );
 }
