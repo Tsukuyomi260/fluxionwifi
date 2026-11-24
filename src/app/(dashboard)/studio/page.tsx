@@ -65,13 +65,58 @@ const palettes: PaletteItem[] = [
   { name: "Papier (clair)", colors: ["#1E293B", "#475569", "#EF4444"] },
 ];
 
-const posterTemplates = ["Prix géant", "Offre flash", "Promo WiFi", "Ticket duo"];
+type Family = "Prix géant" | "Enseigne peinte" | "Lumière profonde" | "Devant le titre";
+
+const STYLES: { name: string; family: Family; tags: string[] }[] = [
+  ...["Prix géant", "Diagonale", "Prix vertical", "Trio de prix", "Escalier", "Pastille", "Soldes", "Rayures", "Damier", "Ruban", "Flèche"].map((name) => ({ name, family: "Prix géant" as Family, tags: [] as string[] })),
+  ...["Enseigne peinte", "Étiquette", "Tampon", "Bulle BD", "Affichette", "Sticker"].map((name) => ({ name, family: "Enseigne peinte" as Family, tags: [] as string[] })),
+  ...["Lumière profonde", "Signal", "Chrono", "Mur de prix"].map((name) => ({ name, family: "Lumière profonde" as Family, tags: [] as string[] })),
+  ...["Devant le titre", "Couverture", "Duotone", "Aurore", "Nuée de signal", "Ticket d'or", "Enseigne néon", "Trame photo", "Soie numérique", "Kente", "Ville isométrique", "Typo 3D", "Rétro 80", "Interférences", "Art déco", "Papier découpé", "Topographie", "Botanique", "Ardoise", "Pop BD", "Glitch", "Une de magazine", "Réseau maillé", "Bauhaus", "Suisse"].map((name) => ({ name, family: "Devant le titre" as Family, tags: [] as string[] })),
+];
+
+const TAGS: Record<string, string[]> = {
+  Wow: ["Aurore", "Nuée de signal", "Ticket d'or", "Enseigne néon"],
+  Moderne: ["Duotone", "Suisse", "Bauhaus", "Couverture"],
+  Afrique: ["Kente"],
+  Luxe: ["Art déco", "Ticket d'or"],
+  Nuit: ["Enseigne néon", "Aurore", "Lumière profonde"],
+  Naturel: ["Botanique", "Topographie", "Papier découpé"],
+  Doux: ["Soie numérique", "Aurore"],
+  "3D": ["Typo 3D", "Ville isométrique"],
+  Tech: ["Réseau maillé", "Glitch", "Interférences", "Signal"],
+  "Art génératif": ["Topographie", "Réseau maillé", "Nuée de signal"],
+  "Op-art": ["Rayures", "Damier", "Interférences"],
+  Rétro: ["Rétro 80", "Pop BD", "Art déco"],
+  Fun: ["Sticker", "Bulle BD", "Pop BD", "Tampon"],
+  Éditorial: ["Une de magazine", "Couverture", "Suisse"],
+  Minimal: ["Suisse", "Étiquette", "Affichette"],
+};
+for (const [tag, names] of Object.entries(TAGS)) for (const n of names) STYLES.find((x) => x.name === n)?.tags.push(tag);
+
+const FILTERS = ["Tous", "Prix géant", "Enseigne peinte", "Lumière profonde", "Devant le titre", ...Object.keys(TAGS)];
+const LIGHTS = ["Aucune", "Douce", "Intense"] as const;
 
 export default function StudioPage() {
   const [activeSidebar, setActiveSidebar] = useState<SidebarItem>("atelier");
   const [activeTab, setActiveTab] = useState<ContentTab>("style");
   const [selectedPalette, setSelectedPalette] = useState(0);
   const [templateIndex, setTemplateIndex] = useState(0);
+  const [filter, setFilter] = useState("Tous");
+  const [light, setLight] = useState<(typeof LIGHTS)[number]>("Douce");
+  const [title, setTitle] = useState("1500");
+  const [subtitle, setSubtitle] = useState("Wi-Fi");
+  const [details, setDetails] = useState("À PARTIR DE · 1 GO · 24 HEURES");
+  const [brand, setBrand] = useState("FLUXIONWIFI");
+  const styleName = STYLES[templateIndex].name;
+  const visible = STYLES.map((st, i) => ({ st, i })).filter(({ st }) => filter === "Tous" || st.family === filter || st.tags.includes(filter));
+  const mode = templateIndex % 6;
+  const glow = light === "Aucune" ? 0 : light === "Douce" ? 0.22 : 0.5;
+
+  function surprise() {
+    setSelectedPalette(Math.floor(Math.random() * palettes.length));
+    setTemplateIndex(Math.floor(Math.random() * STYLES.length));
+    setLight(LIGHTS[Math.floor(Math.random() * LIGHTS.length)]);
+  }
 
   const currentPalette = palettes[selectedPalette];
 
@@ -178,19 +223,19 @@ export default function StudioPage() {
             </button>
             <div className="flex items-center gap-2">
               <span className="text-sm font-bold text-amber-400">
-                {posterTemplates[templateIndex]}
+                {styleName}
               </span>
               <span className="text-xs text-slate-500">
-                {posterTemplates[templateIndex]}
+                {STYLES[templateIndex].family}
               </span>
             </div>
             <button
-              onClick={() => setTemplateIndex((i) => Math.min(posterTemplates.length - 1, i + 1))}
+              onClick={() => setTemplateIndex((i) => Math.min(STYLES.length - 1, i + 1))}
               className="p-1.5 rounded-lg hover:bg-[#1E293B] text-slate-400"
             >
               <ChevronRight className="h-4 w-4" />
             </button>
-            <button className="inline-flex items-center gap-1.5 rounded-lg bg-[#1E293B] border border-[#334155] px-3 py-1.5 text-xs font-medium text-slate-300 hover:bg-[#334155] transition-colors">
+            <button onClick={surprise} className="inline-flex items-center gap-1.5 rounded-lg bg-[#1E293B] border border-[#334155] px-3 py-1.5 text-xs font-medium text-slate-300 hover:bg-[#334155] transition-colors">
               <Sparkles className="h-3.5 w-3.5" />
               Surprends-moi
             </button>
@@ -280,6 +325,48 @@ export default function StudioPage() {
                       </button>
                     ))}
                   </div>
+
+                  <h3 className="mt-6 mb-3 text-xs font-bold uppercase tracking-wider text-slate-500">Lumière</h3>
+                  <div className="grid grid-cols-3 gap-2">
+                    {LIGHTS.map((l) => (
+                      <button
+                        key={l}
+                        onClick={() => setLight(l)}
+                        className={`rounded-lg px-3 py-2 text-xs font-semibold transition-colors ${light === l ? "bg-amber-400 text-black" : "bg-[#111827] border border-[#1E293B] text-slate-300 hover:border-[#334155]"}`}
+                      >
+                        {l}
+                      </button>
+                    ))}
+                  </div>
+
+                  <h3 className="mt-6 mb-3 text-xs font-bold uppercase tracking-wider text-slate-500">Style</h3>
+                  <p className="mb-2 text-[11px] text-slate-500">Variation</p>
+                  <div className="mb-4 flex flex-wrap gap-1.5">
+                    {FILTERS.map((f) => (
+                      <button
+                        key={f}
+                        onClick={() => setFilter(f)}
+                        className={`rounded-full px-3 py-1 text-[11px] font-semibold transition-colors ${filter === f ? "bg-pink-500 text-white" : "bg-[#111827] border border-[#1E293B] text-slate-300 hover:border-[#334155]"}`}
+                      >
+                        {f}
+                      </button>
+                    ))}
+                  </div>
+                  <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-4">
+                    {visible.map(({ st, i }) => (
+                      <button
+                        key={st.name}
+                        onClick={() => setTemplateIndex(i)}
+                        className={`rounded-xl p-2.5 text-left transition-all ${templateIndex === i ? "ring-2 ring-pink-400 bg-[#1E293B]" : "bg-[#111827] border border-[#1E293B] hover:border-[#334155]"}`}
+                      >
+                        <div className="mb-2 flex h-14 items-center justify-center rounded-lg" style={{ background: `linear-gradient(135deg, ${currentPalette.colors[0]}, ${currentPalette.colors[1]})` }}>
+                          <span className="text-lg font-black text-white" style={{ transform: i % 6 === 1 ? "rotate(-8deg)" : undefined, writingMode: i % 6 === 2 ? "vertical-rl" : undefined }}>1500</span>
+                        </div>
+                        <p className="truncate text-[11px] font-semibold text-slate-200">{st.name}</p>
+                      </button>
+                    ))}
+                    {visible.length === 0 && <p className="col-span-full py-4 text-center text-xs text-slate-500">Aucun style dans cette variation.</p>}
+                  </div>
                 </div>
               )}
 
@@ -291,7 +378,8 @@ export default function StudioPage() {
                     </label>
                     <input
                       type="text"
-                      defaultValue="1500"
+                      value={title}
+                      onChange={(e) => setTitle(e.target.value)}
                       className="w-full rounded-xl border border-[#334155] bg-[#111827] px-4 py-2.5 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-[#2B7FFF]"
                     />
                   </div>
@@ -301,7 +389,8 @@ export default function StudioPage() {
                     </label>
                     <input
                       type="text"
-                      defaultValue="Wi-Fi"
+                      value={subtitle}
+                      onChange={(e) => setSubtitle(e.target.value)}
                       className="w-full rounded-xl border border-[#334155] bg-[#111827] px-4 py-2.5 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-[#2B7FFF]"
                     />
                   </div>
@@ -311,7 +400,8 @@ export default function StudioPage() {
                     </label>
                     <input
                       type="text"
-                      defaultValue="À PARTIR DE · 1 GO · 24 HEURES"
+                      value={details}
+                      onChange={(e) => setDetails(e.target.value)}
                       className="w-full rounded-xl border border-[#334155] bg-[#111827] px-4 py-2.5 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-[#2B7FFF]"
                     />
                   </div>
@@ -321,7 +411,8 @@ export default function StudioPage() {
                     </label>
                     <input
                       type="text"
-                      defaultValue="FLUXIONWIFI"
+                      value={brand}
+                      onChange={(e) => setBrand(e.target.value)}
                       className="w-full rounded-xl border border-[#334155] bg-[#111827] px-4 py-2.5 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-[#2B7FFF]"
                     />
                   </div>
@@ -388,8 +479,18 @@ export default function StudioPage() {
               {/* Poster preview */}
               <div
                 className="w-full h-full flex flex-col items-center justify-between p-6 relative"
-                style={{ backgroundColor: currentPalette.colors[0] }}
+                style={{
+                  backgroundColor: currentPalette.colors[0],
+                  backgroundImage:
+                    mode === 4
+                      ? `repeating-linear-gradient(45deg, transparent 0 14px, ${currentPalette.colors[1]}33 14px 28px)`
+                      : mode === 5
+                        ? `conic-gradient(${currentPalette.colors[1]}22 25%, transparent 0 50%, ${currentPalette.colors[1]}22 0 75%, transparent 0)`
+                        : undefined,
+                  backgroundSize: mode === 5 ? "36px 36px" : undefined,
+                }}
               >
+                {glow > 0 && <div className="pointer-events-none absolute inset-0" style={{ background: `radial-gradient(circle at 50% 38%, rgba(255,255,255,${glow}), transparent 62%)` }} />}
                 {/* Decorative top */}
                 <div className="absolute top-0 right-0 w-24 h-24 rounded-bl-full opacity-30" style={{ backgroundColor: currentPalette.colors[1] }} />
                 <div className="absolute bottom-0 left-0 w-32 h-32 rounded-tr-full opacity-20" style={{ backgroundColor: currentPalette.colors[2] }} />
@@ -397,7 +498,7 @@ export default function StudioPage() {
                 {/* Brand */}
                 <div className="relative z-10 text-center mt-4">
                   <p className="text-xs font-bold tracking-[0.3em] text-white/90 uppercase">
-                    FLUXIONWIFI
+                    {brand}
                   </p>
                   <p className="text-3xl font-black text-white mt-1" style={{ color: currentPalette.colors[2] }}>
                     FC
@@ -406,18 +507,27 @@ export default function StudioPage() {
 
                 {/* Price */}
                 <div className="relative z-10 text-center">
-                  <p className="text-7xl font-black text-white leading-none tracking-tight">
-                    1500
+                  <p
+                    className={`font-black text-white leading-none tracking-tight ${mode === 2 ? "text-6xl" : "text-7xl"}`}
+                    style={{
+                      transform: mode === 1 ? "rotate(-8deg)" : undefined,
+                      writingMode: mode === 2 ? "vertical-rl" : undefined,
+                      border: mode === 3 ? `4px solid ${currentPalette.colors[2]}` : undefined,
+                      padding: mode === 3 ? "8px 16px" : undefined,
+                      borderRadius: mode === 3 ? 12 : undefined,
+                    }}
+                  >
+                    {title}
                   </p>
                 </div>
 
                 {/* Details */}
                 <div className="relative z-10 text-center space-y-2 mb-4">
                   <p className="text-[10px] font-bold uppercase tracking-wider text-white/70">
-                    À partir de · 1 Go · 24 heures
+                    {details}
                   </p>
                   <p className="text-2xl font-black text-white">
-                    Wi-Fi
+                    {subtitle}
                   </p>
                   {/* QR placeholder */}
                   <div className="mx-auto w-12 h-12 rounded bg-white/20 flex items-center justify-center">

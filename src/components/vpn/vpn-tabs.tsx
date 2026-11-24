@@ -377,13 +377,20 @@ export function RoutersVpnTab({
                           <MoreVertical className="h-4 w-4" />
                         </button>
                         {menu === r.id && (
-                          <div className="absolute right-3 top-12 z-20 w-52 rounded-[3px] border border-slate-200 bg-white py-1 text-sm shadow-lg">
-                            <button
-                              className="flex w-full items-center gap-2 px-3 py-2 text-left hover:bg-slate-50"
-                              onClick={() => { copy(details(r)); setMenu(null); toast.show("Détails copiés."); }}
-                            >
-                              <Copy className="h-4 w-4" /> Copier tous les détails
-                            </button>
+                          <div className="absolute right-3 top-12 z-20 w-72 rounded-[3px] border border-slate-200 bg-white py-1 text-sm shadow-lg">
+                            {[
+                              { label: "Revoir / télécharger la config", run: () => toast.show("La configuration (.rsc) sera régénérée avec le serveur.") },
+                              { label: "Copier l'adresse WinBox", run: () => { copy(`${SERVER.endpoint}:${r.winboxPort}`); toast.show("Adresse WinBox copiée."); } },
+                              { label: "Copier l'adresse API (MikHmon local)", run: () => { copy(`${SERVER.endpoint}:${r.apiPort}`); toast.show("Adresse API copiée."); } },
+                              { label: "Copier tous les détails (incl. lien MikHmon)", run: () => { copy(details(r)); toast.show("Détails copiés."); } },
+                              { label: "Identifiants MikHmon", run: () => toast.show("Les identifiants MikHmon s'affichent depuis le serveur.") },
+                              { label: "Renommer", run: () => toast.show("Le renommage sera enregistré avec le backend.") },
+                              { label: "Désactiver", run: () => toast.show("La désactivation sera appliquée avec le backend.") },
+                            ].map((a) => (
+                              <button key={a.label} className="flex w-full items-center gap-2 px-3 py-2 text-left hover:bg-slate-50" onClick={() => { setMenu(null); a.run(); }}>
+                                <Copy className="h-4 w-4 text-slate-400" /> {a.label}
+                              </button>
+                            ))}
                             {onDelete && (
                               <button
                                 className="flex w-full items-center gap-2 px-3 py-2 text-left text-red-600 hover:bg-red-50"

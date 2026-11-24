@@ -319,6 +319,79 @@ export default function BalancePage() {
           )}
         </div>
       </div>
+
+      {/* Historique des Ventes (données de démonstration, remplacées par la base au back-end) */}
+      <div className="rounded-2xl bg-[#111827] border border-[#374151] p-6">
+        <h2 className="text-base font-bold text-amber-400 uppercase mb-4 border-l-4 border-amber-400 pl-3">
+          🧾 Historique des Ventes
+        </h2>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm min-w-[640px]">
+            <thead>
+              <tr className="border-b border-[#374151]">
+                {["Date", "Catégorie", "Ticket (utilisateur)", "Montant", "Vendeur", "Statut vente"].map((h) => (
+                  <th key={h} className="text-left px-4 py-3 text-xs font-bold text-[#2B7FFF] uppercase">{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-[#1F2937]">
+              {DEMO_SALES.map((s, i) => (
+                <tr key={i} className="hover:bg-[#1F2937]/50">
+                  <td className="px-4 py-3 text-xs text-slate-400">{s.date}</td>
+                  <td className="px-4 py-3 text-xs text-slate-300">{s.category}</td>
+                  <td className="px-4 py-3 text-xs text-slate-300 font-mono">{s.user}</td>
+                  <td className="px-4 py-3 text-xs text-slate-300">{s.amount.toLocaleString("fr-FR")} {currency}</td>
+                  <td className="px-4 py-3 text-xs text-slate-400">{s.seller}</td>
+                  <td className="px-4 py-3">
+                    <span className={`text-xs font-medium ${s.status === "Approuvée" ? "text-emerald-400" : "text-slate-400"}`}>{s.status}</span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Historique des Retraits */}
+      <div className="rounded-2xl bg-[#111827] border border-[#374151] p-6">
+        <h2 className="text-base font-bold text-amber-400 uppercase mb-4 border-l-4 border-amber-400 pl-3">
+          💸 Historique des Retraits
+        </h2>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm min-w-[520px]">
+            <thead>
+              <tr className="border-b border-[#374151]">
+                {["Date demande", "Montant demandé", "Statut", "Numéro retrait"].map((h) => (
+                  <th key={h} className="text-left px-4 py-3 text-xs font-bold text-[#2B7FFF] uppercase">{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-[#1F2937]">
+              {DEMO_WITHDRAWALS.map((w, i) => (
+                <tr key={i} className="hover:bg-[#1F2937]/50">
+                  <td className="px-4 py-3 text-xs text-slate-400">{w.date}</td>
+                  <td className="px-4 py-3 text-xs text-slate-300">{w.amount.toLocaleString("fr-FR")} {currency}</td>
+                  <td className="px-4 py-3 text-xs font-medium text-emerald-400">{w.status}</td>
+                  <td className="px-4 py-3 text-xs text-slate-400 font-mono">{w.phone}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   );
 }
+
+const DEMO_SALES = [
+  { date: "22/11/2026 20:28:34", category: "Illimité-Promotion-1D", user: "KJEP", amount: 2000, seller: "Vente en ligne", status: "Approuvée" },
+  { date: "22/11/2026 17:38:43", category: "Illimité-Promotion-1D", user: "WXBM", amount: 2000, seller: "Vente en ligne", status: "Approuvée" },
+  { date: "20/11/2026 16:01:20", category: "Illimité-Promotion-1D", user: "LQJFQ", amount: 2000, seller: "Vente en ligne", status: "Approuvée" },
+  { date: "25/09/2026 19:33:20", category: "70MB", user: "CEFNT", amount: 125, seller: "Vente en ligne", status: "Retirée" },
+  { date: "23/06/2026 15:55:43", category: "180MB", user: "EWQZK", amount: 243, seller: "Vente en ligne", status: "Retirée" },
+];
+
+const DEMO_WITHDRAWALS = [
+  { date: "21/11/2026 10:13:42", amount: 67251, status: "Validée", phone: "+243 80 000 00 01" },
+  { date: "17/11/2026 21:59:26", amount: 61000, status: "Validée", phone: "+243 80 000 00 01" },
+];

@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   Receipt,
   Wallet,
@@ -142,6 +144,45 @@ const plans = [
   },
 ];
 
+const SHOP: { title: string; dot: string; items: { name: string; sub: string; icon: typeof Shield; bg: string; fg: string; included?: boolean; href?: string }[] }[] = [
+  {
+    title: "FORMULE DE LA PLATEFORME", dot: "bg-[#10206B]",
+    items: [
+      { name: "Abonnement", sub: "3 887 / mois", icon: Calendar, bg: "bg-slate-100", fg: "text-slate-700", included: true },
+      { name: "Crédit plateforme", sub: "10 % par vente", icon: CreditCard, bg: "bg-violet-50", fg: "text-violet-600" },
+    ],
+  },
+  {
+    title: "CAPACITÉS À DÉBLOQUER", dot: "bg-emerald-500",
+    items: [
+      { name: "Ventes partenaires", sub: "Comprise", icon: Ticket, bg: "bg-violet-50", fg: "text-violet-600", included: true },
+      { name: "Vente par Mobile Money", sub: "Comprise", icon: Smartphone, bg: "bg-emerald-50", fg: "text-emerald-600", included: true },
+      { name: "Espaces interopérabilité", sub: "dès 5 054 / mois", icon: Network, bg: "bg-emerald-50", fg: "text-emerald-600" },
+      { name: "Espaces VPN", sub: "dès 1 944 / mois", icon: Radio, bg: "bg-cyan-50", fg: "text-cyan-600" },
+      { name: "Espaces antennes", sub: "1 166 / antenne", icon: Zap, bg: "bg-rose-50", fg: "text-rose-500" },
+    ],
+  },
+  {
+    title: "OPTIONS ET CONSOMMABLES", dot: "bg-amber-500",
+    items: [
+      { name: "Portails captifs", sub: "dès 3 887", icon: Globe, bg: "bg-amber-50", fg: "text-amber-600", href: "/portal" },
+      { name: "Tutoriels techniques", sub: "dès 3 887", icon: Star, bg: "bg-teal-50", fg: "text-teal-600", href: "/tutorials" },
+      { name: "FLUXION Studio", sub: "Aucune commande à régler", icon: Zap, bg: "bg-pink-50", fg: "text-pink-600", href: "/studio" },
+      { name: "Sous-domaine du portail", sub: "Inclus", icon: Globe, bg: "bg-cyan-50", fg: "text-cyan-600", included: true },
+      { name: "Crédits d'assistance", sub: "0 crédit(s)", icon: Zap, bg: "bg-violet-50", fg: "text-violet-600" },
+      { name: "Crédits Ticket SMS", sub: "10 crédit(s)", icon: Bell, bg: "bg-sky-50", fg: "text-sky-600" },
+    ],
+  },
+  {
+    title: "LICENCES", dot: "bg-rose-500",
+    items: [
+      { name: "Identité", sub: "194 367 / an", icon: Crown, bg: "bg-amber-50", fg: "text-amber-600" },
+      { name: "Services", sub: "dès 116 620 / an", icon: Shield, bg: "bg-blue-50", fg: "text-blue-600" },
+      { name: "Intégrale", sub: "dès 279 889 / an", icon: Crown, bg: "bg-violet-50", fg: "text-violet-600" },
+    ],
+  },
+];
+
 const addons = [
   { id: "addon-vpn", name: "Espace VPN", description: "Tunnels WireGuard & SSTP supplémentaires", icon: Shield, iconBg: "bg-violet-50", iconColor: "text-violet-500", price: 500, period: "/mois" },
   { id: "addon-portal", name: "Portail Premium", description: "Débloquez un modèle de portail captif premium à vie", icon: Globe, iconBg: "bg-blue-50", iconColor: "text-[#2B7FFF]", price: 1000, period: "unique" },
@@ -154,6 +195,8 @@ export default function BillingPage() {
   const [activeTab, setActiveTab] = useState<TabId>("overview");
   const [showRechargeModal, setShowRechargeModal] = useState(false);
   const [showBreakdown, setShowBreakdown] = useState(false);
+  const [shopNote, setShopNote] = useState<string | null>(null);
+  const router = useRouter();
 
   const billingBalance = 13500;
   const currentPlan = "Pro";
@@ -167,39 +210,62 @@ export default function BillingPage() {
     { id: "history", label: "Historique" },
   ];
 
-  return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-xl font-bold text-[#1A1D26]">Facturation</h1>
-          <p className="text-sm text-[#6B7280] mt-0.5">Gérez votre abonnement et vos services FLUXIONWIFI</p>
-        </div>
-        <button
-          onClick={() => setShowRechargeModal(true)}
-          className="inline-flex items-center gap-2 h-10 px-5 rounded-xl bg-[#2B7FFF] text-sm font-medium text-white hover:bg-[#1A6BE6] transition-colors shadow-sm"
-        >
-          <Plus className="h-4 w-4" />
-          Recharger
-        </button>
-      </div>
+  const menu: { section: string; items: { id?: TabId; label: string; icon: typeof Receipt; href?: string; badge?: number }[] }[] = [
+    { section: "FACTURATION", items: [{ id: "overview", label: "Vue d'ensemble", icon: Receipt }, { id: "subscribe", label: "Souscrire & payer", icon: CreditCard }] },
+    { section: "SUIVI", items: [{ id: "active", label: "Mes droits actifs", icon: Star, badge: activeServices.length }, { id: "history", label: "Historique & reçus", icon: FileText }] },
+    { section: "AILLEURS", items: [{ label: "Retraits (Mon Solde)", icon: Wallet, href: "/finance/balance" }, { label: "Studio Visibilité", icon: Zap, href: "/studio" }] },
+  ];
 
-      {/* Tabs */}
-      <div className="flex gap-1 rounded-xl bg-[#F1F3F7] p-1 overflow-x-auto">
-        {tabs.map((tab) => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            className={`flex-1 min-w-fit px-4 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap ${
-              activeTab === tab.id
-                ? "bg-white text-[#1A1D26] shadow-sm"
-                : "text-[#6B7280] hover:text-[#1A1D26]"
-            }`}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </div>
+  return (
+    <div className="-m-4 flex min-h-[calc(100vh-4rem)] bg-[#F1F3F7] lg:-m-6">
+      <aside className="hidden w-[230px] shrink-0 bg-[#1B2336] text-slate-300 lg:block">
+        <div className="border-b border-white/10 px-5 py-4 text-[20px] font-extrabold text-white">
+          FLUXION <span className="text-amber-400">FACTURATION</span>
+        </div>
+        <nav className="p-2">
+          {menu.map((g) => (
+            <div key={g.section}>
+              <p className="px-3 pb-1 pt-5 text-[12px] font-semibold uppercase tracking-wide text-slate-400">{g.section}</p>
+              {g.items.map((it) =>
+                it.href ? (
+                  <Link key={it.label} href={it.href} className="flex items-center gap-3 rounded-md px-3 py-2.5 text-[15px] hover:bg-white/5">
+                    <it.icon className="h-4 w-4" /> {it.label}
+                  </Link>
+                ) : (
+                  <button
+                    key={it.label}
+                    onClick={() => setActiveTab(it.id!)}
+                    className={`flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left text-[15px] ${activeTab === it.id ? "bg-[#17307A] text-white" : "hover:bg-white/5"}`}
+                  >
+                    <it.icon className="h-4 w-4" /> <span className="flex-1">{it.label}</span>
+                    {it.badge ? <span className="rounded-full bg-red-500 px-1.5 text-[11px] font-bold text-white">{it.badge}</span> : null}
+                  </button>
+                ),
+              )}
+            </div>
+          ))}
+        </nav>
+      </aside>
+
+      <div className="flex min-w-0 flex-1 flex-col">
+        <header className="flex h-12 shrink-0 items-center justify-between bg-gradient-to-r from-[#10206B] to-[#1B3A9E] px-4 text-white">
+          <span className="text-[15px]">Facturation</span>
+          <div className="flex items-center gap-4 text-sm">
+            <span className="rounded bg-white/10 px-2 py-0.5 text-xs font-semibold">{billingBalance.toLocaleString("fr-FR")} {currency}</span>
+            <Link href="/dashboard" aria-label="Quitter la facturation"><X className="h-4 w-4" /></Link>
+          </div>
+        </header>
+
+        <div className="lg:hidden flex gap-1 overflow-x-auto bg-white p-2">
+          {menu.flatMap((g) => g.items).filter((i) => i.id).map((i) => (
+            <button key={i.id} onClick={() => setActiveTab(i.id!)} className={`shrink-0 rounded-lg px-3 py-1.5 text-xs font-medium ${activeTab === i.id ? "bg-[#17307A] text-white" : "text-[#6B7280]"}`}>{i.label}</button>
+          ))}
+        </div>
+
+        <div className="flex-1 space-y-6 p-4 lg:p-6">
+          <h1 className="text-[28px] font-medium text-[#1A1D26]">
+            {activeTab === "overview" ? "Vue d'ensemble" : activeTab === "subscribe" ? "Souscrire & payer" : activeTab === "active" ? "Mes droits actifs" : "Historique & reçus"}
+          </h1>
 
       {/* === TAB: Vue d'ensemble === */}
       {activeTab === "overview" && (
@@ -342,83 +408,43 @@ export default function BillingPage() {
         </div>
       )}
 
-      {/* === TAB: Souscrire === */}
+      {/* === TAB: Souscrire & payer === */}
       {activeTab === "subscribe" && (
-        <div className="space-y-6">
-          {/* Plans */}
-          <div>
-            <h2 className="text-base font-semibold text-[#1A1D26] mb-4">Formules</h2>
-            <div className="grid gap-4 lg:grid-cols-3">
-              {plans.map((plan) => (
-                <div
-                  key={plan.name}
-                  className={`rounded-2xl p-5 ${
-                    plan.highlighted
-                      ? "bg-[#0B1E4D] text-white ring-2 ring-[#2B7FFF]"
-                      : "bg-white border border-[#E8ECF1] shadow-[0_1px_3px_rgba(0,0,0,0.04)]"
-                  }`}
-                >
-                  {plan.current && (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-[#2B7FFF] px-2.5 py-0.5 text-[10px] font-semibold text-white mb-3">
-                      <Star className="h-3 w-3" /> Actuel
-                    </span>
-                  )}
-                  <h3 className={`text-lg font-bold ${plan.highlighted ? "text-white" : "text-[#1A1D26]"}`}>{plan.name}</h3>
-                  <div className="flex items-baseline gap-1 mt-2">
-                    <span className={`text-3xl font-bold ${plan.highlighted ? "text-white" : "text-[#1A1D26]"}`}>
-                      {(plan as { priceLabel?: string }).priceLabel || (plan.price === 0 ? "Gratuit" : format(plan.price))}
-                    </span>
-                    {plan.period && <span className={`text-sm ${plan.highlighted ? "text-white/60" : "text-[#6B7280]"}`}>{plan.period}</span>}
-                  </div>
-                  <p className={`text-xs mt-1 ${plan.highlighted ? "text-white/60" : "text-[#6B7280]"}`}>{plan.description}</p>
-                  <ul className="mt-4 space-y-2">
-                    {plan.features.map((f) => (
-                      <li key={f} className="flex items-center gap-2 text-xs">
-                        <CheckCircle className={`h-3.5 w-3.5 shrink-0 ${plan.highlighted ? "text-[#2B7FFF]" : "text-emerald-500"}`} />
-                        <span className={plan.highlighted ? "text-white/80" : "text-[#374151]"}>{f}</span>
-                      </li>
-                    ))}
-                  </ul>
-                  <button
-                    className={`mt-5 w-full h-10 rounded-xl text-sm font-medium transition-colors ${
-                      plan.current
-                        ? "bg-white/10 text-white/50 cursor-default"
-                        : plan.highlighted
-                          ? "bg-[#2B7FFF] text-white hover:bg-[#1A6BE6]"
-                          : "border border-[#D1D5DB] text-[#374151] hover:bg-[#F5F7FA]"
-                    }`}
-                    disabled={plan.current}
-                  >
-                    {plan.current ? "Formule actuelle" : (plan as { priceLabel?: string }).priceLabel ? "Nous contacter" : "Choisir"}
-                  </button>
-                </div>
-              ))}
+        <div className="space-y-5">
+          <div className="flex items-center justify-between rounded-lg bg-gradient-to-r from-[#10206B] to-[#1B3A9E] px-5 py-4 text-white">
+            <div className="flex items-center gap-3">
+              <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-white/10"><Wallet className="h-5 w-5 text-amber-300" /></span>
+              <div>
+                <p className="text-[11px] font-semibold tracking-wide text-white/70">SOLDE DISPONIBLE</p>
+                <p className="text-[22px] font-extrabold">{billingBalance.toLocaleString("fr-FR")} {currency}</p>
+              </div>
             </div>
+            <button onClick={() => setShowRechargeModal(true)} className="inline-flex h-9 items-center gap-2 rounded-md bg-amber-400 px-4 text-sm font-bold text-[#1B1300] hover:bg-amber-300"><Plus className="h-4 w-4" /> Recharger</button>
           </div>
 
-          {/* Add-ons */}
-          <div>
-            <h2 className="text-base font-semibold text-[#1A1D26] mb-4">Services complémentaires</h2>
-            <div className="grid gap-4 sm:grid-cols-2">
-              {addons.map((addon) => (
-                <div key={addon.id} className="rounded-2xl border border-[#E8ECF1] bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)] flex items-start gap-4">
-                  <div className={`rounded-xl p-2.5 shrink-0 ${addon.iconBg}`}>
-                    <addon.icon className={`h-5 w-5 ${addon.iconColor}`} />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="text-sm font-semibold text-[#1A1D26]">{addon.name}</h3>
-                    <p className="text-xs text-[#6B7280] mt-0.5">{addon.description}</p>
-                    <div className="flex items-center justify-between mt-3">
-                      <p className="text-sm font-bold text-[#2B7FFF]">{format(addon.price)} <span className="text-xs font-normal text-[#9CA3AF]">{addon.period}</span></p>
-                      <button className="inline-flex items-center gap-1.5 h-8 px-3.5 rounded-lg bg-[#EBF2FF] text-xs font-medium text-[#2B7FFF] hover:bg-[#2B7FFF] hover:text-white transition-colors">
-                        <Plus className="h-3 w-3" /> Activer
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ))}
+          {shopNote && <p className="rounded-lg bg-[#EBF2FF] px-4 py-2.5 text-sm text-[#1A6BE6]">{shopNote}</p>}
+
+          {SHOP.map((g) => (
+            <div key={g.title}>
+              <p className="mb-2 flex items-center gap-2 text-[12px] font-extrabold tracking-wide text-[#10206B]"><span className={`h-2 w-2 rounded-full ${g.dot}`} /> {g.title}</p>
+              <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                {g.items.map((it) => (
+                  <button
+                    key={it.name}
+                    onClick={() => (it.href ? router.push(it.href) : setShopNote(`${it.name} : le paiement par solde sera activé avec le backend.`))}
+                    className="flex items-center gap-3 rounded-lg border border-[#E2E6EE] bg-white px-4 py-3 text-left shadow-sm transition-colors hover:border-[#2B7FFF]"
+                  >
+                    <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${it.bg}`}><it.icon className={`h-5 w-5 ${it.fg}`} /></span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-[14px] font-bold text-[#1A1D26]">{it.name}</span>
+                      <span className="block truncate text-[12px] text-[#6B7280]">{it.sub}</span>
+                    </span>
+                    {it.included ? <CheckCircle className="h-5 w-5 shrink-0 text-emerald-500" /> : <ArrowRight className="h-4 w-4 shrink-0 text-slate-300" />}
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
+          ))}
         </div>
       )}
 
@@ -594,6 +620,8 @@ export default function BillingPage() {
           </div>
         </div>
       )}
+        </div>
+      </div>
     </div>
   );
 }

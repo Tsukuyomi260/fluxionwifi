@@ -1,5 +1,6 @@
 "use client";
 
+import { PortalExtraTab, type ExtraTab } from "@/components/portal/portal-extra-tabs";
 import { useState } from "react";
 import Link from "next/link";
 import {
@@ -644,22 +645,8 @@ export default function PortalPage() {
             </div>
           )}
 
-          {/* TAB: AUTRES TABS FALLBACK (Tarifs, Mode, SMS, etc.) */}
           {["mode", "tarifs", "integration", "sms", "infos", "fidelite", "verification", "lier"].includes(activeTab) && (
-            <div className="space-y-4">
-              <h3 className="text-sm font-bold uppercase tracking-wider text-amber-400 capitalize">
-                Configuration : {activeTab}
-              </h3>
-              <p className="text-xs text-gray-400">
-                Paramètres avancés synchronisés automatiquement avec votre routeur MikroTik et la base de données FLUXIONWIFI.
-              </p>
-              <div className="p-4 rounded-xl bg-[#1E293B] border border-[#334155] text-xs text-gray-300 space-y-2">
-                <p className="font-semibold text-white">Options actives :</p>
-                <p>• Synchronisation temps réel FreeRADIUS activée</p>
-                <p>• Génération instantanée du ticket après validation du webhook Mobile Money</p>
-                <p>• Reconnexion automatique des utilisateurs expirés vers la page de paiement</p>
-              </div>
-            </div>
+            <PortalExtraTab tab={activeTab as ExtraTab} />
           )}
         </div>
 

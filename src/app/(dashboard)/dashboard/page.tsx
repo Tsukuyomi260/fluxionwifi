@@ -51,7 +51,7 @@ import { cn } from "@/lib/utils";
 const navTabs = [
   { name: "Facturation", href: "/finance/billing", icon: Receipt },
   { name: "Portail Captif", href: "/portal", icon: Globe },
-  { name: "Télécharger", href: "/downloads", icon: Download },
+  { name: "Télécharger", href: "/console/downloads", icon: Download },
   { name: "Gestion Données", href: "/data", icon: Database },
   { name: "Comptes Associés", href: "#", icon: UsersRound, modal: "accounts" as const },
   { name: "Journal", href: "#", icon: BookText, modal: "journal" as const },
@@ -135,7 +135,7 @@ export default function DashboardPage() {
     },
     {
       name: "Administration Tickets",
-      href: "/console/stock",
+      href: "/tickets-admin",
       icon: Ticket,
       iconBg: "bg-teal-50",
       iconColor: "text-teal-600",
