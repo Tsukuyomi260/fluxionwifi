@@ -7,7 +7,7 @@ import { TicketModal } from "@/components/reseller/ticket-modal";
 import { RESELLER, RESELLER_PROFILES, formatCdf, netCost, type ResellerProfileItem, type Sale } from "@/lib/reseller-data";
 
 export default function VendrePage() {
-  const { sell, balance } = useReseller();
+  const { sell, available } = useReseller();
   const [query, setQuery] = useState("");
   const [sale, setSale] = useState<Sale | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -32,7 +32,7 @@ export default function VendrePage() {
       <div>
         <h1 className="text-2xl font-bold text-[#0B1E4D]">Vente de tickets WiFi</h1>
         <p className="mt-1 text-sm text-[#6B7280]">
-          Choisissez un forfait. Votre commission de {RESELLER.commissionRate} % est déjà déduite du crédit débité.
+          Choisissez un forfait. Votre commission de {RESELLER.commissionRate} % est déjà déduite de la dette ajoutée à votre crédit.
         </p>
       </div>
 
@@ -58,7 +58,7 @@ export default function VendrePage() {
               <th className="px-5 py-3 font-medium">Forfait</th>
               <th className="px-5 py-3 font-medium">Validité</th>
               <th className="px-5 py-3 font-medium">Prix</th>
-              <th className="px-5 py-3 font-medium">Votre coût</th>
+              <th className="px-5 py-3 font-medium">À régler</th>
               <th className="px-5 py-3 text-right font-medium">Action</th>
             </tr>
           </thead>
@@ -74,7 +74,7 @@ export default function VendrePage() {
                   <td className="px-5 py-3.5 text-right">
                     <button
                       onClick={() => handleSell(p)}
-                      disabled={balance < cost}
+                      disabled={available < cost}
                       className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-emerald-500 px-4 text-sm font-medium text-white hover:bg-emerald-600 disabled:cursor-not-allowed disabled:bg-[#D1D5DB]"
                     >
                       <ShoppingCart className="h-4 w-4" /> Vendre
@@ -102,7 +102,7 @@ export default function VendrePage() {
               </div>
               <button
                 onClick={() => handleSell(p)}
-                disabled={balance < cost}
+                disabled={available < cost}
                 className="mt-3 flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-emerald-500 text-sm font-medium text-white hover:bg-emerald-600 disabled:cursor-not-allowed disabled:bg-[#D1D5DB]"
               >
                 <Printer className="h-4 w-4" /> Vendre et générer le ticket

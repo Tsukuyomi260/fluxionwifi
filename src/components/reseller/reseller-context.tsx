@@ -15,12 +15,13 @@ import {
 } from "@/lib/reseller-data";
 
 interface ResellerState {
-  balance: number;
+  creditUsed: number;
+  creditLimit: number;
+  available: number;
   sales: Sale[];
   ledger: LedgerEntry[];
   messages: ChatMessage[];
   sell: (profile: ResellerProfileItem) => { ok: true; sale: Sale } | { ok: false; error: string };
-  topUp: (amount: number) => void;
   sendMessage: (body: string) => void;
 }
 
@@ -36,7 +37,8 @@ let counter = 100;
 const nextId = (p: string) => `${p}${++counter}`;
 
 export function ResellerProvider({ children }: { children: ReactNode }) {
-  const [balance, setBalance] = useState(RESELLER.initialBalance);
+  const [creditUsed, setCreditUsed] = useState(RESELLER.initialCreditUsed);
+  const creditLimit = RESELLER.creditLimit;
   const [sales, setSales] = useState<Sale[]>(INITIAL_SALES);
   const [ledger, setLedger] = useState<LedgerEntry[]>(INITIAL_LEDGER);
   const [messages, setMessages] = useState<ChatMessage[]>(INITIAL_MESSAGES);
@@ -44,7 +46,8 @@ export function ResellerProvider({ children }: { children: ReactNode }) {
   const sell = useCallback<ResellerState["sell"]>(
     (profile) => {
       const cost = netCost(profile.price, RESELLER.commissionRate);
-      if (balance < cost) return { ok: false, error: "Crédit insuffisant. Rechargez votre compte." };
+      if (creditUsed + cost > creditLimit)
+        return { ok: false, error: "Limite de crédit atteinte. Réglez votre dette auprès du propriétaire pour continuer." };
       const at = new Date().toISOString();
       const sale: Sale = {
         id: nextId("s"),
@@ -54,28 +57,16 @@ export function ResellerProvider({ children }: { children: ReactNode }) {
         cost,
         at,
       };
-      const after = balance - cost;
-      setBalance(after);
+      const after = creditUsed + cost;
+      setCreditUsed(after);
       setSales((s) => [sale, ...s]);
       setLedger((l) => [
-        { id: nextId("l"), type: "sale", amount: -cost, balanceAfter: after, note: profile.name, at },
+        { id: nextId("l"), type: "sale", amount: cost, debtAfter: after, note: profile.name, at },
         ...l,
       ]);
       return { ok: true, sale };
     },
-    [balance]
-  );
-
-  const topUp = useCallback(
-    (amount: number) => {
-      const after = balance + amount;
-      setBalance(after);
-      setLedger((l) => [
-        { id: nextId("l"), type: "topup", amount, balanceAfter: after, note: "Recharge", at: new Date().toISOString() },
-        ...l,
-      ]);
-    },
-    [balance]
+    [creditUsed, creditLimit]
   );
 
   const sendMessage = useCallback((body: string) => {
@@ -86,8 +77,8 @@ export function ResellerProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const value = useMemo(
-    () => ({ balance, sales, ledger, messages, sell, topUp, sendMessage }),
-    [balance, sales, ledger, messages, sell, topUp, sendMessage]
+    () => ({ creditUsed, creditLimit, available: creditLimit - creditUsed, sales, ledger, messages, sell, sendMessage }),
+    [creditUsed, creditLimit, sales, ledger, messages, sell, sendMessage]
   );
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;

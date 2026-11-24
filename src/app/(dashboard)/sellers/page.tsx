@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useCurrency } from "@/hooks/use-currency";
 import { useSellers } from "@/hooks/use-sellers";
 import { useTickets } from "@/hooks/use-tickets";
+import { PartnersManager } from "@/components/partners/partners-manager";
 import type { Seller, SellerStatus } from "@/lib/supabase/types";
 import {
   Users,
@@ -47,6 +48,7 @@ export default function SellersPage() {
   const [rembMethode, setRembMethode] = useState("all");
 
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showPartners, setShowPartners] = useState(false);
   const [showAssignModal, setShowAssignModal] = useState(false);
   const [assignTarget, setAssignTarget] = useState<Seller | null>(null);
   const [assignProfile, setAssignProfile] = useState("");
@@ -538,11 +540,12 @@ export default function SellersPage() {
         </table>
       </div>
 
-      {/* Floating button - manage sellers */}
+      {/* Bouton flottant : Gestion Partenaires (comme EVISIONS CONNECT) */}
       <button
-        onClick={() => setShowAddModal(true)}
-        className="fixed bottom-24 right-6 lg:bottom-8 lg:right-8 z-30 flex items-center justify-center h-14 w-14 rounded-full bg-orange-500 text-white shadow-lg hover:bg-orange-600 transition-colors"
-        title="G&eacute;rer les vendeurs"
+        onClick={() => setShowPartners(true)}
+        aria-label="Gestion Partenaires"
+        title="Gestion Partenaires"
+        className="fixed bottom-40 right-3 lg:bottom-28 lg:right-3 z-30 flex items-center justify-center h-14 w-14 rounded-full bg-amber-400 text-[#1F2937] shadow-xl shadow-black/40 hover:scale-105 transition-transform"
       >
         <Users className="h-6 w-6" />
       </button>
@@ -760,6 +763,8 @@ export default function SellersPage() {
           </div>
         </div>
       )}
+
+      {showPartners && <PartnersManager onClose={() => setShowPartners(false)} />}
     </div>
   );
 }

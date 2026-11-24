@@ -53,11 +53,15 @@ alter table public.tickets
 -- (échoue s'il existe déjà des doublons de code entre propriétaires)
 create unique index if not exists idx_tickets_code_global on public.tickets(code);
 
--- Revendeurs : compte de connexion, crédit
+-- Revendeurs : compte de connexion, crédit (modèle EVISIONS : vente à crédit, dette plafonnée)
 alter table public.sellers
   add column if not exists login_id text,                       -- ex. FLX-KIL-003-SITE
   add column if not exists auth_user_id uuid references auth.users(id) on delete set null,
-  add column if not exists balance integer not null default 0;  -- crédit disponible
+  add column if not exists credit_limit integer not null default 0,   -- limite de crédit (dette max)
+  add column if not exists credit_used integer not null default 0;   -- dette actuelle (crédit utilisé)
+
+alter table public.sellers
+  add constraint sellers_credit_check check (credit_used >= 0 and credit_limit >= 0);
 
 create unique index if not exists idx_sellers_login on public.sellers(login_id) where login_id is not null;
 create unique index if not exists idx_sellers_auth_user on public.sellers(auth_user_id) where auth_user_id is not null;
@@ -262,15 +266,15 @@ $$;
 -- ============================================================
 -- 5. Espace revendeur : crédit, ventes, messagerie
 -- ============================================================
-create type public.seller_ledger_type as enum ('topup', 'sale', 'refund', 'adjustment', 'withdrawal');
+create type public.seller_ledger_type as enum ('sale', 'payment', 'adjustment');
 
 create table public.seller_ledger (
   id uuid primary key default uuid_generate_v4(),
   owner_id uuid not null references public.profiles(id) on delete cascade,
   seller_id uuid not null references public.sellers(id) on delete cascade,
   type public.seller_ledger_type not null,
-  amount integer not null,                       -- signé : + crédit, - débit
-  balance_after integer not null,
+  amount integer not null,                       -- signé : + augmente la dette (vente), - la réduit (règlement)
+  debt_after integer not null,
   ticket_id uuid references public.tickets(id) on delete set null,
   note text default '',
   created_at timestamptz not null default now()
@@ -291,7 +295,7 @@ create table public.seller_messages (
 create index idx_seller_messages_seller on public.seller_messages(seller_id, created_at desc);
 create index idx_seller_messages_owner on public.seller_messages(owner_id);
 
--- Vente d'un ticket par un revendeur connecté (atomique : débit, ticket, journal)
+-- Vente d'un ticket par un revendeur connecté (atomique : dette, ticket, journal)
 create or replace function public.seller_sell_ticket(p_profile_id uuid)
 returns public.tickets
 language plpgsql
@@ -302,6 +306,7 @@ declare
   v_profile public.ticket_profiles%rowtype;
   v_owner public.profiles%rowtype;
   v_cost integer;
+  v_debt integer;
   v_ticket public.tickets%rowtype;
   v_code text;
 begin
@@ -321,11 +326,13 @@ begin
 
   select * into v_owner from public.profiles where id = v_seller.owner_id;
 
+  -- montant ajouté à la dette = prix moins commission
   v_cost := coalesce(v_profile.seller_price,
                      v_profile.price - (v_profile.price * v_seller.commission_rate / 100));
+  v_debt := v_seller.credit_used + v_cost;
 
-  if v_seller.balance < v_cost then
-    raise exception 'Crédit insuffisant';
+  if v_debt > v_seller.credit_limit then
+    raise exception 'Limite de crédit atteinte';
   end if;
 
   v_code := public.gen_ticket_code(v_owner.ticket_charset, v_owner.ticket_length);
@@ -335,14 +342,14 @@ begin
     returning * into v_ticket;
 
   update public.sellers
-    set balance = balance - v_cost,
+    set credit_used = v_debt,
         total_sold = total_sold + 1,
         total_revenue = total_revenue + v_profile.price,
         last_active = now()
     where id = v_seller.id;
 
-  insert into public.seller_ledger (owner_id, seller_id, type, amount, balance_after, ticket_id, note)
-    values (v_seller.owner_id, v_seller.id, 'sale', -v_cost, v_seller.balance - v_cost, v_ticket.id, v_profile.name);
+  insert into public.seller_ledger (owner_id, seller_id, type, amount, debt_after, ticket_id, note)
+    values (v_seller.owner_id, v_seller.id, 'sale', v_cost, v_debt, v_ticket.id, v_profile.name);
 
   insert into public.transactions (owner_id, type, label, description, amount, status, method, ticket_id, seller_id)
     values (v_seller.owner_id, 'sale', 'Vente revendeur', v_profile.name, v_profile.price, 'completed', 'seller', v_ticket.id, v_seller.id);
@@ -354,46 +361,39 @@ $$;
 revoke all on function public.seller_sell_ticket(uuid) from public, anon;
 grant execute on function public.seller_sell_ticket(uuid) to authenticated;
 
--- Crédit d'un revendeur par le propriétaire (atomique)
-create or replace function public.owner_credit_seller(p_seller_id uuid, p_amount integer, p_note text default '')
+-- « Solder » : le propriétaire a encaissé, la dette du revendeur repasse à zéro
+create or replace function public.owner_settle_seller(p_seller_id uuid)
 returns integer
 language plpgsql
 security definer set search_path = public
 as $$
 declare
   v_seller public.sellers%rowtype;
-  v_new integer;
 begin
   select * into v_seller from public.sellers where id = p_seller_id and owner_id = auth.uid() for update;
   if not found then
     raise exception 'Revendeur introuvable';
   end if;
-  if p_amount = 0 then
-    raise exception 'Montant invalide';
-  end if;
-  v_new := v_seller.balance + p_amount;
-  if v_new < 0 then
-    raise exception 'Solde négatif impossible';
+  if v_seller.credit_used <= 0 then
+    raise exception 'Aucune dette à solder';
   end if;
 
-  update public.sellers set balance = v_new where id = v_seller.id;
-  insert into public.seller_ledger (owner_id, seller_id, type, amount, balance_after, note)
-    values (v_seller.owner_id, v_seller.id,
-            case when p_amount > 0 then 'topup' else 'adjustment' end::public.seller_ledger_type,
-            p_amount, v_new, p_note);
-  return v_new;
+  update public.sellers set credit_used = 0 where id = v_seller.id;
+  insert into public.seller_ledger (owner_id, seller_id, type, amount, debt_after, note)
+    values (v_seller.owner_id, v_seller.id, 'payment', -v_seller.credit_used, 0, 'Règlement reçu');
+  return v_seller.credit_used;
 end;
 $$;
 
-revoke all on function public.owner_credit_seller(uuid, integer, text) from public, anon;
-grant execute on function public.owner_credit_seller(uuid, integer, text) to authenticated;
+revoke all on function public.owner_settle_seller(uuid) from public, anon;
+grant execute on function public.owner_settle_seller(uuid) to authenticated;
 
 
 -- ============================================================
 -- 6. Paiements (FlexPay d'abord, autres fournisseurs ensuite)
 -- ============================================================
 create type public.payment_status as enum ('pending', 'succeeded', 'failed', 'cancelled');
-create type public.payment_purpose as enum ('ticket_sale', 'seller_topup', 'subscription');
+create type public.payment_purpose as enum ('ticket_sale', 'seller_settlement', 'subscription');
 
 create table public.payments (
   id uuid primary key default uuid_generate_v4(),

@@ -20,7 +20,7 @@ function isActive(pathname: string, href: string) {
 
 function Shell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const { balance } = useReseller();
+  const { creditUsed, creditLimit } = useReseller();
 
   return (
     <div className="min-h-screen bg-[#F5F7FA]">
@@ -73,7 +73,7 @@ function Shell({ children }: { children: React.ReactNode }) {
             className="inline-flex items-center gap-2 rounded-full bg-[#EBF2FF] px-4 py-1.5 text-sm font-semibold text-[#2B7FFF]"
           >
             <Wallet className="h-4 w-4" />
-            {formatCdf(balance)}
+            {creditUsed.toLocaleString("fr-FR")} / {creditLimit.toLocaleString("fr-FR")} CDF
           </Link>
         </header>
 

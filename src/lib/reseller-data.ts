@@ -19,11 +19,12 @@ export interface Sale {
   at: string; // ISO
 }
 
+// Journal de la dette : amount > 0 augmente la dette (vente), amount < 0 la réduit (règlement).
 export interface LedgerEntry {
   id: string;
-  type: "topup" | "sale" | "refund" | "adjustment";
-  amount: number; // signé
-  balanceAfter: number;
+  type: "sale" | "payment" | "adjustment";
+  amount: number;
+  debtAfter: number;
   note: string;
   at: string;
 }
@@ -41,7 +42,8 @@ export const RESELLER = {
   loginId: "FLX-KIL-003-SITE",
   network: "FLUXIONWIFI",
   commissionRate: 15,
-  initialBalance: 39257,
+  creditLimit: 100000,
+  initialCreditUsed: 8800,
 };
 
 export const RESELLER_PROFILES: ResellerProfileItem[] = [
@@ -69,13 +71,12 @@ export const INITIAL_SALES: Sale[] = [
 ];
 
 export const INITIAL_LEDGER: LedgerEntry[] = [
-  { id: "l1", type: "topup", amount: 50000, balanceAfter: 50000, note: "Recharge par le propriétaire", at: "2026-11-14T08:00:00Z" },
-  { id: "l2", type: "sale", amount: -8500, balanceAfter: 41500, note: "5GB 30J", at: "2026-11-15T17:22:00Z" },
-  { id: "l3", type: "sale", amount: -1700, balanceAfter: 39800, note: "2GB 2J", at: "2026-11-17T08:30:00Z" },
-  { id: "l4", type: "sale", amount: -10625, balanceAfter: 29175, note: "10GB 30J", at: "2026-11-17T15:05:00Z" },
-  { id: "l5", type: "topup", amount: 15000, balanceAfter: 44175, note: "Recharge par le propriétaire", at: "2026-11-18T07:30:00Z" },
-  { id: "l6", type: "sale", amount: -1275, balanceAfter: 42900, note: "1GB 24H", at: "2026-11-18T09:12:00Z" },
-  { id: "l7", type: "sale", amount: -1700, balanceAfter: 41200, note: "Illimité Promo 1J", at: "2026-11-18T10:40:00Z" },
+  { id: "l6", type: "sale", amount: 1700, debtAfter: 8800, note: "Illimité Promo 1J", at: "2026-11-18T10:40:00Z" },
+  { id: "l5", type: "sale", amount: 1275, debtAfter: 7100, note: "1GB 24H", at: "2026-11-18T09:12:00Z" },
+  { id: "l4", type: "payment", amount: -15000, debtAfter: 5825, note: "Règlement reçu par le propriétaire", at: "2026-11-17T18:00:00Z" },
+  { id: "l3", type: "sale", amount: 10625, debtAfter: 20825, note: "10GB 30J", at: "2026-11-17T15:05:00Z" },
+  { id: "l2", type: "sale", amount: 1700, debtAfter: 10200, note: "2GB 2J", at: "2026-11-17T08:30:00Z" },
+  { id: "l1", type: "sale", amount: 8500, debtAfter: 8500, note: "5GB 30J", at: "2026-11-15T17:22:00Z" },
 ];
 
 export const INITIAL_MESSAGES: ChatMessage[] = [
