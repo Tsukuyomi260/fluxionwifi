@@ -1,8 +1,6 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 import { useCurrency } from "@/hooks/use-currency";
 import { useTickets } from "@/hooks/use-tickets";
 import { useRouters } from "@/hooks/use-routers";
@@ -34,48 +32,11 @@ import {
   X,
 } from "lucide-react";
 
-type SidebarItem = { label: string; href: string; icon: import("lucide-react").LucideIcon; active?: boolean; badge?: boolean };
-
-const SIDEBAR_SECTIONS: { label: string | null; items: SidebarItem[] }[] = [
-  {
-    label: null,
-    items: [
-      { label: "Tableau de bord", href: "/console", icon: LayoutDashboard, active: true },
-    ],
-  },
-  {
-    label: "HOTSPOT",
-    items: [
-      { label: "Profils tarifaires", href: "/console/stock", icon: Tag },
-      { label: "Générer des tickets", href: "/tickets", icon: PlusCircle },
-      { label: "Stock / Utilisateurs", href: "/console/stock", icon: Users },
-      { label: "Tickets en ligne", href: "/console/sessions", icon: Radio, badge: true },
-      { label: "Sessions & conso", href: "/console/sessions", icon: Activity },
-    ],
-  },
-  {
-    label: "INVENTAIRE",
-    items: [
-      { label: "Inventaire", href: "/console/stock", icon: Package },
-    ],
-  },
-  {
-    label: "RÉSEAU",
-    items: [
-      { label: "Routeurs", href: "/console/routers", icon: Router },
-      { label: "Routeurs indépendants", href: "/console/routers", icon: Star },
-      { label: "Tunnel MikHmon VPN", href: "/vpn", icon: Shield },
-    ],
-  },
-];
-
 export default function ConsoleDashboard() {
   const { currency } = useCurrency();
   const { tickets, profiles, loading: tl } = useTickets();
   const { routers, loading: rl, online } = useRouters();
   const { activeSessions, loading: sl } = useSessions();
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const pathname = usePathname();
 
   const anyLoading = tl || rl || sl;
   const availableTickets = tickets.filter((t) => t.status === "available").length;
@@ -92,131 +53,7 @@ export default function ConsoleDashboard() {
   });
 
   return (
-    <div className="-m-4 lg:-m-6 min-h-full bg-[#F3F4F6] flex">
-      {/* Mobile sidebar overlay */}
-      {sidebarOpen && (
-        <div
-          className="fixed inset-0 z-40 bg-black/50 lg:hidden"
-          onClick={() => setSidebarOpen(false)}
-        />
-      )}
-
-      {/* Sidebar */}
-      <aside
-        className={`fixed lg:sticky top-0 left-0 z-50 lg:z-auto h-screen w-[240px] bg-[#1E293B] flex flex-col overflow-y-auto shrink-0 transition-transform duration-200 ${
-          sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
-        }`}
-      >
-        {/* Sidebar header */}
-        <div className="px-5 py-4 flex items-center justify-between">
-          <h2 className="text-base font-bold">
-            <span className="text-[#2B7FFF]">FLUXION</span>
-            <span className="text-emerald-400"> CONSOLE</span>
-          </h2>
-          <button
-            onClick={() => setSidebarOpen(false)}
-            className="lg:hidden p-1 rounded text-slate-400 hover:text-white"
-          >
-            <X className="h-5 w-5" />
-          </button>
-        </div>
-
-        {/* Nav sections */}
-        <nav className="flex-1 px-3 pb-4 space-y-1">
-          {SIDEBAR_SECTIONS.map((section, si) => (
-            <div key={si}>
-              {section.label && (
-                <p className="px-3 pt-5 pb-1.5 text-[10px] font-bold tracking-wider text-slate-500 uppercase">
-                  {section.label}
-                </p>
-              )}
-              {section.items.map((item) => {
-                const isActive = item.active || pathname === item.href;
-                const Icon = item.icon;
-                return (
-                  <Link
-                    key={item.label}
-                    href={item.href}
-                    onClick={() => setSidebarOpen(false)}
-                    className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                      isActive
-                        ? "bg-[#2B7FFF] text-white"
-                        : "text-slate-300 hover:bg-[#334155] hover:text-white"
-                    }`}
-                  >
-                    <Icon className="h-4 w-4 shrink-0" />
-                    <span className="truncate">{item.label}</span>
-                    {item.badge && !sl && activeSessions.length > 0 && (
-                      <span className="ml-auto rounded-full bg-emerald-500 px-1.5 py-0.5 text-[10px] font-bold text-white leading-none">
-                        {activeSessions.length}
-                      </span>
-                    )}
-                  </Link>
-                );
-              })}
-            </div>
-          ))}
-        </nav>
-      </aside>
-
-      {/* Main content */}
-      <div className="flex-1 min-w-0">
-        {/* Top bar */}
-        <div className="bg-[#1F2937] px-5 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => setSidebarOpen(true)}
-              className="lg:hidden p-1.5 rounded-lg text-white hover:bg-[#374151]"
-            >
-              <Menu className="h-5 w-5" />
-            </button>
-            <h1 className="text-lg font-bold lg:hidden">
-              <span className="text-[#2B7FFF]">FLUXION</span>
-              <span className="text-emerald-400"> CONSOLE</span>
-            </h1>
-            <span className="hidden lg:inline text-sm text-slate-300">
-              Tableau de bord
-            </span>
-          </div>
-          <div className="flex items-center gap-3">
-            <div className="relative">
-              <select className="h-8 pl-3 pr-8 rounded-lg bg-[#374151] text-white text-xs appearance-none focus:outline-none min-w-[200px]">
-                <option>Tous les routeurs (global)</option>
-                {routers.map((r) => (
-                  <option key={r.id} value={r.id}>
-                    {r.name}
-                  </option>
-                ))}
-              </select>
-              <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 h-3 w-3 text-white/60 pointer-events-none" />
-            </div>
-            <span className="text-xs font-semibold text-white bg-[#374151] px-3 py-1.5 rounded-lg hidden sm:inline">
-              FLUXIONWIFI
-            </span>
-          </div>
-        </div>
-
-        {/* Portal alert banner */}
-        <div className="mx-5 mt-4 flex items-center justify-between rounded-lg bg-amber-400 px-4 py-2">
-          <div className="flex items-center gap-2">
-            <AlertTriangle className="h-4 w-4 text-amber-900" />
-            <span className="text-sm font-semibold text-amber-900">
-              Portail &agrave; publier
-            </span>
-            <span className="rounded bg-amber-600 px-2 py-0.5 text-[10px] font-bold text-white">
-              1
-            </span>
-          </div>
-          <Link
-            href="/portal"
-            className="text-xs font-semibold text-amber-900 hover:text-amber-700 flex items-center gap-1"
-          >
-            <Globe className="h-3.5 w-3.5" />
-            Publier
-            <ChevronDown className="h-3 w-3 -rotate-90" />
-          </Link>
-        </div>
-
+    <div className="flex-1 min-w-0 pb-6">
         {/* Stat cards */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mx-5 mt-4">
           <div className="rounded-xl bg-emerald-500 p-5 text-white relative overflow-hidden">
@@ -507,7 +344,6 @@ export default function ConsoleDashboard() {
             </div>
           </div>
         </div>
-      </div>
     </div>
   );
 }
