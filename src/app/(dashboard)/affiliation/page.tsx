@@ -1,523 +1,265 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import {
-  Gift,
-  Copy,
-  CheckCircle,
-  Users,
-  Wallet,
-  TrendingUp,
-  Link2,
-  Share2,
-  Clock,
-  ChevronDown,
-  Search,
-  Eye,
-  ArrowRight,
-  X,
-  Send,
-  Smartphone,
-  Star,
-  Award,
-  Target,
-  Zap,
-  ExternalLink,
-  Download,
-  MessageCircle,
-  Globe,
+  CalendarCheck, Coins, Copy, Check, Gift, Handshake, HeartHandshake, History, KeyRound, LayoutGrid, Link2, MessageSquare, PiggyBank,
+  PieChart, Receipt, Send, Hourglass, UserPen, Users, Wallet, Wifi, X, ArrowLeftRight, Banknote,
 } from "lucide-react";
 import { useCurrency } from "@/hooks/use-currency";
+import { useUser } from "@/hooks/use-user";
 
-type ReferralStatus = "active" | "trial" | "expired";
+const PROFILE_KEY = "fluxion-withdraw-profile";
+const MIN_WITHDRAW = 1000;
 
-interface Referral {
-  id: string;
+interface Filleul {
   name: string;
-  email: string;
-  date: string;
-  plan: string;
-  status: ReferralStatus;
-  earned: number;
+  at: string;
+  source: string;
+  gains: number;
 }
 
-interface Commission {
-  id: string;
-  referral: string;
-  type: string;
-  amount: number;
-  date: string;
-  status: "paid" | "pending";
+// Données de démonstration (remplacées par la base au back-end).
+const FILLEULS: Filleul[] = [
+  { name: "Associé 1", at: "06/11/2026", source: "signup_backend_local", gains: 0 },
+  { name: "Associé 2", at: "20/09/2026", source: "reconciliation_referredBy", gains: 0 },
+];
+const COMMISSIONS: { date: string; client: string; amount: number; description: string }[] = [];
+const WITHDRAWALS: { date: string; amount: number; status: string }[] = [];
+
+const CHIPS: { label: string; icon: typeof Coins; cls: string }[] = [
+  { label: "Recharges crédits", icon: Coins, cls: "border-emerald-500/30 bg-emerald-500/10 text-emerald-300" },
+  { label: "Abonnements", icon: CalendarCheck, cls: "border-sky-500/30 bg-sky-500/10 text-sky-300" },
+  { label: "Portails captifs", icon: Wifi, cls: "border-violet-500/30 bg-violet-500/10 text-violet-300" },
+  { label: "Transferts de solde", icon: ArrowLeftRight, cls: "border-amber-500/30 bg-amber-500/10 text-amber-300" },
+  { label: "Frais d'intégration", icon: KeyRound, cls: "border-red-500/30 bg-red-500/10 text-red-300" },
+  { label: "SMS OTP", icon: MessageSquare, cls: "border-teal-500/30 bg-teal-500/10 text-teal-300" },
+];
+
+function Section({ title, icon: Icon, children }: { title: string; icon: typeof History; children: React.ReactNode }) {
+  return (
+    <section className="rounded-2xl border border-white/10 bg-[#0F1A3A]/70 p-5 sm:p-6">
+      <h3 className="mb-4 flex items-center gap-3 rounded-lg border-l-4 border-amber-400 bg-gradient-to-r from-amber-400/10 to-transparent px-4 py-3 text-[17px] font-bold text-amber-300">
+        <Icon className="h-5 w-5" /> {title}
+      </h3>
+      {children}
+    </section>
+  );
 }
 
-const demoReferrals: Referral[] = [
-  { id: "R01", name: "Alain K.", email: "al***@gmail.com", date: "25 Oct 2026", plan: "Pro", status: "active", earned: 3000 },
-  { id: "R02", name: "Fatou D.", email: "fa***@yahoo.fr", date: "20 Oct 2026", plan: "Pro", status: "active", earned: 3000 },
-  { id: "R03", name: "Ibrahim S.", email: "ib***@gmail.com", date: "18 Oct 2026", plan: "Starter", status: "trial", earned: 0 },
-  { id: "R04", name: "Marie C.", email: "ma***@outlook.com", date: "10 Oct 2026", plan: "Pro", status: "active", earned: 6000 },
-  { id: "R05", name: "Kodjo A.", email: "ko***@gmail.com", date: "5 Oct 2026", plan: "Pro", status: "expired", earned: 3000 },
-  { id: "R06", name: "Awa B.", email: "aw***@gmail.com", date: "28 Sep 2026", plan: "Enterprise", status: "active", earned: 12000 },
-];
-
-const demoCommissions: Commission[] = [
-  { id: "C01", referral: "Alain K.", type: "Abonnement Pro", amount: 3000, date: "25 Oct 2026", status: "pending" },
-  { id: "C02", referral: "Fatou D.", type: "Abonnement Pro", amount: 3000, date: "20 Oct 2026", status: "paid" },
-  { id: "C03", referral: "Marie C.", type: "Renouvellement Pro", amount: 3000, date: "15 Oct 2026", status: "paid" },
-  { id: "C04", referral: "Marie C.", type: "Abonnement Pro", amount: 3000, date: "10 Oct 2026", status: "paid" },
-  { id: "C05", referral: "Kodjo A.", type: "Abonnement Pro", amount: 3000, date: "5 Oct 2026", status: "paid" },
-  { id: "C06", referral: "Awa B.", type: "Abonnement Enterprise", amount: 12000, date: "28 Sep 2026", status: "paid" },
-];
-
-const statusConfig: Record<ReferralStatus, { label: string; color: string; bg: string }> = {
-  active: { label: "Actif", color: "text-emerald-600", bg: "bg-emerald-50" },
-  trial: { label: "Essai", color: "text-amber-600", bg: "bg-amber-50" },
-  expired: { label: "Expiré", color: "text-gray-500", bg: "bg-gray-100" },
-};
+function Th({ children }: { children: React.ReactNode }) {
+  return <th className="bg-gradient-to-r from-[#16275C] to-[#0B1230] px-4 py-3 text-left text-xs font-bold uppercase tracking-wide text-amber-300">{children}</th>;
+}
 
 export default function AffiliationPage() {
   const { currency } = useCurrency();
+  const { user } = useUser();
   const [copied, setCopied] = useState(false);
-  const [activeTab, setActiveTab] = useState<"referrals" | "commissions">("referrals");
-  const [search, setSearch] = useState("");
-  const [showWithdrawModal, setShowWithdrawModal] = useState(false);
-  const [showShareModal, setShowShareModal] = useState(false);
+  const [amount, setAmount] = useState("1000");
+  const [transfer, setTransfer] = useState("");
+  const [msg, setMsg] = useState<string | null>(null);
+  const [profile, setProfile] = useState({ first: "", last: "", address: "", phone: "" });
+  const profileRef = useRef<HTMLElement>(null);
 
-  const affiliateCode = "PATERNE-FWF2026";
-  const affiliateLink = `https://fluxionwifi.com/ref/${affiliateCode}`;
+  const code = (user?.email?.split("@")[0] || "FLUXI").replace(/[^a-zA-Z0-9]/g, "").slice(0, 8) || "FLUXI";
+  const link = `https://fluxionwifi.tech/register?ref=${code}`;
 
-  const totalEarned = demoReferrals.reduce((s, r) => s + r.earned, 0);
-  const pendingAmount = demoCommissions.filter((c) => c.status === "pending").reduce((s, c) => s + c.amount, 0);
-  const activeReferrals = demoReferrals.filter((r) => r.status === "active").length;
-  const commissionRate = 20;
+  const gains = FILLEULS.reduce((n, f) => n + f.gains, 0);
+  const available = gains;
+  const pending = 0;
+  const withdrawn = WITHDRAWALS.reduce((n, w) => n + w.amount, 0);
+  const fmt = (n: number) => `${n.toLocaleString("fr-FR")} ${currency}`;
+  const balance = 1800; // solde de la plateforme (démo)
+  const subscription = 58310;
 
-  const copyLink = () => {
-    navigator.clipboard.writeText(affiliateLink);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
+  useEffect(() => {
+    const id = setTimeout(() => {
+      try {
+        const p = localStorage.getItem(PROFILE_KEY);
+        if (p) setProfile(JSON.parse(p));
+      } catch {
+        /* stockage indisponible */
+      }
+    }, 0);
+    return () => clearTimeout(id);
+  }, []);
 
-  const filteredReferrals = demoReferrals.filter((r) =>
-    r.name.toLowerCase().includes(search.toLowerCase()) || r.email.toLowerCase().includes(search.toLowerCase())
-  );
+  function say(m: string) {
+    setMsg(m);
+    setTimeout(() => setMsg(null), 4500);
+  }
 
-  const filteredCommissions = demoCommissions.filter((c) =>
-    c.referral.toLowerCase().includes(search.toLowerCase())
-  );
+  async function copyLink() {
+    try {
+      await navigator.clipboard.writeText(link);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1800);
+    } catch {
+      /* presse-papiers indisponible */
+    }
+  }
 
-  const fmt = (n: number) => n.toLocaleString("fr-FR") + " " + currency;
+  function saveProfile(e: React.FormEvent) {
+    e.preventDefault();
+    try { localStorage.setItem(PROFILE_KEY, JSON.stringify(profile)); } catch { /* indisponible */ }
+    say("Profil de retrait enregistré.");
+  }
+
+  function withdraw() {
+    const n = Number(amount);
+    if (!profile.phone) return say("Renseignez d'abord votre profil de retrait (numéro Mobile Money).");
+    if (available < MIN_WITHDRAW) return say(`Solde minimum de ${fmt(MIN_WITHDRAW)} requis.`);
+    if (!n || n < MIN_WITHDRAW || n > available) return say(`Montant invalide : entre ${fmt(MIN_WITHDRAW)} et ${fmt(available)}.`);
+    say("Demande de retrait enregistrée (démonstration : le traitement se fera avec le backend).");
+  }
+
+  const cards: { title: string; value: string; sub: string; color: string; icon: typeof Users; num: string }[] = [
+    { title: "Mes filleuls", value: `${FILLEULS.length}`, sub: "filleul(s)", color: "border-t-red-500", icon: Users, num: "text-red-400" },
+    { title: "Total des gains", value: fmt(gains), sub: `${COMMISSIONS.length} commission(s)`, color: "border-t-emerald-500", icon: Coins, num: "text-emerald-400" },
+    { title: "Solde disponible", value: fmt(available), sub: "Prêt pour retrait", color: "border-t-sky-500", icon: Wallet, num: "text-sky-400" },
+    { title: "Demandes en attente", value: fmt(pending), sub: "0 demande(s)", color: "border-t-amber-500", icon: Hourglass, num: "text-amber-400" },
+    { title: "Total retiré", value: fmt(withdrawn), sub: `${WITHDRAWALS.length} retrait(s)`, color: "border-t-violet-500", icon: PiggyBank, num: "text-violet-400" },
+  ];
+
+  const input = "h-[52px] w-full rounded-lg border border-white/20 bg-[#0A1230] px-4 text-center text-lg font-bold text-amber-300 placeholder:text-slate-500 focus:border-amber-400 focus:outline-none";
+  const field = "h-11 w-full rounded-lg border border-white/15 bg-[#0A1230] px-4 text-sm text-white placeholder:text-slate-500 focus:border-amber-400 focus:outline-none";
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-[#0B1E4D]">Programme d&apos;affiliation</h1>
-          <p className="text-sm text-gray-500 mt-1">
-            Gagnez {commissionRate}% de commission sur chaque abonnement référé
-          </p>
+    <div className="-m-4 min-h-[calc(100vh-4rem)] bg-gradient-to-br from-[#0B1330] via-[#101B45] to-[#0A1028] p-4 text-white lg:-m-6 lg:p-8">
+      <div className="mx-auto max-w-[1200px] space-y-5">
+        <div className="flex items-start justify-between border-b border-white/10 pb-4">
+          <h1 className="inline-flex items-center gap-3 border-b-2 border-amber-400 pb-2 text-[28px] font-extrabold text-amber-300">
+            <Handshake className="h-7 w-7" /> Mon Espace Affiliation
+          </h1>
+          <Link href="/account" aria-label="Fermer" className="flex h-9 w-9 items-center justify-center rounded-full text-slate-300 hover:bg-white/10"><X className="h-5 w-5" /></Link>
         </div>
-        <div className="flex gap-2">
-          <button
-            onClick={() => setShowShareModal(true)}
-            className="inline-flex items-center gap-2 rounded-xl border border-[#2B7FFF] bg-white px-4 py-2.5 text-sm font-medium text-[#2B7FFF] hover:bg-blue-50 transition-colors"
-          >
-            <Share2 className="h-4 w-4" />
-            Partager
-          </button>
-          <button
-            onClick={() => setShowWithdrawModal(true)}
-            className="inline-flex items-center gap-2 rounded-xl bg-[#2B7FFF] px-4 py-2.5 text-sm font-medium text-white hover:bg-[#2563EB] transition-colors"
-          >
-            <Wallet className="h-4 w-4" />
-            Retirer
-          </button>
-        </div>
-      </div>
 
-      {/* Affiliate link card */}
-      <div className="rounded-2xl bg-gradient-to-r from-[#0B1E4D] via-[#122B66] to-[#1A3A7A] p-5 relative overflow-hidden">
-        <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-[#2B7FFF]/10 blur-3xl" />
-        <div className="absolute -bottom-10 -left-10 w-32 h-32 rounded-full bg-[#2B7FFF]/15 blur-3xl" />
-        <div className="relative z-10">
-          <div className="flex items-center gap-2 mb-3">
-            <Link2 className="h-4 w-4 text-[#5BA0FF]" />
-            <span className="text-sm font-medium text-white/70">Votre lien d&apos;affiliation</span>
+        {msg && <p className="rounded-lg border border-amber-400/30 bg-amber-400/10 px-4 py-3 text-sm text-amber-100">{msg}</p>}
+
+        {/* Lien de parrainage */}
+        <section className="rounded-2xl border border-white/10 bg-[#0F1A3A]/70 p-5 sm:p-6">
+          <h2 className="flex items-center gap-2 text-[19px] font-bold text-amber-300"><Link2 className="h-5 w-5" /> Mon Lien de Parrainage</h2>
+          <p className="mt-3 text-center text-[15px] text-slate-200">
+            Partagez ce lien unique. Pour chaque inscription, vous recevrez une commission de <b className="text-emerald-400">10%</b> sur :
+          </p>
+          <div className="mt-3 flex flex-wrap justify-center gap-2">
+            {CHIPS.map((c) => (
+              <span key={c.label} className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold ${c.cls}`}><c.icon className="h-3.5 w-3.5" /> {c.label}</span>
+            ))}
           </div>
-          <div className="flex flex-col sm:flex-row gap-3">
-            <div className="flex-1 rounded-xl bg-white/10 backdrop-blur-sm border border-white/10 px-4 py-2.5 flex items-center">
-              <span className="text-sm text-white/90 truncate flex-1 font-mono">{affiliateLink}</span>
-            </div>
-            <button
-              onClick={copyLink}
-              className={`inline-flex items-center justify-center gap-2 rounded-xl px-5 py-2.5 text-sm font-medium transition-all ${
-                copied
-                  ? "bg-emerald-500 text-white"
-                  : "bg-white text-[#0B1E4D] hover:bg-white/90"
-              }`}
-            >
-              {copied ? (
-                <>
-                  <CheckCircle className="h-4 w-4" />
-                  Copié !
-                </>
-              ) : (
-                <>
-                  <Copy className="h-4 w-4" />
-                  Copier
-                </>
-              )}
+          <div className="mt-4 flex flex-col gap-3 sm:flex-row">
+            <input readOnly value={link} className="h-[50px] flex-1 rounded-xl border border-white/15 bg-[#0A1230] px-4 font-medium text-amber-300" />
+            <button onClick={copyLink} className="inline-flex h-[50px] items-center justify-center gap-2 rounded-xl bg-amber-400 px-6 font-bold text-[#1B1300] hover:bg-amber-300">
+              {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />} {copied ? "Copié" : "Copier"}
             </button>
           </div>
-          <div className="flex items-center gap-4 mt-3">
-            <span className="text-xs text-white/40">Code : <span className="font-mono text-white/60">{affiliateCode}</span></span>
-            <span className="text-xs text-white/40">·</span>
-            <span className="text-xs text-white/40">Commission : <span className="text-[#5BA0FF] font-semibold">{commissionRate}%</span> sur chaque paiement</span>
+        </section>
+
+        {/* Tableau de bord financier */}
+        <section className="rounded-2xl border border-white/10 bg-[#0F1A3A]/70 p-5 sm:p-6">
+          <h2 className="flex items-center justify-center gap-2 border-b border-amber-400/40 pb-3 text-[20px] font-extrabold uppercase text-amber-300"><PieChart className="h-5 w-5" /> Tableau de bord financier</h2>
+          <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+            {cards.map((c) => (
+              <div key={c.title} className={`rounded-xl border border-white/10 border-t-[3px] ${c.color} bg-white/[0.04] p-4 text-center`}>
+                <c.icon className={`mx-auto h-9 w-9 ${c.num}`} />
+                <p className="mt-2 text-[13px] font-bold uppercase text-slate-200">{c.title}</p>
+                <p className={`mt-1 text-[20px] font-extrabold ${c.num}`}>{c.value}</p>
+                <p className="text-xs text-slate-400">{c.sub}</p>
+              </div>
+            ))}
           </div>
-        </div>
-      </div>
+          <p className="mt-4 rounded-lg border-l-4 border-amber-400 bg-amber-400/10 px-4 py-3 text-sm text-slate-200">
+            <b className="text-amber-300">Information :</b> Le solde disponible exclut les demandes en attente et déjà validées
+          </p>
+        </section>
 
-      {/* Stats */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {[
-          { label: "Gains totaux", value: fmt(totalEarned), icon: TrendingUp, color: "text-[#2B7FFF]", bg: "bg-blue-50" },
-          { label: "En attente", value: fmt(pendingAmount), icon: Clock, color: "text-amber-600", bg: "bg-amber-50" },
-          { label: "Filleuls actifs", value: activeReferrals, icon: Users, color: "text-emerald-600", bg: "bg-emerald-50" },
-          { label: "Total filleuls", value: demoReferrals.length, icon: Gift, color: "text-violet-600", bg: "bg-violet-50" },
-        ].map((s) => (
-          <div key={s.label} className="rounded-2xl border border-[#E8ECF1] bg-white p-4 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
-            <div className="flex items-center gap-3">
-              <div className={`rounded-xl ${s.bg} p-2.5`}>
-                <s.icon className={`h-5 w-5 ${s.color}`} />
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-[#0B1E4D]">{s.value}</p>
-                <p className="text-xs text-gray-500">{s.label}</p>
-              </div>
-            </div>
+        {/* Demande de retrait */}
+        <section className="rounded-2xl border border-white/10 bg-[#0F1A3A]/70 p-5 text-center sm:p-6">
+          <h2 className="flex items-center justify-center gap-2 text-[20px] font-extrabold uppercase text-amber-300"><Banknote className="h-5 w-5" /> Demande de retrait</h2>
+          <p className="mx-auto mt-4 max-w-md rounded-lg border border-white/10 bg-white/[0.04] px-4 py-3 text-sm text-amber-200">
+            Solde minimum de {fmt(MIN_WITHDRAW)} requis. Disponible: {fmt(available)}
+          </p>
+          <label className="mt-5 flex items-center justify-center gap-2 text-sm font-semibold" htmlFor="amt"><Coins className="h-4 w-4 text-amber-400" /> Montant souhaité :</label>
+          <input id="amt" type="number" value={amount} onChange={(e) => setAmount(e.target.value)} className={`${input} mx-auto mt-2 max-w-[400px]`} />
+          <div className="mt-5 flex flex-wrap justify-center gap-3">
+            <button onClick={() => profileRef.current?.scrollIntoView({ behavior: "smooth" })} className="inline-flex h-11 items-center gap-2 rounded-full bg-slate-100 px-6 text-sm font-bold text-[#1A1D26] hover:bg-white"><UserPen className="h-4 w-4" /> Profil de retrait</button>
+            <button onClick={withdraw} className="inline-flex h-11 items-center gap-2 rounded-full bg-amber-500 px-6 text-sm font-bold text-[#1B1300] hover:bg-amber-400"><Send className="h-4 w-4" /> Demander un retrait</button>
           </div>
-        ))}
-      </div>
+        </section>
 
-      {/* How it works */}
-      <div className="rounded-2xl border border-[#E8ECF1] bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
-        <h2 className="text-sm font-semibold text-[#0B1E4D] mb-4">Comment ça fonctionne</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          {[
-            { step: "1", icon: Share2, title: "Partagez votre lien", desc: "Envoyez votre lien d'affiliation à vos contacts ou partagez-le sur les réseaux sociaux.", color: "text-[#2B7FFF]", bg: "bg-blue-50" },
-            { step: "2", icon: Users, title: "Ils s'inscrivent", desc: "Vos filleuls créent un compte et souscrivent à une formule payante via votre lien.", color: "text-violet-600", bg: "bg-violet-50" },
-            { step: "3", icon: Wallet, title: "Vous gagnez 20%", desc: "Recevez 20% de commission sur chaque paiement de vos filleuls, sans limite de durée.", color: "text-emerald-600", bg: "bg-emerald-50" },
-          ].map((item) => (
-            <div key={item.step} className="flex gap-3">
-              <div className={`shrink-0 w-10 h-10 rounded-xl ${item.bg} flex items-center justify-center`}>
-                <item.icon className={`h-5 w-5 ${item.color}`} />
-              </div>
-              <div>
-                <p className="text-sm font-semibold text-[#0B1E4D]">{item.title}</p>
-                <p className="text-xs text-gray-500 mt-0.5 leading-relaxed">{item.desc}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Tabs */}
-      <div className="flex gap-1 rounded-xl bg-[#F5F7FA] p-1 w-fit">
-        <button
-          onClick={() => setActiveTab("referrals")}
-          className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
-            activeTab === "referrals" ? "bg-white text-[#0B1E4D] shadow-sm" : "text-gray-500 hover:text-gray-700"
-          }`}
-        >
-          Filleuls
-        </button>
-        <button
-          onClick={() => setActiveTab("commissions")}
-          className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
-            activeTab === "commissions" ? "bg-white text-[#0B1E4D] shadow-sm" : "text-gray-500 hover:text-gray-700"
-          }`}
-        >
-          Commissions
-        </button>
-      </div>
-
-      {/* List */}
-      <div className="rounded-2xl border border-[#E8ECF1] bg-white shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
-        <div className="p-4 border-b border-[#E8ECF1]">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-            <input
-              type="text"
-              placeholder={activeTab === "referrals" ? "Rechercher un filleul..." : "Rechercher une commission..."}
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="w-full rounded-xl border border-[#E8ECF1] bg-[#F5F7FA] pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#2B7FFF]/20 focus:border-[#2B7FFF]"
-            />
+        {/* Utiliser mon gain */}
+        <section className="rounded-2xl border border-white/10 bg-[#0F1A3A]/70 p-5 text-center sm:p-6">
+          <h2 className="flex items-center justify-center gap-2 text-[20px] font-extrabold uppercase text-amber-300"><ArrowLeftRight className="h-5 w-5" /> Utiliser mon gain</h2>
+          <p className="mx-auto mt-4 max-w-xl text-sm text-slate-300">
+            Gain disponible : {fmt(available)} · Solde actuel : {fmt(balance)} ({fmt(balance)} une fois transféré)
+          </p>
+          <label className="mt-4 flex items-center justify-center gap-2 text-sm font-semibold"><Coins className="h-4 w-4 text-amber-400" /> Montant à transférer vers mon solde ({currency}) :</label>
+          <input type="number" value={transfer} onChange={(e) => setTransfer(e.target.value)} placeholder="Montant" className={`${input} mx-auto mt-2 max-w-[400px]`} />
+          <div className="mt-5 flex flex-wrap justify-center gap-3">
+            <button
+              onClick={() => (Number(transfer) > 0 && Number(transfer) <= available ? say("Transfert enregistré (démonstration).") : say("Montant invalide ou supérieur au gain disponible."))}
+              className="inline-flex h-11 items-center gap-2 rounded-full bg-amber-500 px-6 text-sm font-bold text-[#1B1300] hover:bg-amber-400"
+            >
+              <Wallet className="h-4 w-4" /> Transférer vers mon solde
+            </button>
+            <button onClick={() => say("Paiement de l'abonnement : solde insuffisant.")} className="inline-flex h-11 items-center gap-2 rounded-full bg-slate-100 px-6 text-sm font-bold text-[#1A1D26] hover:bg-white">
+              <CalendarCheck className="h-4 w-4" /> Payer mon abonnement ({fmt(subscription)})
+            </button>
           </div>
-        </div>
+          <p className="mx-auto mt-4 max-w-md text-sm text-slate-400">
+            Abonnement annuel — 2 options — prolonge l&apos;échéance du 23/07/2027. Votre gain paie {fmt(available)}, votre solde complète {fmt(subscription - available)} — solde insuffisant.
+          </p>
+        </section>
 
-        {activeTab === "referrals" && (
-          <>
-            {/* Desktop table */}
-            <div className="hidden lg:block">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b border-[#E8ECF1]">
-                    <th className="text-left text-xs font-medium text-gray-500 uppercase px-4 py-3">Filleul</th>
-                    <th className="text-left text-xs font-medium text-gray-500 uppercase px-4 py-3">Date</th>
-                    <th className="text-left text-xs font-medium text-gray-500 uppercase px-4 py-3">Formule</th>
-                    <th className="text-left text-xs font-medium text-gray-500 uppercase px-4 py-3">Statut</th>
-                    <th className="text-right text-xs font-medium text-gray-500 uppercase px-4 py-3">Gains</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredReferrals.map((r) => {
-                    const st = statusConfig[r.status];
-                    return (
-                      <tr key={r.id} className="border-b border-[#E8ECF1] last:border-0 hover:bg-[#F5F7FA]/50 transition-colors">
-                        <td className="px-4 py-3.5">
-                          <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#2B7FFF] to-[#0B1E4D] flex items-center justify-center text-xs font-bold text-white">
-                              {r.name.charAt(0)}
-                            </div>
-                            <div>
-                              <p className="text-sm font-medium text-[#0B1E4D]">{r.name}</p>
-                              <p className="text-xs text-gray-400">{r.email}</p>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="px-4 py-3.5 text-sm text-gray-600">{r.date}</td>
-                        <td className="px-4 py-3.5">
-                          <span className="inline-flex items-center gap-1 rounded-lg bg-blue-50 px-2 py-0.5 text-xs font-medium text-[#2B7FFF]">
-                            {r.plan}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3.5">
-                          <span className={`inline-flex items-center rounded-lg ${st.bg} px-2.5 py-1 text-xs font-medium ${st.color}`}>
-                            {st.label}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3.5 text-right">
-                          <span className={`text-sm font-semibold ${r.earned > 0 ? "text-emerald-600" : "text-gray-400"}`}>
-                            {r.earned > 0 ? `+${fmt(r.earned)}` : "—"}
-                          </span>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
+        <Section title="Historique des Commissions" icon={Receipt}>
+          <div className="overflow-x-auto"><table className="w-full min-w-[560px] text-sm">
+            <thead><tr><Th>Date</Th><Th>Client</Th><Th>Montant</Th><Th>Description</Th></tr></thead>
+            <tbody>
+              {COMMISSIONS.length === 0 && <tr><td colSpan={4} className="px-4 py-4 italic text-slate-300">Aucune commission enregistrée.</td></tr>}
+              {COMMISSIONS.map((c, i) => <tr key={i} className="border-b border-white/10"><td className="px-4 py-3">{c.date}</td><td className="px-4 py-3">{c.client}</td><td className="px-4 py-3">{fmt(c.amount)}</td><td className="px-4 py-3">{c.description}</td></tr>)}
+            </tbody>
+          </table></div>
+        </Section>
 
-            {/* Mobile cards */}
-            <div className="lg:hidden divide-y divide-[#E8ECF1]">
-              {filteredReferrals.map((r) => {
-                const st = statusConfig[r.status];
-                return (
-                  <div key={r.id} className="p-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#2B7FFF] to-[#0B1E4D] flex items-center justify-center text-xs font-bold text-white">
-                          {r.name.charAt(0)}
-                        </div>
-                        <div>
-                          <p className="text-sm font-medium text-[#0B1E4D]">{r.name}</p>
-                          <p className="text-xs text-gray-400">{r.date}</p>
-                        </div>
-                      </div>
-                      <span className={`inline-flex items-center rounded-lg ${st.bg} px-2 py-0.5 text-xs font-medium ${st.color}`}>
-                        {st.label}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between text-xs text-gray-500">
-                      <span>Formule {r.plan}</span>
-                      <span className={`font-semibold ${r.earned > 0 ? "text-emerald-600" : "text-gray-400"}`}>
-                        {r.earned > 0 ? `+${fmt(r.earned)}` : "—"}
-                      </span>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </>
-        )}
-
-        {activeTab === "commissions" && (
-          <>
-            <div className="hidden lg:block">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b border-[#E8ECF1]">
-                    <th className="text-left text-xs font-medium text-gray-500 uppercase px-4 py-3">Filleul</th>
-                    <th className="text-left text-xs font-medium text-gray-500 uppercase px-4 py-3">Type</th>
-                    <th className="text-left text-xs font-medium text-gray-500 uppercase px-4 py-3">Date</th>
-                    <th className="text-left text-xs font-medium text-gray-500 uppercase px-4 py-3">Statut</th>
-                    <th className="text-right text-xs font-medium text-gray-500 uppercase px-4 py-3">Montant</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredCommissions.map((c) => (
-                    <tr key={c.id} className="border-b border-[#E8ECF1] last:border-0 hover:bg-[#F5F7FA]/50 transition-colors">
-                      <td className="px-4 py-3.5 text-sm font-medium text-[#0B1E4D]">{c.referral}</td>
-                      <td className="px-4 py-3.5 text-sm text-gray-600">{c.type}</td>
-                      <td className="px-4 py-3.5 text-sm text-gray-600">{c.date}</td>
-                      <td className="px-4 py-3.5">
-                        <span className={`inline-flex items-center rounded-lg px-2.5 py-1 text-xs font-medium ${
-                          c.status === "paid" ? "bg-emerald-50 text-emerald-600" : "bg-amber-50 text-amber-600"
-                        }`}>
-                          {c.status === "paid" ? "Payé" : "En attente"}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3.5 text-right">
-                        <span className="text-sm font-semibold text-emerald-600">+{fmt(c.amount)}</span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-
-            <div className="lg:hidden divide-y divide-[#E8ECF1]">
-              {filteredCommissions.map((c) => (
-                <div key={c.id} className="p-4">
-                  <div className="flex items-center justify-between mb-1">
-                    <p className="text-sm font-medium text-[#0B1E4D]">{c.referral}</p>
-                    <span className="text-sm font-semibold text-emerald-600">+{fmt(c.amount)}</span>
-                  </div>
-                  <div className="flex items-center justify-between text-xs text-gray-400">
-                    <span>{c.type} · {c.date}</span>
-                    <span className={c.status === "paid" ? "text-emerald-600" : "text-amber-600"}>
-                      {c.status === "paid" ? "Payé" : "En attente"}
-                    </span>
-                  </div>
-                </div>
+        <Section title="Mes Filleuls" icon={Users}>
+          <div className="overflow-x-auto"><table className="w-full min-w-[560px] text-sm">
+            <thead><tr><Th>Filleul</Th><Th>Inscrit le</Th><Th>Source</Th><Th>Gains générés</Th></tr></thead>
+            <tbody>
+              {FILLEULS.map((f) => (
+                <tr key={f.name} className="border-b border-white/10">
+                  <td className="px-4 py-3 font-bold">{f.name}</td>
+                  <td className="px-4 py-3">{f.at}</td>
+                  <td className="px-4 py-3"><span className="rounded bg-violet-500/20 px-2 py-0.5 text-xs text-violet-300">{f.source}</span></td>
+                  <td className="px-4 py-3 text-slate-400">{f.gains > 0 ? fmt(f.gains) : "— Pas encore"}</td>
+                </tr>
               ))}
-            </div>
-          </>
-        )}
+            </tbody>
+          </table></div>
+        </Section>
 
-        {((activeTab === "referrals" && filteredReferrals.length === 0) || (activeTab === "commissions" && filteredCommissions.length === 0)) && (
-          <div className="py-12 text-center">
-            <Gift className="h-10 w-10 text-gray-300 mx-auto mb-3" />
-            <p className="text-sm text-gray-500">Aucun résultat</p>
-          </div>
-        )}
+        <Section title="Historique des Retraits" icon={History}>
+          <div className="overflow-x-auto"><table className="w-full min-w-[480px] text-sm">
+            <thead><tr><Th>Date</Th><Th>Montant</Th><Th>Statut</Th></tr></thead>
+            <tbody>
+              {WITHDRAWALS.length === 0 && <tr><td colSpan={3} className="px-4 py-4 italic text-slate-300">Aucune demande de retrait.</td></tr>}
+              {WITHDRAWALS.map((w, i) => <tr key={i} className="border-b border-white/10"><td className="px-4 py-3">{w.date}</td><td className="px-4 py-3">{fmt(w.amount)}</td><td className="px-4 py-3">{w.status}</td></tr>)}
+            </tbody>
+          </table></div>
+        </Section>
+
+        <section ref={profileRef} className="rounded-2xl border border-white/10 bg-[#0F1A3A]/70 p-5 sm:p-6">
+          <h3 className="mb-4 flex items-center gap-3 rounded-lg border-l-4 border-amber-400 bg-gradient-to-r from-amber-400/10 to-transparent px-4 py-3 text-[17px] font-bold text-amber-300"><UserPen className="h-5 w-5" /> Profil de Retrait</h3>
+          <form onSubmit={saveProfile} className="grid gap-4 sm:grid-cols-2">
+            <div><label className="mb-1.5 block text-sm font-semibold">Prénom :</label><input className={field} placeholder="Votre prénom" value={profile.first} onChange={(e) => setProfile({ ...profile, first: e.target.value })} /></div>
+            <div><label className="mb-1.5 block text-sm font-semibold">Nom :</label><input className={field} placeholder="Votre nom" value={profile.last} onChange={(e) => setProfile({ ...profile, last: e.target.value })} /></div>
+            <div><label className="mb-1.5 block text-sm font-semibold">Adresse :</label><input className={field} placeholder="Votre adresse / Ville" value={profile.address} onChange={(e) => setProfile({ ...profile, address: e.target.value })} /></div>
+            <div><label className="mb-1.5 block text-sm font-semibold">Numéro de retrait (Mobile Money) :</label><input type="tel" className={field} placeholder="Ex: 97000000" value={profile.phone} onChange={(e) => setProfile({ ...profile, phone: e.target.value })} /></div>
+            <div className="sm:col-span-2"><button className="inline-flex h-11 items-center gap-2 rounded-full bg-amber-500 px-6 text-sm font-bold text-[#1B1300] hover:bg-amber-400"><Gift className="h-4 w-4" /> Enregistrer le Profil</button></div>
+          </form>
+        </section>
+
+        <p className="flex items-center justify-center gap-2 pb-4 text-xs text-slate-500"><HeartHandshake className="h-3.5 w-3.5" /> <LayoutGrid className="hidden" /> PROPULSÉ PAR <b className="text-slate-300">FLUXIONWIFI</b></p>
       </div>
-
-      {/* Withdraw modal */}
-      {showWithdrawModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="bg-white rounded-2xl w-full max-w-md shadow-xl">
-            <div className="flex items-center justify-between p-5 border-b border-[#E8ECF1]">
-              <h2 className="text-lg font-bold text-[#0B1E4D]">Retirer mes gains</h2>
-              <button onClick={() => setShowWithdrawModal(false)} className="rounded-lg p-1.5 hover:bg-gray-100">
-                <X className="h-5 w-5 text-gray-400" />
-              </button>
-            </div>
-            <div className="p-5 space-y-4">
-              <div className="rounded-xl bg-[#F5F7FA] p-4 text-center">
-                <p className="text-xs text-gray-500 mb-1">Solde disponible</p>
-                <p className="text-2xl font-bold text-[#0B1E4D]">{fmt(totalEarned)}</p>
-                <p className="text-xs text-amber-600 mt-1">{fmt(pendingAmount)} en attente de validation</p>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">Montant à retirer</label>
-                <div className="relative">
-                  <input
-                    type="number"
-                    placeholder="0"
-                    className="w-full rounded-xl border border-[#E8ECF1] bg-[#F5F7FA] px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#2B7FFF]/20 focus:border-[#2B7FFF] pr-16"
-                  />
-                  <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-gray-400">{currency}</span>
-                </div>
-                <div className="flex gap-2 mt-2">
-                  {[5000, 10000, 20000].map((v) => (
-                    <button key={v} className="flex-1 rounded-lg border border-[#E8ECF1] py-1.5 text-xs font-medium text-gray-600 hover:bg-[#F5F7FA] transition-colors">
-                      {v.toLocaleString("fr-FR")}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Moyen de paiement</label>
-                <div className="space-y-2">
-                  {[
-                    { label: "Mobile Money", desc: "MTN, Moov, Orange", icon: Smartphone, selected: true },
-                    { label: "Virement bancaire", desc: "Compte bancaire", icon: Wallet, selected: false },
-                  ].map((m) => (
-                    <label key={m.label} className={`flex items-center gap-3 rounded-xl border-2 p-3 cursor-pointer transition-colors ${
-                      m.selected ? "border-[#2B7FFF] bg-blue-50/50" : "border-[#E8ECF1] hover:bg-[#F5F7FA]"
-                    }`}>
-                      <input type="radio" name="withdraw-method" defaultChecked={m.selected} className="sr-only" />
-                      <div className={`rounded-xl p-2 ${m.selected ? "bg-[#2B7FFF]" : "bg-gray-100"}`}>
-                        <m.icon className={`h-4 w-4 ${m.selected ? "text-white" : "text-gray-400"}`} />
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-[#0B1E4D]">{m.label}</p>
-                        <p className="text-xs text-gray-400">{m.desc}</p>
-                      </div>
-                    </label>
-                  ))}
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">Numéro de téléphone</label>
-                <input
-                  type="tel"
-                  placeholder="+229 XX XX XX XX"
-                  className="w-full rounded-xl border border-[#E8ECF1] bg-[#F5F7FA] px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#2B7FFF]/20 focus:border-[#2B7FFF]"
-                />
-              </div>
-
-              <div className="flex gap-3 pt-2">
-                <button onClick={() => setShowWithdrawModal(false)} className="flex-1 rounded-xl border border-[#E8ECF1] py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
-                  Annuler
-                </button>
-                <button className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-[#2B7FFF] py-2.5 text-sm font-medium text-white hover:bg-[#2563EB] transition-colors">
-                  <Send className="h-4 w-4" />
-                  Retirer
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Share modal */}
-      {showShareModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="bg-white rounded-2xl w-full max-w-sm shadow-xl">
-            <div className="flex items-center justify-between p-5 border-b border-[#E8ECF1]">
-              <h2 className="text-lg font-bold text-[#0B1E4D]">Partager votre lien</h2>
-              <button onClick={() => setShowShareModal(false)} className="rounded-lg p-1.5 hover:bg-gray-100">
-                <X className="h-5 w-5 text-gray-400" />
-              </button>
-            </div>
-            <div className="p-5 space-y-3">
-              {[
-                { label: "WhatsApp", color: "bg-emerald-500 hover:bg-emerald-600", icon: MessageCircle },
-                { label: "Facebook", color: "bg-blue-600 hover:bg-blue-700", icon: Globe },
-                { label: "Telegram", color: "bg-sky-500 hover:bg-sky-600", icon: Send },
-                { label: "Email", color: "bg-gray-700 hover:bg-gray-800", icon: ExternalLink },
-              ].map((s) => (
-                <button key={s.label} className={`w-full flex items-center gap-3 rounded-xl ${s.color} px-4 py-3 text-white text-sm font-medium transition-colors`}>
-                  <s.icon className="h-5 w-5" />
-                  Partager sur {s.label}
-                </button>
-              ))}
-              <button
-                onClick={() => { copyLink(); setShowShareModal(false); }}
-                className="w-full flex items-center gap-3 rounded-xl border border-[#E8ECF1] px-4 py-3 text-sm font-medium text-gray-700 hover:bg-[#F5F7FA] transition-colors"
-              >
-                <Copy className="h-5 w-5 text-gray-400" />
-                Copier le lien
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

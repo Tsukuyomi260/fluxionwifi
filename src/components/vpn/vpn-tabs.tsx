@@ -656,7 +656,7 @@ export function AffiliationTab() {
             </span>
           </div>
           <div className="mt-4 flex flex-wrap gap-3">
-            <a href="/account" className="inline-flex h-10 items-center gap-2 rounded-[3px] px-5 text-[15px] text-white" style={{ background: TEAL }}>
+            <a href="/affiliation" className="inline-flex h-10 items-center gap-2 rounded-[3px] px-5 text-[15px] text-white" style={{ background: TEAL }}>
               <ExternalLink className="h-4 w-4" /> Gérer mes retraits (Espace Affiliation)
             </a>
             <button className="inline-flex h-10 items-center gap-2 rounded-[3px] border border-slate-400 px-5 text-[15px] text-slate-700 hover:bg-slate-50">
