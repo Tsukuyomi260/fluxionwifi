@@ -5,6 +5,7 @@ import { MarqueeStrip } from "@/components/marketing/marquee-strip";
 import { StatsCounter } from "@/components/marketing/stats-counter";
 import { FeaturesBento } from "@/components/marketing/features-bento";
 import { PricingSection } from "@/components/marketing/pricing-section";
+import { CountriesSection } from "@/components/marketing/countries-section";
 import { CtaCard } from "@/components/marketing/cta-card";
 import { SectionTitle } from "@/components/marketing/section-title";
 import { Footer7 } from "@/components/ui/footer-7";
@@ -37,6 +38,21 @@ export default function LandingPage() {
       </section>
 
       <StatsCounter />
+
+      {/* Countries & currencies */}
+      <section id="countries" className="px-4 py-20 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-6xl">
+          <ScrollReveal>
+            <SectionTitle
+              eyebrow="Couverture"
+              title="Présent dans toute"
+              accent="l'Afrique"
+              subtitle="Chaque pays a sa devise : vos prix et vos paiements s'adaptent automatiquement."
+            />
+          </ScrollReveal>
+          <CountriesSection />
+        </div>
+      </section>
 
       {/* How it works */}
       <section id="how-it-works" className="px-4 py-20 sm:px-6 lg:px-8">
