@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useVpn } from "@/hooks/use-vpn";
 import { useRouters } from "@/hooks/use-routers";
 import { AddRouterWizard } from "@/components/vpn/add-router-wizard";
+import { TopologyPanel } from "@/components/vpn/topology-panel";
 import type { VpnTunnel, VpnProtocol, TunnelStatus } from "@/lib/supabase/types";
 import {
   Shield,
@@ -525,7 +526,6 @@ function OverviewTab({
             <h3 className="text-sm font-semibold text-white">Topologie</h3>
             <span className="text-xs text-slate-500">Légende :</span>
             <span className="text-xs text-slate-400">VPS : vpn1.fluxionwifi.tech:443</span>
-            <span className="text-xs text-slate-500">Vue libre — mon plan</span>
           </div>
           <div className="flex flex-wrap items-center gap-2 mt-2">
             <span className="inline-flex items-center gap-1.5 rounded-full bg-[#0E7490]/20 px-2.5 py-1 text-[11px] font-medium text-[#0E7490]">
@@ -570,88 +570,7 @@ function OverviewTab({
           </div>
         </div>
 
-        {/* SVG Topology Map */}
-        <div className="p-5">
-          <svg viewBox="0 0 600 400" className="w-full h-auto" style={{ minHeight: 280 }}>
-            <defs>
-              <radialGradient id="vpnGlow" cx="50%" cy="50%" r="50%">
-                <stop offset="0%" stopColor="#0E7490" stopOpacity="0.3" />
-                <stop offset="100%" stopColor="#0E7490" stopOpacity="0" />
-              </radialGradient>
-            </defs>
-
-            {/* Connection lines */}
-            {routers.slice(0, 10).map((r, i) => {
-              const angle = (i / Math.min(routers.length, 10)) * Math.PI * 2 - Math.PI / 2;
-              const radius = 150;
-              const x = 300 + Math.cos(angle) * radius;
-              const y = 200 + Math.sin(angle) * radius;
-              const isOnline = r.status === "online";
-              return (
-                <line
-                  key={`line-${r.id}`}
-                  x1="300"
-                  y1="200"
-                  x2={x}
-                  y2={y}
-                  stroke={isOnline ? "#0E7490" : "#475569"}
-                  strokeWidth="1.5"
-                  strokeDasharray={isOnline ? "none" : "4 4"}
-                  opacity={isOnline ? 0.6 : 0.3}
-                />
-              );
-            })}
-
-            {/* Center VPN node glow */}
-            <circle cx="300" cy="200" r="60" fill="url(#vpnGlow)" />
-
-            {/* Center VPN node */}
-            <circle cx="300" cy="200" r="30" fill="#0E7490" stroke="#06B6D4" strokeWidth="2" />
-            <text x="300" y="196" textAnchor="middle" fill="white" fontSize="10" fontWeight="bold">VPN</text>
-            <text x="300" y="210" textAnchor="middle" fill="#A5F3FC" fontSize="7">HUB</text>
-
-            {/* Router nodes */}
-            {routers.slice(0, 10).map((r, i) => {
-              const angle = (i / Math.min(routers.length, 10)) * Math.PI * 2 - Math.PI / 2;
-              const radius = 150;
-              const x = 300 + Math.cos(angle) * radius;
-              const y = 200 + Math.sin(angle) * radius;
-              const isOnline = r.status === "online";
-              return (
-                <g key={`node-${r.id}`}>
-                  <circle
-                    cx={x}
-                    cy={y}
-                    r="18"
-                    fill={isOnline ? "#065F46" : "#1E293B"}
-                    stroke={isOnline ? "#10B981" : "#475569"}
-                    strokeWidth="2"
-                  />
-                  <text x={x} y={y + 1} textAnchor="middle" fill="white" fontSize="7" fontWeight="bold">
-                    R{i + 1}
-                  </text>
-                  {/* Status dot */}
-                  <circle
-                    cx={x + 12}
-                    cy={y - 12}
-                    r="4"
-                    fill={isOnline ? "#10B981" : "#EF4444"}
-                  />
-                  {/* Name label */}
-                  <text
-                    x={x}
-                    y={y + 30}
-                    textAnchor="middle"
-                    fill="#94A3B8"
-                    fontSize="7"
-                  >
-                    {r.name.length > 20 ? r.name.substring(0, 18) + "…" : r.name}
-                  </text>
-                </g>
-              );
-            })}
-          </svg>
-        </div>
+        <TopologyPanel routers={routers} />
       </div>
 
       {/* Equipment banner */}
