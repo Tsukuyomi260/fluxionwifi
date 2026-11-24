@@ -42,8 +42,8 @@ const PROTOCOLS: ProtocolOption[] = [
 const STEPS = ["Protocole", "Identité", "Connexion", "Validation"];
 
 const input =
-  "h-11 w-full rounded-lg border border-white/10 bg-[#0F172A] px-3.5 text-sm text-white placeholder:text-slate-500 focus:border-[#0E7490] focus:outline-none focus:ring-2 focus:ring-[#0E7490]/30";
-const label = "mb-1.5 block text-sm font-medium text-slate-200";
+  "h-11 w-full rounded-[3px] border border-slate-300 bg-white px-3.5 text-sm text-slate-800 placeholder:text-slate-500 focus:border-[#17A2B8] focus:outline-none focus:ring-2 focus:ring-[#17A2B8]/30";
+const label = "mb-1.5 block text-sm font-semibold text-slate-700";
 const hint = "mt-1 text-xs text-slate-500";
 
 function randomString(len: number, alphabet: string) {
@@ -157,25 +157,25 @@ export function AddRouterWizard({
 
   return (
     <div className="space-y-5">
-      <h2 className="text-xl font-bold text-white">Ajouter un routeur</h2>
+      
 
-      <div className="rounded-xl border border-white/10 bg-[#1E293B]">
-        <div className="flex items-center justify-between border-b border-white/10 px-5 py-3 text-sm font-semibold text-white">
-          <span className="flex items-center gap-2"><Router className="h-4 w-4 text-[#22D3EE]" /> Nouveau routeur</span>
+      <div className="mx-auto max-w-2xl overflow-hidden rounded-[3px] border-t-[3px] border-t-[#17A2B8] bg-white shadow-[0_1px_3px_rgba(0,0,0,0.15)]">
+        <div className="flex items-center justify-between border-b border-slate-200 px-5 py-3 text-sm font-semibold text-slate-800">
+          <span className="flex items-center gap-2"><Router className="h-4 w-4 text-[#17A2B8]" /> Nouveau routeur</span>
           <span className="text-xs font-normal text-slate-500">À propos : aide rapide</span>
         </div>
 
         {/* Schéma Routeur - protocole - Serveur */}
         <div className="px-5 pt-5">
           <div className="flex items-center gap-3">
-            <div className="flex flex-col items-center gap-1 text-[11px] text-slate-400"><Router className="h-6 w-6 text-slate-300" /> Routeur</div>
-            <div className="relative h-px flex-1 border-t border-dashed border-slate-600">
-              <span className="absolute left-1/2 top-1/2 flex h-7 w-7 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-[#0E7490] bg-[#0F172A]">
-                <ProtoIcon className="h-3.5 w-3.5 text-[#22D3EE]" />
+            <div className="flex flex-col items-center gap-1 text-[11px] text-slate-500"><Router className="h-6 w-6 text-slate-600" /> Routeur</div>
+            <div className="relative h-px flex-1 border-t border-dashed border-slate-400">
+              <span className="absolute left-1/2 top-1/2 flex h-7 w-7 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-[#17A2B8] bg-slate-50">
+                <ProtoIcon className="h-3.5 w-3.5 text-[#17A2B8]" />
               </span>
-              <span className="absolute left-1/2 top-4 -translate-x-1/2 text-[10px] font-semibold text-[#22D3EE]">{protocol}</span>
+              <span className="absolute left-1/2 top-4 -translate-x-1/2 text-[10px] font-semibold text-[#17A2B8]">{protocol}</span>
             </div>
-            <div className="flex flex-col items-center gap-1 text-[11px] text-slate-400"><Server className="h-6 w-6 text-slate-300" /> Serveur VPN</div>
+            <div className="flex flex-col items-center gap-1 text-[11px] text-slate-500"><Server className="h-6 w-6 text-slate-600" /> Serveur VPN</div>
           </div>
 
           {/* Étapes */}
@@ -185,13 +185,13 @@ export function AddRouterWizard({
               const current = i === step && !saved;
               return (
                 <li key={s} className="relative flex flex-1 flex-col items-center">
-                  {i > 0 && <span className={`absolute right-1/2 top-4 h-0.5 w-full ${i <= step || saved ? "bg-emerald-500" : "bg-white/10"}`} />}
+                  {i > 0 && <span className={`absolute right-1/2 top-4 h-0.5 w-full ${i <= step || saved ? "bg-emerald-500" : "bg-slate-200"}`} />}
                   <span className={`relative z-10 flex h-8 w-8 items-center justify-center rounded-full border-2 text-xs font-bold ${
-                    done ? "border-emerald-500 bg-emerald-500 text-white" : current ? "border-[#22D3EE] bg-[#0E7490] text-white" : "border-white/15 bg-[#0F172A] text-slate-500"
+                    done ? "border-emerald-500 bg-emerald-500 text-white" : current ? "border-[#17A2B8] bg-[#17A2B8] text-white" : "border-slate-300 bg-slate-50 text-slate-500"
                   }`}>
                     {done ? <Check className="h-4 w-4" /> : i + 1}
                   </span>
-                  <span className={`mt-1.5 text-[11px] ${current ? "font-semibold text-white" : "text-slate-500"}`}>{s}</span>
+                  <span className={`mt-1.5 text-[11px] ${current ? "font-semibold text-slate-800" : "text-slate-500"}`}>{s}</span>
                 </li>
               );
             })}
@@ -202,8 +202,8 @@ export function AddRouterWizard({
           {/* ÉTAPE 1 */}
           {step === 0 && (
             <div className="space-y-3">
-              <p className="text-[11px] font-bold uppercase tracking-wide text-[#22D3EE]">Étape 1 : choisissez le protocole</p>
-              <p className="text-xs text-slate-400">Choisissez selon la version de votre routeur et la compatibilité réseau.</p>
+              <p className="text-[11px] font-bold uppercase tracking-wide text-[#17A2B8]">Étape 1 : choisissez le protocole</p>
+              <p className="text-xs text-slate-500">Choisissez selon la version de votre routeur et la compatibilité réseau.</p>
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 {PROTOCOLS.map((p) => {
                   const selected = p.supported && protocol === p.key;
@@ -214,16 +214,16 @@ export function AddRouterWizard({
                       disabled={!p.supported}
                       onClick={() => setProtocol(p.key as VpnProtocol)}
                       className={`relative rounded-xl border-2 p-3.5 text-left transition-colors ${
-                        selected ? "border-[#22D3EE] bg-[#0E7490]/15" : p.supported ? "border-white/10 hover:border-white/25" : "cursor-not-allowed border-white/5 opacity-50"
+                        selected ? "border-[#17A2B8] bg-[#17A2B8]/15" : p.supported ? "border-slate-200 hover:border-slate-400" : "cursor-not-allowed border-slate-200 opacity-50"
                       }`}
                     >
                       <div className="flex items-center gap-2">
-                        <p.icon className={`h-4 w-4 ${selected ? "text-[#22D3EE]" : "text-slate-400"}`} />
-                        <span className="text-sm font-semibold text-white">{p.label}</span>
+                        <p.icon className={`h-4 w-4 ${selected ? "text-[#17A2B8]" : "text-slate-500"}`} />
+                        <span className="text-sm font-semibold text-slate-800">{p.label}</span>
                         {p.badge && p.supported && <span className={`ml-auto rounded px-1.5 py-0.5 text-[9px] font-bold uppercase ${p.badge.cls}`}>{p.badge.text}</span>}
-                        {!p.supported && <span className="ml-auto rounded bg-white/10 px-1.5 py-0.5 text-[9px] font-bold uppercase text-slate-300">Bientôt</span>}
+                        {!p.supported && <span className="ml-auto rounded bg-slate-200 px-1.5 py-0.5 text-[9px] font-bold uppercase text-slate-600">Bientôt</span>}
                       </div>
-                      <p className="mt-1.5 text-xs text-slate-400">{p.desc}</p>
+                      <p className="mt-1.5 text-xs text-slate-500">{p.desc}</p>
                       <p className="mt-0.5 text-[11px] text-slate-500">{p.version}</p>
                     </button>
                   );
@@ -235,7 +235,7 @@ export function AddRouterWizard({
           {/* ÉTAPE 2 */}
           {step === 1 && (
             <div className="space-y-4">
-              <p className="text-[11px] font-bold uppercase tracking-wide text-[#22D3EE]">Étape 2 : identifiez le routeur</p>
+              <p className="text-[11px] font-bold uppercase tracking-wide text-[#17A2B8]">Étape 2 : identifiez le routeur</p>
               <div>
                 <label className={label} htmlFor="w-name">Nom du routeur <span className="text-red-400">*</span></label>
                 <input id="w-name" className={input} placeholder="ex. Boutique-Centre" value={name} onChange={(e) => setName(e.target.value)} autoFocus />
@@ -261,7 +261,7 @@ export function AddRouterWizard({
           {/* ÉTAPE 3 */}
           {step === 2 && (
             <div className="space-y-4">
-              <p className="text-[11px] font-bold uppercase tracking-wide text-[#22D3EE]">Étape 3 : paramètres de connexion</p>
+              <p className="text-[11px] font-bold uppercase tracking-wide text-[#17A2B8]">Étape 3 : paramètres de connexion</p>
               {protocol === "SSTP" ? (
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div>
@@ -272,27 +272,27 @@ export function AddRouterWizard({
                     <label className={label} htmlFor="w-pass">Mot de passe</label>
                     <div className="flex gap-2">
                       <input id="w-pass" className={`${input} font-mono`} value={pass} onChange={(e) => setPass(e.target.value)} />
-                      <button type="button" aria-label="Générer un mot de passe" onClick={() => setPass(randomString(10, "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789"))} className="shrink-0 rounded-lg border border-white/10 px-3 text-slate-300 hover:bg-white/5"><RefreshCw className="h-4 w-4" /></button>
+                      <button type="button" aria-label="Générer un mot de passe" onClick={() => setPass(randomString(10, "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789"))} className="shrink-0 rounded-lg border border-slate-200 px-3 text-slate-600 hover:bg-slate-50"><RefreshCw className="h-4 w-4" /></button>
                     </div>
                   </div>
                 </div>
               ) : (
-                <p className="rounded-lg bg-[#0F172A] px-3 py-2.5 text-xs text-slate-300"><KeyRound className="mr-1.5 inline h-3.5 w-3.5 text-[#22D3EE]" /> WireGuard : le routeur crée sa propre paire de clés. La clé publique du serveur sera fournie par la plateforme.</p>
+                <p className="rounded-lg bg-slate-50 px-3 py-2.5 text-xs text-slate-600"><KeyRound className="mr-1.5 inline h-3.5 w-3.5 text-[#17A2B8]" /> WireGuard : le routeur crée sa propre paire de clés. La clé publique du serveur sera fournie par la plateforme.</p>
               )}
               <div className="grid gap-4 sm:grid-cols-2">
                 <div>
                   <label className={label}>Hôte serveur <span className="font-normal text-slate-500">(connect-to)</span></label>
-                  <input className={`${input} text-slate-400`} value={serverHost} readOnly />
+                  <input className={`${input} text-slate-500`} value={serverHost} readOnly />
                 </div>
                 <div>
                   <label className={label}>Port serveur</label>
-                  <input className={`${input} text-slate-400`} value={String(port)} readOnly />
+                  <input className={`${input} text-slate-500`} value={String(port)} readOnly />
                 </div>
               </div>
-              <p className="flex items-start gap-2 rounded-lg bg-[#0E7490]/10 px-3 py-2 text-xs text-[#67E8F9]"><Info className="mt-0.5 h-3.5 w-3.5 shrink-0" /> Le serveur attribue l&apos;IP de tunnel à ce compte (champ « IP de tunnel attribuée »).</p>
+              <p className="flex items-start gap-2 rounded-lg bg-[#17A2B8]/10 px-3 py-2 text-xs text-[#0B6070]"><Info className="mt-0.5 h-3.5 w-3.5 shrink-0" /> Le serveur attribue l&apos;IP de tunnel à ce compte (champ « IP de tunnel attribuée »).</p>
               <div>
                 <label className={label}>IP de tunnel attribuée</label>
-                <input className={`${input} font-mono text-slate-400`} value={tunnelIp} readOnly />
+                <input className={`${input} font-mono text-slate-500`} value={tunnelIp} readOnly />
                 <p className={hint}>Attribuée automatiquement, non modifiable.</p>
               </div>
             </div>
@@ -301,15 +301,15 @@ export function AddRouterWizard({
           {/* ÉTAPE 4 */}
           {step === 3 && (
             <div className="space-y-4">
-              <p className="text-[11px] font-bold uppercase tracking-wide text-[#22D3EE]">Étape 4 : validation et script</p>
+              <p className="text-[11px] font-bold uppercase tracking-wide text-[#17A2B8]">Étape 4 : validation et script</p>
               {!saved ? (
                 <>
-                  <dl className="grid gap-x-6 gap-y-2 rounded-lg bg-[#0F172A] p-4 text-sm sm:grid-cols-2">
+                  <dl className="grid gap-x-6 gap-y-2 rounded-lg bg-slate-50 p-4 text-sm sm:grid-cols-2">
                     {([["Routeur", name], ["Protocole", `${protocol} · RouterOS ${version}`], ["Serveur", `${serverHost}:${port}`], ["IP de tunnel", tunnelIp]] as [string, string][]).map(([k, v]) => (
-                      <div key={k}><dt className="text-xs text-slate-500">{k}</dt><dd className="font-medium text-white">{v}</dd></div>
+                      <div key={k}><dt className="text-xs text-slate-500">{k}</dt><dd className="font-medium text-slate-800">{v}</dd></div>
                     ))}
                   </dl>
-                  <p className="text-xs text-slate-400">Validez pour créer le routeur, puis collez le script dans <b>New Terminal</b> du routeur.</p>
+                  <p className="text-xs text-slate-500">Validez pour créer le routeur, puis collez le script dans <b>New Terminal</b> du routeur.</p>
                   {error && <p className="rounded-lg bg-red-500/10 px-3 py-2 text-sm text-red-300">{error}</p>}
                 </>
               ) : (
@@ -320,7 +320,7 @@ export function AddRouterWizard({
                   <div>
                     <div className="mb-1.5 flex items-center justify-between">
                       <p className="text-xs font-semibold text-slate-200">Script à coller dans New Terminal :</p>
-                      <button onClick={copy} className="inline-flex items-center gap-1.5 rounded-lg bg-[#0E7490] px-3 py-1.5 text-xs font-medium text-white hover:bg-[#0C6880]">
+                      <button onClick={copy} className="inline-flex items-center gap-1.5 rounded-lg bg-[#17A2B8] px-3 py-1.5 text-xs font-medium text-white hover:bg-[#138496]">
                         {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />} {copied ? "Copié" : "Copier"}
                       </button>
                     </div>
@@ -335,19 +335,19 @@ export function AddRouterWizard({
           )}
 
           {/* Navigation */}
-          <div className="mt-6 flex items-center justify-between border-t border-white/10 pt-4">
+          <div className="mt-6 flex items-center justify-between border-t border-slate-200 pt-4">
             {step > 0 && !saved ? (
-              <button onClick={() => setStep(step - 1)} className="inline-flex h-10 items-center gap-2 rounded-lg border border-white/10 px-4 text-sm text-slate-300 hover:bg-white/5"><ArrowLeft className="h-4 w-4" /> Retour</button>
+              <button onClick={() => setStep(step - 1)} className="inline-flex h-10 items-center gap-2 rounded-lg border border-slate-200 px-4 text-sm text-slate-600 hover:bg-slate-50"><ArrowLeft className="h-4 w-4" /> Retour</button>
             ) : <span />}
 
             {step === 0 && (
-              <button onClick={() => setStep(1)} className="inline-flex h-10 items-center gap-2 rounded-lg bg-[#0E7490] px-5 text-sm font-medium text-white hover:bg-[#0C6880]">Continuer <ArrowRight className="h-4 w-4" /></button>
+              <button onClick={() => setStep(1)} className="inline-flex h-10 items-center gap-2 rounded-lg bg-[#17A2B8] px-5 text-sm font-medium text-white hover:bg-[#138496]">Continuer <ArrowRight className="h-4 w-4" /></button>
             )}
             {step === 1 && (
-              <button onClick={goConnexion} disabled={!name.trim() || wgBlocked} className="inline-flex h-10 items-center gap-2 rounded-lg bg-[#0E7490] px-5 text-sm font-medium text-white hover:bg-[#0C6880] disabled:cursor-not-allowed disabled:opacity-50">Continuer <ArrowRight className="h-4 w-4" /></button>
+              <button onClick={goConnexion} disabled={!name.trim() || wgBlocked} className="inline-flex h-10 items-center gap-2 rounded-lg bg-[#17A2B8] px-5 text-sm font-medium text-white hover:bg-[#138496] disabled:cursor-not-allowed disabled:opacity-50">Continuer <ArrowRight className="h-4 w-4" /></button>
             )}
             {step === 2 && (
-              <button onClick={() => setStep(3)} disabled={protocol === "SSTP" && (!user.trim() || !pass.trim())} className="inline-flex h-10 items-center gap-2 rounded-lg bg-[#0E7490] px-5 text-sm font-medium text-white hover:bg-[#0C6880] disabled:cursor-not-allowed disabled:opacity-50">Continuer <ArrowRight className="h-4 w-4" /></button>
+              <button onClick={() => setStep(3)} disabled={protocol === "SSTP" && (!user.trim() || !pass.trim())} className="inline-flex h-10 items-center gap-2 rounded-lg bg-[#17A2B8] px-5 text-sm font-medium text-white hover:bg-[#138496] disabled:cursor-not-allowed disabled:opacity-50">Continuer <ArrowRight className="h-4 w-4" /></button>
             )}
             {step === 3 && !saved && (
               <button onClick={finish} disabled={saving} className="inline-flex h-10 items-center gap-2 rounded-lg bg-emerald-500 px-5 text-sm font-medium text-white hover:bg-emerald-600 disabled:opacity-60">
@@ -355,7 +355,7 @@ export function AddRouterWizard({
               </button>
             )}
             {step === 3 && saved && (
-              <button onClick={onDone} className="inline-flex h-10 items-center gap-2 rounded-lg bg-[#0E7490] px-5 text-sm font-medium text-white hover:bg-[#0C6880]">Voir mes routeurs <ArrowRight className="h-4 w-4" /></button>
+              <button onClick={onDone} className="inline-flex h-10 items-center gap-2 rounded-lg bg-[#17A2B8] px-5 text-sm font-medium text-white hover:bg-[#138496]">Voir mes routeurs <ArrowRight className="h-4 w-4" /></button>
             )}
           </div>
         </div>
