@@ -10,6 +10,11 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
+  // Espace revendeur : authentification propre (identifiant revendeur), pas celle du propriétaire.
+  if (pathname === "/vendeur" || pathname.startsWith("/vendeur/")) {
+    return NextResponse.next();
+  }
+
   if (publicRoutes.some((route) => route !== "/" && pathname.startsWith(route))) {
     const response = NextResponse.next();
     const supabase = createSupabaseMiddleware(request, response);

@@ -85,7 +85,7 @@ export function QuickActionsFab() {
   return (
     <>
       {/* FAB vertical stack */}
-      <div ref={fabRef} className="fixed bottom-20 right-4 lg:bottom-8 lg:right-6 z-40 flex flex-col items-end gap-2">
+      <div ref={fabRef} className="fixed bottom-20 right-2 lg:bottom-8 lg:right-3 z-40 flex flex-col items-end gap-2">
         {/* Action items */}
         {actions.map((action, i) => (
           <button
@@ -132,7 +132,7 @@ export function QuickActionsFab() {
 
       {/* "Une question ?" label */}
       {!open && (
-        <div className="fixed bottom-[76px] right-[70px] lg:bottom-[28px] lg:right-[72px] z-40 pointer-events-none">
+        <div className="fixed bottom-[76px] right-[62px] lg:bottom-[28px] lg:right-[60px] z-40 pointer-events-none">
           <span className="rounded-lg bg-[#1A1D26] px-2.5 py-1 text-[10px] font-medium text-white/80 whitespace-nowrap shadow">
             Une question ?
           </span>
