@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useVpn } from "@/hooks/use-vpn";
 import { useRouters } from "@/hooks/use-routers";
+import { AddRouterWizard } from "@/components/vpn/add-router-wizard";
 import type { VpnTunnel, VpnProtocol, TunnelStatus } from "@/lib/supabase/types";
 import {
   Shield,
@@ -217,18 +218,19 @@ export default function VpnPage() {
           {activeTab === "server" && <ServerTab />}
 
           {activeTab === "add-router" && (
-            <AddRouterTab
-              routers={routers}
-              formName={formName}
-              setFormName={setFormName}
-              formProtocol={formProtocol}
-              setFormProtocol={setFormProtocol}
-              formServerIp={formServerIp}
-              setFormServerIp={setFormServerIp}
-              formRouterId={formRouterId}
-              setFormRouterId={setFormRouterId}
-              creating={creating}
-              onSubmit={handleCreate}
+            <AddRouterWizard
+              serverHost="vpn1.fluxionwifi.tech"
+              onCreate={async (r) => {
+                const res = await addTunnel({
+                  name: r.name,
+                  protocol: r.protocol,
+                  server_ip: r.serverHost,
+                  port: r.port,
+                  router_id: null,
+                } as Partial<VpnTunnel>);
+                if (res?.error) throw new Error(res.error);
+              }}
+              onDone={() => setActiveTab("routers-vpn")}
             />
           )}
 
@@ -696,105 +698,6 @@ function ServerTab() {
             </span>
           </div>
         </div>
-      </div>
-    </div>
-  );
-}
-
-function AddRouterTab({
-  routers,
-  formName,
-  setFormName,
-  formProtocol,
-  setFormProtocol,
-  formServerIp,
-  setFormServerIp,
-  formRouterId,
-  setFormRouterId,
-  creating,
-  onSubmit,
-}: {
-  routers: { id: string; name: string; ip_address: string }[];
-  formName: string;
-  setFormName: (v: string) => void;
-  formProtocol: VpnProtocol;
-  setFormProtocol: (v: VpnProtocol) => void;
-  formServerIp: string;
-  setFormServerIp: (v: string) => void;
-  formRouterId: string;
-  setFormRouterId: (v: string) => void;
-  creating: boolean;
-  onSubmit: () => void;
-}) {
-  return (
-    <div className="space-y-5">
-      <h2 className="text-xl font-bold text-white">Ajouter un routeur au VPN</h2>
-      <div className="rounded-xl border border-white/10 bg-[#1E293B] p-6 space-y-4 max-w-lg">
-        <div>
-          <label className="block text-sm font-medium text-slate-300 mb-1.5">Nom du tunnel</label>
-          <input
-            type="text"
-            placeholder="Ex: Tunnel Site Principal"
-            value={formName}
-            onChange={(e) => setFormName(e.target.value)}
-            className="w-full h-10 px-4 rounded-xl border border-white/10 bg-[#0F172A] text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-[#0E7490]"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-slate-300 mb-1.5">Protocole</label>
-          <div className="grid grid-cols-2 gap-3">
-            {(["WireGuard", "SSTP"] as VpnProtocol[]).map((proto) => (
-              <button
-                key={proto}
-                type="button"
-                onClick={() => setFormProtocol(proto)}
-                className={`flex items-center gap-3 rounded-xl border-2 p-3.5 transition-colors ${
-                  formProtocol === proto ? "border-[#0E7490] bg-[#0E7490]/10" : "border-white/10 hover:border-white/20"
-                }`}
-              >
-                <div className={`rounded-lg p-2 ${proto === "WireGuard" ? "bg-violet-500/20" : "bg-cyan-500/20"}`}>
-                  {proto === "WireGuard" ? <Zap className="h-4 w-4 text-violet-400" /> : <Lock className="h-4 w-4 text-cyan-400" />}
-                </div>
-                <div className="text-left">
-                  <p className="text-sm font-medium text-white">{proto}</p>
-                  <p className="text-[11px] text-slate-500">{proto === "WireGuard" ? "Rapide & léger" : "Port 443"}</p>
-                </div>
-              </button>
-            ))}
-          </div>
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-slate-300 mb-1.5">Serveur VPN</label>
-          <select
-            value={formServerIp}
-            onChange={(e) => setFormServerIp(e.target.value)}
-            className="w-full h-10 px-4 rounded-xl border border-white/10 bg-[#0F172A] text-sm text-white appearance-none focus:outline-none focus:border-[#0E7490]"
-          >
-            <option value="vpn1.fluxionwifi.tech">vpn1.fluxionwifi.tech (Afrique Centrale)</option>
-            <option value="vpn2.fluxionwifi.tech">vpn2.fluxionwifi.tech (Afrique de l&apos;Ouest)</option>
-          </select>
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-slate-300 mb-1.5">Lier à un routeur</label>
-          <select
-            value={formRouterId}
-            onChange={(e) => setFormRouterId(e.target.value)}
-            className="w-full h-10 px-4 rounded-xl border border-white/10 bg-[#0F172A] text-sm text-white appearance-none focus:outline-none focus:border-[#0E7490]"
-          >
-            <option value="">Aucun routeur</option>
-            {routers.map((r) => (
-              <option key={r.id} value={r.id}>{r.name} ({r.ip_address})</option>
-            ))}
-          </select>
-        </div>
-        <button
-          onClick={onSubmit}
-          disabled={creating || !formName.trim()}
-          className="w-full inline-flex items-center justify-center gap-2 h-10 rounded-xl bg-[#0E7490] text-sm font-medium text-white hover:bg-[#0C6880] transition-colors disabled:opacity-50"
-        >
-          {creating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
-          Ajouter au réseau VPN
-        </button>
       </div>
     </div>
   );
